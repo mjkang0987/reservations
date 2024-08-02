@@ -3,6 +3,7 @@ import {useRecoilValue} from 'recoil';
 import {
     timeState,
 } from '../../recoil/atoms';
+import {ReactNode} from 'react';
 
 export const TimelineTitleComponent = () => {
     const time = useRecoilValue(timeState);
@@ -59,7 +60,7 @@ const StyledTimes = styled.ul`
   margin: 30px 0 60px;
 `;
 
-const StyledTime = styled.li`
+const StyledTime = styled.li<{children: ReactNode}>`
   display: flex;
   justify-content: center;
   position: relative;
