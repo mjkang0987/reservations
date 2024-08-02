@@ -89,8 +89,8 @@ export const DateComponent = ({
         {arrayDates.map((val, index) =>
             <StyledDate key={`month_${val + index}`}
                         type={type}
-                        ref={(element) => reservationRef.current[index] = element}
-                        onDragOver={(e) => {
+                        ref={(element): any => reservationRef.current[index] = element}
+                        onDragOver={(e: React.MouseEvent) => {
                             handlerDragOver({
                                 event: e,
                                 index,
