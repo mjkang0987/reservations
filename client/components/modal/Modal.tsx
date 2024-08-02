@@ -1,5 +1,6 @@
 import React, {
     ReactElement,
+    ReactNode,
     Ref,
     useEffect,
     useRef
@@ -61,6 +62,7 @@ export const ModalComponent = ({
 const StyledModal = styled.dialog`
 const StyledModal = styled.dialog<{
     ref: Ref<HTMLElement>;
+    children: ReactNode;
 }>`
   display: flex;
   flex-direction: column;
