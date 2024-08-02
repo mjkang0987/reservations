@@ -1,3 +1,4 @@
+import React, {ReactNode} from 'react';
 import styled from 'styled-components';
 
 import {ReservationsType} from '../../recoil/atoms';
@@ -7,7 +8,6 @@ import {COLORS} from '../../utils/constants';
 
 import {ButtonText} from '../common/ButtonText';
 import {ButtonSquare} from '../common/Buttons';
-import React from 'react';
 
 export const ModalReservation = ({item}: { item: ReservationsType }) => {
     return (<StyledItems>
@@ -46,7 +46,10 @@ const StyledItem = styled.div`
   margin-top: 10px;
 `;
 
-const StyledTel = styled.a`
+const StyledTel = styled.a<{
+    href: string;
+    children: ReactNode;
+}>`
   margin-top: 10px;
   text-decoration: underline;
 `;
