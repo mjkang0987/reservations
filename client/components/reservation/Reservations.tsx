@@ -1,4 +1,6 @@
 import React, {
+    ReactNode,
+    Ref,
     useEffect,
     useRef,
     useState
@@ -76,7 +78,11 @@ export const ReservationsComponents = ({
     </StyledReserveWrap>);
 };
 
-const StyledReserveWrap = styled.div<{ type: string }>`
+const StyledReserveWrap = styled.div<{
+    type: string;
+    ref: Ref<HTMLElement>;
+    children: ReactNode;
+}>`
   flex: 1;
   display: flex;
   position: relative;
