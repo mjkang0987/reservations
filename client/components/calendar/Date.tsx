@@ -1,4 +1,5 @@
 import React, {
+    ReactNode,
     useRef
 } from 'react';
 
@@ -116,9 +117,15 @@ export const DateComponent = ({
     </>);
 };
 
-const StyledDate = styled.li<{ type: string }>`
-  ${props => props.type !== ViewType.Month
-             ? `
+const StyledDate = styled.li<{
+    children: ReactNode;
+    key: string;
+    type: string;
+    ref: (element: HTMLElement) => void;
+    onDragOver: (e: React.MouseEvent) => void;
+}>`
+    ${props => props.type !== ViewType.Month
+               ? `
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -156,7 +163,7 @@ const StyledDate = styled.li<{ type: string }>`
     }
   }
   `
-             : `
+               : `
   display: flex;
   flex-direction: column;
   text-align: center;
