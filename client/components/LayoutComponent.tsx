@@ -152,7 +152,10 @@ export default function LayoutComponent({children}: NodeType) {
     );
 }
 
-const StyledWrapper = styled.div<{ onClick?: Function }>`
+const StyledWrapper = styled.div<{
+    onClick?: (e: MouseEvent) => void;
+    children?: ReactNode;
+}>`
   display: flex;
   flex-direction: column;
   height: 100%;
