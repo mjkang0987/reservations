@@ -8,7 +8,7 @@
             "startHours": 10,
             "startMinutes": 0,
             "endHours": 10,
-            "endMinutes": 20,
+            "endMinutes": 30,
             "service": "서비스 이름 노출",
             "name": "가나다",
             "tel": "000-0000-0000",
