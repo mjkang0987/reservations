@@ -113,7 +113,8 @@ export const enum ViewType {
     Day = 'day'
 }
 
-export const isTodayValue = (today: any, fullYear: number, month: number, number: number = 0): boolean => {
+export const isTodayValue = (today: Date | null, fullYear: number, month: number, number: number = 0): boolean => {
+    if (!today) return false;
     return [today.getFullYear(), today.getMonth(), today.getDate()].join(' ') === [fullYear, month, number].join(' ');
 };
 

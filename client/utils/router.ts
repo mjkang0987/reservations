@@ -1,3 +1,5 @@
+import type {NextRouter} from 'next/router';
+
 import {ASIDE, ViewType} from './constants';
 
 interface RouterType {
@@ -5,7 +7,7 @@ interface RouterType {
     year: number | null,
     month: number | null,
     date: number | null,
-    router: any
+    router: NextRouter
 }
 
 export const isCalendar = (arrayPath: string[] = ['', '', '', '']) => {
