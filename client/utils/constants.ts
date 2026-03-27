@@ -117,9 +117,3 @@ export const isTodayValue = (today: any, fullYear: number, month: number, number
     return [today.getFullYear(), today.getMonth(), today.getDate()].join(' ') === [fullYear, month, number].join(' ');
 };
 
-export const RESERVATION_COLORS = [
-    '#4285F4', '#c93a30', '#a88417', '#24753a', '#FF6D01',
-    '#297177', '#473896', '#932863', '#0092a4', '#FF7043',
-    '#5b4740', '#4a5960', '#58733a', '#7f4c88', '#FFD54F',
-];
-
