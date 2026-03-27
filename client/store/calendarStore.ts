@@ -1,6 +1,7 @@
 import {create} from 'zustand';
 
-import type {ReservationMap} from '../utils/reservations';
+import type {Reservation, ReservationMap, ReservationHistoryEntry, ReservationStatus} from '../utils/reservations';
+import type {CustomerMap} from '../utils/customers';
 
 export type FullType = Date | null;
 
@@ -41,6 +42,11 @@ export interface MousePositionType {
     date: number;
 }
 
+export interface CreateReservationInitial {
+    date: string;
+    startTime: string;
+}
+
 export interface CalendarState {
     today: FullType;
     target: DateType;
@@ -50,6 +56,11 @@ export interface CalendarState {
     router: RouterSlice;
     mousePosition: MousePositionType | null;
     reservationMap: ReservationMap;
+    customerMap: CustomerMap;
+    selectedReservation: Reservation | null;
+    reservationHistory: ReservationHistoryEntry[];
+    reservationListFilter: { type: 'month'; year: number; month: number } | { type: 'date'; dateKey: string } | null;
+    createReservationInitial: CreateReservationInitial | null;
 
     setToday: (v: FullType) => void;
     setTarget: (partial: Partial<DateType>) => void;
@@ -60,6 +71,14 @@ export interface CalendarState {
     setRouterSlice: (v: RouterSlice | ((prev: RouterSlice) => RouterSlice)) => void;
     setMousePosition: (v: MousePositionType | null) => void;
     setReservationMap: (map: ReservationMap) => void;
+    setCustomerMap: (map: CustomerMap) => void;
+    setSelectedReservation: (v: Reservation | null) => void;
+    setReservationHistory: (history: ReservationHistoryEntry[]) => void;
+    setReservationListFilter: (v: CalendarState['reservationListFilter']) => void;
+    setCreateReservationInitial: (v: CreateReservationInitial | null) => void;
+    addReservation: (reservation: Reservation) => void;
+    updateReservation: (prev: Reservation, updated: Reservation) => void;
+    cancelReservation: (reservation: Reservation, status?: ReservationStatus) => void;
 }
 
 export const useCalendarStore = create<CalendarState>((set) => ({
@@ -90,6 +109,11 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     },
     mousePosition: null,
     reservationMap: {},
+    customerMap: {},
+    selectedReservation: null,
+    reservationHistory: [],
+    reservationListFilter: null,
+    createReservationInitial: null,
 
     setToday: (today) => set({today}),
 
@@ -133,5 +157,105 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
     setMousePosition: (mousePosition) => set({mousePosition}),
 
-    setReservationMap: (reservationMap) => set({reservationMap})
+    setReservationMap: (reservationMap) => set({reservationMap}),
+
+    setCustomerMap: (customerMap) => set({customerMap}),
+
+    setSelectedReservation: (selectedReservation) => set({selectedReservation}),
+
+    setReservationHistory: (reservationHistory) => set({reservationHistory}),
+
+    setReservationListFilter: (reservationListFilter) => set({reservationListFilter}),
+
+    setCreateReservationInitial: (createReservationInitial) => set({createReservationInitial}),
+
+    addReservation: (reservation) => {
+        set((state) => {
+            const map = {...state.reservationMap};
+            const key = reservation.date;
+
+            if (!map[key]) map[key] = [];
+            map[key] = [...map[key], reservation];
+
+            return {reservationMap: map, createReservationInitial: null};
+        });
+
+        fetch('/api/reservations', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(reservation)
+        });
+    },
+
+    updateReservation: (prev, updated) => {
+        set((state) => {
+            const map = {...state.reservationMap};
+            const oldKey = prev.date;
+            const newKey = updated.date;
+
+            if (map[oldKey]) {
+                map[oldKey] = map[oldKey].filter((r) => r.id !== prev.id);
+                if (map[oldKey].length === 0) delete map[oldKey];
+            }
+
+            if (!map[newKey]) map[newKey] = [];
+            const idx = map[newKey].findIndex((r) => r.id === updated.id);
+            if (idx > -1) {
+                map[newKey][idx] = updated;
+            } else {
+                map[newKey].push(updated);
+            }
+
+            const entry: ReservationHistoryEntry = {
+                reservationId: prev.id,
+                before: prev,
+                after: updated,
+                timestamp: new Date().toISOString()
+            };
+
+            return {
+                reservationMap: map,
+                selectedReservation: updated,
+                reservationHistory: [...state.reservationHistory, entry]
+            };
+        });
+
+        fetch('/api/reservations', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({prev, updated})
+        });
+    },
+
+    cancelReservation: (reservation, status = 'cancelled') => {
+        const updated: Reservation = {...reservation, status};
+
+        set((state) => {
+            const map = {...state.reservationMap};
+            const key = reservation.date;
+
+            if (map[key]) {
+                map[key] = map[key].map((r) => r.id === reservation.id ? updated : r);
+            }
+
+            const entry: ReservationHistoryEntry = {
+                reservationId: reservation.id,
+                before: reservation,
+                after: updated,
+                timestamp: new Date().toISOString()
+            };
+
+            return {
+                reservationMap: map,
+                selectedReservation: null,
+                reservationHistory: [...state.reservationHistory, entry]
+            };
+        });
+
+        fetch('/api/reservations', {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id: reservation.id, status})
+        });
+    }
 }));
