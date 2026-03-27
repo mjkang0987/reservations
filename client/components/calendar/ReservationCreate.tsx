@@ -8,6 +8,7 @@ import {useCalendarStore} from '../../store/calendarStore';
 import type {CreateReservationInitial} from '../../store/calendarStore';
 
 import type {Reservation} from '../../utils/reservations';
+import {findOverlap} from '../../utils/reservations';
 import type {CustomerMap} from '../../utils/customers';
 
 import {
@@ -142,8 +143,7 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
         if (!form.endTime) return '종료 시간을 입력해주세요.';
         if (form.startTime >= form.endTime) return '시작 시간은 종료 시간보다 앞서야 합니다.';
 
-        const others = (reservationMap[form.date] ?? []).filter((r) => r.status !== 'cancelled' && r.status !== 'noshow');
-        const overlap = others.find((r) => form.startTime < r.endTime && form.endTime > r.startTime);
+        const overlap = findOverlap(reservationMap, form.date, form.startTime, form.endTime);
 
         if (overlap) {
             const name = customerMap[overlap.customerId]?.name ?? '-';
