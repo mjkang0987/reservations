@@ -8,6 +8,13 @@ import {useCalendarStore} from '../../store/calendarStore';
 
 import {getServiceColor} from '../../utils/services';
 
+import {
+    StyledOverlay,
+    StyledDetail,
+    StyledHeader,
+    StyledBody,
+} from './ModalStyles';
+
 import type {Reservation} from '../../utils/reservations';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -85,14 +92,14 @@ export const ReservationListModal = () => {
                                        role="dialog"
                                        aria-modal="true"
                                        aria-label="예약 목록">
-        <StyledModal onClick={(e) => e.stopPropagation()}>
+        <StyledListModal onClick={(e) => e.stopPropagation()}>
             <StyledHeader>
                 <h3>{title} 예약 ({reservations.length})</h3>
                 <button type="button"
                         onClick={handleClose}
                         aria-label="닫기">&#x2715;</button>
             </StyledHeader>
-            <StyledBody>
+            <StyledListBody>
                 {reservations.length === 0 ? (
                     <StyledEmpty>예약이 없습니다.</StyledEmpty>
                 ) : (
@@ -117,63 +124,17 @@ export const ReservationListModal = () => {
                         })}
                     </StyledList>
                 )}
-            </StyledBody>
-        </StyledModal>
+            </StyledListBody>
+        </StyledListModal>
     </StyledOverlay>, modalRoot);
 };
 
-const StyledOverlay = styled.div`
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background-color: rgba(0, 0, 0, 0.4);
-    box-sizing: border-box;
-`;
-
-const StyledModal = styled.div`
-    width: 100%;
+const StyledListModal = styled(StyledDetail)`
     max-width: 500px;
-    max-height: 80vh;
-    display: flex;
-    flex-direction: column;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
+    width: 100%;
 `;
 
-const StyledHeader = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--light-gray-color);
-
-    h3 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-    }
-
-    > button {
-        border: none;
-        background: none;
-        font-size: 16px;
-        cursor: pointer;
-        padding: 0;
-        line-height: 1;
-        color: var(--gray-color);
-    }
-`;
-
-const StyledBody = styled.div`
-    flex: 1;
-    overflow-y: auto;
+const StyledListBody = styled(StyledBody)`
     padding: 12px;
 `;
 
