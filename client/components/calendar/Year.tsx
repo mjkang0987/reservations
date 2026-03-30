@@ -87,6 +87,7 @@ const StyledMonthHeader = styled.div`
 
 const StyledMonth = styled.li`
     overflow-y: auto;
+    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
     align-self: stretch;

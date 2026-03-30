@@ -83,6 +83,7 @@ const StyledDate = styled.li<{ type: string }>`
     padding: 5px;
     text-align: center;
     overflow-y: auto;
+    overscroll-behavior: contain;
     border-right: 1px solid var(--light-gray-color);
     border-top: 1px solid var(--light-gray-color);
 
