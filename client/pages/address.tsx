@@ -330,6 +330,7 @@ const StyledSection = styled.section`
     flex-direction: column;
     min-height: 100%;
     overflow-y: auto;
+    overscroll-behavior: contain;
     box-sizing: border-box;
 `;
 
