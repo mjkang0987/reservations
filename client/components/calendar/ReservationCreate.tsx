@@ -277,6 +277,7 @@ const StyledSuggestionList = styled.ul`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   max-height: 160px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 `;
 
 const StyledSuggestionItem = styled.li`

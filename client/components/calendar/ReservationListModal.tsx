@@ -154,7 +154,8 @@ const StyledListModal = styled(StyledDetail)`
 `;
 
 const StyledListBody = styled(StyledBody)`
-    padding: 12px;
+    padding: 0 12px;
+    overscroll-behavior: contain;
 `;
 
 const StyledEmpty = styled.p`
@@ -180,7 +181,7 @@ const StyledDateTitle = styled.div`
     position: sticky;
     top: 0;
     z-index: 1;
-    padding: 6px 10px;
+    padding: 12px 10px;
     background-color: var(--white-color);
     border-bottom: 1px solid var(--light-gray-color);
     font-size: 12px;
