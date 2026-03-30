@@ -29,6 +29,8 @@ import {ButtonText} from './common/ButtonText';
 export default function LayoutComponent({children}: NodeType) {
     const router = useRouter();
 
+    const isLoginPage = router.pathname === '/login';
+
     const [loading, setLoading] = useState(false);
     const aside = useCalendarStore((s) => s.aside);
     const setAside = useCalendarStore((s) => s.setAside);
@@ -144,6 +146,9 @@ export default function LayoutComponent({children}: NodeType) {
         });
     }, [currValue, view]);
 
+    if (isLoginPage) {
+        return <>{children}</>;
+    }
 
     return (<StyledWrapper onClick={(e: React.MouseEvent) => closeModal(e)}>
             {!loading && <Icon iconType="loading"/>}

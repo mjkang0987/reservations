@@ -3,6 +3,8 @@ import type {NextApiRequest, NextApiResponse} from 'next';
 import fs from 'fs';
 import path from 'path';
 
+import {auth} from '../../auth';
+
 import type {Reservation, ReservationHistoryEntry, ReservationStatus} from '../../utils/reservations';
 
 interface ReservationData {
@@ -21,7 +23,13 @@ function writeData(data: ReservationData): void {
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 4), 'utf-8');
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    const session = await auth(req, res);
+
+    if (!session) {
+        return res.status(401).json({error: 'Unauthorized'});
+    }
+
     if (req.method === 'GET') {
         const data = readData();
         return res.status(200).json(data);

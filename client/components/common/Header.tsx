@@ -1,5 +1,7 @@
 import styled from 'styled-components';
 
+import {useSession, signOut} from 'next-auth/react';
+
 import {useCalendarStore} from '../../store/calendarStore';
 
 import {CalendarDirection} from '../calendar/CalendarDirection';
@@ -8,6 +10,7 @@ import {Icon} from './Icons';
 import {ButtonText} from './ButtonText';
 
 export const Header = () => {
+    const {data: session} = useSession();
     const aside = useCalendarStore((s) => s.aside);
     const setAside = useCalendarStore((s) => s.setAside);
     const currValue = useCalendarStore((s) => s.target);
@@ -22,6 +25,14 @@ export const Header = () => {
                 <CalendarDirection/>
                 <CalendarHeading/>
             </>}
+            {session?.user && (
+                <StyledUserArea>
+                    <StyledUserName>{session.user.name}</StyledUserName>
+                    <StyledLogoutButton type="button" onClick={() => signOut({callbackUrl: '/login'})}>
+                        로그아웃
+                    </StyledLogoutButton>
+                </StyledUserArea>
+            )}
         </StyledHeader>
     );
 };
@@ -45,5 +56,31 @@ const StyledButton = styled.button`
 
   &:hover {
     background-color: rgba(0, 0, 0, .1);
+  }
+`;
+
+const StyledUserArea = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+`;
+
+const StyledUserName = styled.span`
+  font-size: var(--small-font);
+  color: #555;
+`;
+
+const StyledLogoutButton = styled.button`
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  font-size: var(--small-font);
+  color: #555;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #f5f5f5;
   }
 `;
