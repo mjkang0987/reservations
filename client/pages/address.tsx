@@ -7,7 +7,14 @@ import Head from 'next/head';
 import styled from 'styled-components';
 
 import type {Customer} from '../utils/customers';
-import type {Reservation} from '../utils/reservations';
+import {toCustomerMap} from '../utils/customers';
+import type {Reservation, ReservationHistoryEntry} from '../utils/reservations';
+import {groupByDate} from '../utils/reservations';
+
+import {ReservationDetail} from '../components/calendar/ReservationDetail';
+import {CustomerDetail} from '../components/calendar/CustomerDetail';
+
+import {useCalendarStore} from '../store/calendarStore';
 
 import customersData from './api/customers.json';
 import {InputWrap} from "../components/common/Input";
@@ -15,6 +22,7 @@ import {InputWrap} from "../components/common/Input";
 type AddressProps = {
     customers: Customer[];
     reservations: Reservation[];
+    history: ReservationHistoryEntry[];
 };
 
 const RESERVATION_ITEM_HEIGHT = 40;
@@ -36,11 +44,15 @@ const TAG_COLORS = [
     '#E91E8C',
 ];
 
-const Address: NextPage<AddressProps> = ({customers, reservations}) => {
+const Address: NextPage<AddressProps> = ({customers, reservations, history}) => {
+    const selectedCustomerId = useCalendarStore((s) => s.selectedCustomerId);
+    const setSelectedCustomerId = useCalendarStore((s) => s.setSelectedCustomerId);
+
     const [tags, setTags] = useState<Record<number, Tag[]>>({});
     const [editingId, setEditingId] = useState<number | null>(null);
     const [tagInput, setTagInput] = useState('');
     const [selectedColor, setSelectedColor] = useState(TAG_COLORS[0]);
+    const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
 
     const [searchInput, setSearchInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -65,6 +77,9 @@ const Address: NextPage<AddressProps> = ({customers, reservations}) => {
             }, 300);
         }
     }, []);
+
+    const customerMap = useMemo(() => toCustomerMap(customers), [customers]);
+    const reservationMap = useMemo(() => groupByDate(reservations), [reservations]);
 
     const reservationsByCustomer = useMemo(() => {
         const map: Record<number, Reservation[]> = {};
@@ -266,7 +281,8 @@ const Address: NextPage<AddressProps> = ({customers, reservations}) => {
                                                 <StyledReservationScroll $count={customerReservations.length}>
                                                     <dl>
                                                         {customerReservations.map((r) => (
-                                                            <StyledReservationItem key={r.id}>
+                                                            <StyledReservationItem key={r.id}
+                                                                                   onClick={() => setSelectedReservation(r)}>
                                                                 <dt className="a11y">예약정보</dt>
                                                                 <dd>
                                                                     <time dateTime={r.date}>{r.date}</time>
@@ -304,6 +320,22 @@ const Address: NextPage<AddressProps> = ({customers, reservations}) => {
                     </StyledItems>
                 )}
             </StyledGrid>
+            {selectedReservation && <ReservationDetail reservation={selectedReservation}
+                                                       customerMap={customerMap}
+                                                       reservationMap={reservationMap}
+                                                       history={history}
+                                                       onClose={() => setSelectedReservation(null)}
+                                                       onCustomerClick={(customerId) => {
+                                                           setSelectedReservation(null);
+                                                           setSelectedCustomerId(customerId);
+                                                       }}
+                                                       onUpdate={(prev, updated) => setSelectedReservation(updated)}
+                                                       onCancel={() => setSelectedReservation(null)}/>}
+            {selectedCustomerId !== null && customerMap[selectedCustomerId] && (
+                <CustomerDetail customer={customerMap[selectedCustomerId]}
+                                reservationMap={reservationMap}
+                                onClose={() => setSelectedCustomerId(null)}/>
+            )}
         </StyledSection>
     );
 };
@@ -319,7 +351,8 @@ export const getServerSideProps: GetServerSideProps<AddressProps> = async () => 
     return {
         props: {
             customers: customersData.customers,
-            reservations: data.reservations
+            reservations: data.reservations,
+            history: data.history ?? []
         }
     };
 };
@@ -367,6 +400,10 @@ const StyledHeaderRow = styled.div`
     font-weight: 600;
     color: var(--dark-gray-color);
     z-index: 1;
+
+    @media (max-width: 600px) {
+        display: none;
+    }
 `;
 
 const StyledItems = styled.ul`
@@ -428,25 +465,39 @@ const StyledSummary = styled.summary`
         transition: transform 0.15s ease;
     }
 
-    > span:first-child {
+    > strong {
         font-size: var(--font);
         font-weight: 500;
     }
 
-    > span:nth-child(2) {
+    > span:first-of-type {
         font-size: var(--small-font);
         color: var(--dark-gray-color);
     }
 
-    > span:nth-child(3) {
+    > span:nth-of-type(2) {
         font-size: var(--small-font);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    &:hover > span:first-child {
+    &:hover > strong {
         color: var(--blue-color);
+    }
+
+    @media (max-width: 600px) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 10px;
+
+        > strong {
+            min-width: 60px;
+        }
+
+        > span:nth-of-type(2) {
+            width: 100%;
+        }
     }
 `;
 
@@ -460,6 +511,7 @@ const STATUS_COLORS: Record<string, string> = {
 const StyledStatusCounts = styled.div`
     display: flex;
     gap: 4px;
+    flex-wrap: wrap;
 `;
 
 const StyledStatusBadge = styled.span<{ $type: string }>`
@@ -596,18 +648,23 @@ const StyledReservationScroll = styled.div<{ $count: number }>`
 `;
 
 const StyledReservationItem = styled.div`
-    display: grid;
-    grid-template-columns: 110px 120px 1fr auto;
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
     align-items: center;
-    height: ${RESERVATION_ITEM_HEIGHT}px;
-    padding: 0 10px;
+    min-height: ${RESERVATION_ITEM_HEIGHT}px;
+    padding: 6px 10px;
     font-size: var(--small-font);
     box-sizing: border-box;
     border-bottom: 1px solid var(--light-gray-color);
+    cursor: pointer;
 
     &:last-child {
         border-bottom: none;
+    }
+
+    &:hover {
+        background-color: var(--black-color-10);
     }
 
     dt {
@@ -625,6 +682,7 @@ const StyledReservationItem = styled.div`
 
     dd:last-child {
         font-weight: 500;
+        margin-left: auto;
     }
 `;
 
