@@ -1,10 +1,20 @@
 import NextAuth from 'next-auth';
+import type {Provider} from 'next-auth/providers';
 import Google from 'next-auth/providers/google';
 import Kakao from 'next-auth/providers/kakao';
 import Naver from 'next-auth/providers/naver';
 
+const providers: Provider[] = [];
+
+if (process.env.AUTH_GOOGLE_ID && !process.env.AUTH_GOOGLE_ID.startsWith('REPLACE'))
+    providers.push(Google);
+if (process.env.AUTH_KAKAO_ID && !process.env.AUTH_KAKAO_ID.startsWith('REPLACE'))
+    providers.push(Kakao);
+if (process.env.AUTH_NAVER_ID && !process.env.AUTH_NAVER_ID.startsWith('REPLACE'))
+    providers.push(Naver);
+
 export const {handlers, auth, signIn, signOut} = NextAuth({
-    providers: [Google, Kakao, Naver],
+    providers,
     session: {
         strategy: 'jwt'
     },
@@ -12,8 +22,8 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
         signIn: '/login'
     },
     callbacks: {
-        authorized({auth}) {
-            return !!auth?.user;
+        authorized() {
+            return true;
         },
         jwt({token, account}) {
             if (account) {
