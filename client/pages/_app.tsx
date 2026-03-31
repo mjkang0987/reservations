@@ -17,7 +17,7 @@ function App({Component, pageProps: {session, ...pageProps}}: AppProps) {
     return (
         <SessionProvider session={session}>
             <Head>
-                <title>RESERVATION</title>
+                <title>Chairtime</title>
             </Head>
             <GlobalStyle/>
             <LayoutComponent>

@@ -23,7 +23,7 @@ export default function LoginPage() {
     return (
         <StyledWrapper>
             <StyledCard>
-                <StyledTitle>RESERVATION</StyledTitle>
+                <StyledTitle>Chairtime</StyledTitle>
                 <StyledSubtitle>SNS 계정으로 로그인</StyledSubtitle>
                 <StyledButtonGroup>
                     <StyledButton
