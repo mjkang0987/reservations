@@ -68,7 +68,7 @@ const StyledPanel = styled.div`
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     max-height: 60vh;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
     min-width: 180px;
 `;
 

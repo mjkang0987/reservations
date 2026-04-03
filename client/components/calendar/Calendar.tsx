@@ -46,7 +46,7 @@ const StyledDaysWrap = styled.div <DaysType>`
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
 
   > div {
     grid-row: 2 / 3;

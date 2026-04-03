@@ -64,7 +64,7 @@ const StyledList = styled.ul<{ $variant: 'date' | 'month' }>`
     min-height: 0;
     ${(props) => props.$variant === 'date' ? '' : 'width: 100%;'}
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
     box-sizing: border-box;
 `;
 

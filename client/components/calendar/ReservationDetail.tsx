@@ -706,7 +706,7 @@ const StyledHistoryDetailList = styled.div`
   gap: 10px;
   max-height: 320px;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
 `;
 
 const HISTORY_ITEM_STYLES: Record<string, { bg: string; border: string }> = {

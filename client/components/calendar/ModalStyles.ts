@@ -50,7 +50,7 @@ export const StyledHeader = styled.div`
 export const StyledBody = styled.div`
   flex: 1;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   padding: 8px;
 `;
 

@@ -120,7 +120,7 @@ const StyledInfo = styled.div`
 const StyledReservationSection = styled.div`
   padding: 12px 16px;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   flex: 1;
 
   h4 {

@@ -83,7 +83,7 @@ export const StyledServiceArea = styled.div`
 export const StyledServiceList = styled.div`
   max-height: 200px;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   border: 1px solid var(--light-gray-color);
   border-radius: var(--radius-sm);
   display: flex;

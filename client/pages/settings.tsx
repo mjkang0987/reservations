@@ -653,7 +653,7 @@ const StyledContent = styled.div`
     flex-direction: column;
     padding: 0 10px 20px;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
 `;
 
 const StyledCardBody = styled.div`
@@ -780,7 +780,7 @@ const StyledEmpty = styled.div`
 
 const StyledServiceBody = styled.div`
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
     padding: 8px 0;
 `;
 
@@ -1045,7 +1045,7 @@ const StyledAddActions = styled.div`
 
 const StyledDesignerBody = styled.div`
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
     padding: 8px 0;
     display: flex;
     flex-direction: column;

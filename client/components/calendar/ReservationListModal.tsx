@@ -161,7 +161,7 @@ const StyledListModal = styled(StyledDetail)`
 
 const StyledListBody = styled(StyledBody)`
     padding: 0 12px;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
 `;
 
 const StyledEmpty = styled.p`

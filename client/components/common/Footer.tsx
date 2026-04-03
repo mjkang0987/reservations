@@ -199,7 +199,7 @@ const StyledSearchInput = styled.input`
 const StyledResultList = styled.ul`
   flex: 1;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   padding: 4px 0;
   list-style: none;
 `;
