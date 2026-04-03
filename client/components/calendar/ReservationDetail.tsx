@@ -8,6 +8,7 @@ import {useCalendarStore} from '../../store/calendarStore';
 import type {Reservation, ReservationHistoryEntry, ReservationMap, ReservationStatus} from '../../utils/reservations';
 import {findOverlap} from '../../utils/reservations';
 import type {CustomerMap} from '../../utils/customers';
+import {splitDesignersByStatus} from '../../utils/designers';
 import {
     parseServiceString,
     joinServiceNames,
@@ -156,6 +157,8 @@ const formatTimestamp = (iso: string) => {
 export const ReservationDetail = ({reservation, customerMap, reservationMap, history, onClose, onCustomerClick, onUpdate, onCancel}: ReservationDetailProps) => {
     const customer = customerMap[reservation.customerId];
     const designers = useCalendarStore((s) => s.designers);
+    const {active: activeDesigners, onLeave: onLeaveDesigners, resigned: resignedDesigners} = splitDesignersByStatus(designers);
+    const selectableDesigners = [...activeDesigners, ...onLeaveDesigners, ...resignedDesigners];
     const designerNameMap = designers.reduce<Record<number, string>>((acc, designer) => {
         acc[designer.id] = designer.name;
         return acc;
@@ -164,7 +167,7 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
 
     const [mode, setMode] = useState<Mode>('view');
     const initialPrice = reservation.price ?? sumPrice(parseServiceString(reservation.service));
-    const initialDesignerId = reservation.designerId ?? (designers[0]?.id ?? 0);
+    const initialDesignerId = reservation.designerId ?? (selectableDesigners[0]?.id ?? 0);
     const [form, setForm] = useState<FormState>({
         date: reservation.date,
         startTime: reservation.startTime,
@@ -246,7 +249,7 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
     };
 
     const validateForm = (): string => {
-        if (designers.length > 0 && !form.designerId) return '디자이너를 선택해주세요.';
+        if (selectableDesigners.length > 0 && !form.designerId) return '디자이너를 선택해주세요.';
         if (!form.service.trim()) return '시술을 선택해주세요.';
         if (!form.date) return '날짜를 선택해주세요.';
         if (!form.startTime) return '시작 시간을 입력해주세요.';
@@ -403,20 +406,35 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
                                 <StyledPriceUnit>원</StyledPriceUnit>
                             </StyledPriceRow>
                         </label>
-                        <label htmlFor="edit-designer">
-                            <span>디자이너</span>
-                            <select id="edit-designer"
-                                    value={form.designerId}
-                                    onChange={(e) => {
-                                        setForm((prev) => ({...prev, designerId: Number(e.target.value)}));
-                                        setError('');
-                                    }}>
-                                {designers.length === 0 && <option value={0}>디자이너 없음</option>}
-                                {designers.map((designer) => (
-                                    <option key={designer.id} value={designer.id}>{designer.name}</option>
-                                ))}
-                            </select>
-                        </label>
+                        {selectableDesigners.length > 0 && (
+                            <label htmlFor="edit-designer">
+                                <span>디자이너</span>
+                                <select id="edit-designer"
+                                        value={form.designerId}
+                                        onChange={(e) => {
+                                            setForm((prev) => ({...prev, designerId: Number(e.target.value)}));
+                                            setError('');
+                                        }}>
+                                    {activeDesigners.map((designer) => (
+                                        <option key={designer.id} value={designer.id}>{designer.name}</option>
+                                    ))}
+                                    {onLeaveDesigners.length > 0 && (
+                                        <optgroup label="휴직자">
+                                            {onLeaveDesigners.map((designer) => (
+                                                <option key={designer.id} value={designer.id}>{designer.name}</option>
+                                            ))}
+                                        </optgroup>
+                                    )}
+                                    {resignedDesigners.length > 0 && (
+                                        <optgroup label="퇴직자">
+                                            {resignedDesigners.map((designer) => (
+                                                <option key={designer.id} value={designer.id}>{designer.name}</option>
+                                            ))}
+                                        </optgroup>
+                                    )}
+                                </select>
+                            </label>
+                        )}
                         <label htmlFor="edit-date">
                             <span>날짜</span>
                             <input id="edit-date"

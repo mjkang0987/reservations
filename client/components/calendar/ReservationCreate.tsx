@@ -10,6 +10,7 @@ import type {CreateReservationInitial} from '../../store/calendarStore';
 import type {Reservation} from '../../utils/reservations';
 import {findOverlap} from '../../utils/reservations';
 import type {CustomerMap} from '../../utils/customers';
+import {splitDesignersByStatus} from '../../utils/designers';
 
 import {
     joinServiceNames,
@@ -46,6 +47,8 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
     const reservationMap = useCalendarStore((s) => s.reservationMap);
     const designers = useCalendarStore((s) => s.designers);
     const modalRoot = document.getElementById('modal-root');
+    const {active: activeDesigners, onLeave: onLeaveDesigners, resigned: resignedDesigners} = splitDesignersByStatus(designers);
+    const selectableDesigners = [...activeDesigners, ...onLeaveDesigners, ...resignedDesigners];
 
     const customers = Object.values(customerMap);
 
@@ -53,7 +56,7 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
     const [customerQuery, setCustomerQuery] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
     const blurTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-    const [designerId, setDesignerId] = useState<number>(designers[0]?.id ?? 0);
+    const [designerId, setDesignerId] = useState<number>(selectableDesigners[0]?.id ?? 0);
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [price, setPrice] = useState(0);
     const [isPriceManual, setIsPriceManual] = useState(false);
@@ -73,10 +76,10 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
         : customers;
 
     useEffect(() => {
-        if (designerId === 0 && designers.length > 0) {
-            setDesignerId(designers[0].id);
+        if (designerId === 0 && selectableDesigners.length > 0) {
+            setDesignerId(selectableDesigners[0].id);
         }
-    }, [designerId, designers]);
+    }, [designerId, selectableDesigners]);
 
     const handleCustomerSelect = (id: number) => {
         const c = customerMap[id];
@@ -156,7 +159,7 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
     };
 
     const validate = (): string => {
-        if (designers.length > 0 && !designerId) return '디자이너를 선택해주세요.';
+        if (selectableDesigners.length > 0 && !designerId) return '디자이너를 선택해주세요.';
         if (!customerId) return '고객을 선택해주세요.';
         if (selectedServices.length === 0) return '시술을 선택해주세요.';
         if (!form.date) return '날짜를 선택해주세요.';
@@ -242,20 +245,35 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
                             </StyledSuggestionList>
                         )}
                     </StyledAutocomplete>
-                    <label htmlFor="create-designer">
-                        <strong>디자이너</strong>
-                        <select id="create-designer"
-                                value={designerId}
-                                onChange={(e) => {
-                                    setDesignerId(Number(e.target.value));
-                                    setError('');
-                                }}>
-                            {designers.length === 0 && <option value={0}>디자이너 없음</option>}
-                            {designers.map((designer) => (
-                                <option key={designer.id} value={designer.id}>{designer.name}</option>
-                            ))}
-                        </select>
-                    </label>
+                    {selectableDesigners.length > 0 && (
+                        <label htmlFor="create-designer">
+                            <strong>디자이너</strong>
+                            <select id="create-designer"
+                                    value={designerId}
+                                    onChange={(e) => {
+                                        setDesignerId(Number(e.target.value));
+                                        setError('');
+                                    }}>
+                                {activeDesigners.map((designer) => (
+                                    <option key={designer.id} value={designer.id}>{designer.name}</option>
+                                ))}
+                                {onLeaveDesigners.length > 0 && (
+                                    <optgroup label="휴직자">
+                                        {onLeaveDesigners.map((designer) => (
+                                            <option key={designer.id} value={designer.id}>{designer.name}</option>
+                                        ))}
+                                    </optgroup>
+                                )}
+                                {resignedDesigners.length > 0 && (
+                                    <optgroup label="퇴직자">
+                                        {resignedDesigners.map((designer) => (
+                                            <option key={designer.id} value={designer.id}>{designer.name}</option>
+                                        ))}
+                                    </optgroup>
+                                )}
+                            </select>
+                        </label>
+                    )}
                     <StyledFieldRow role="group" aria-labelledby="create-service-label">
                         <strong id="create-service-label">시술</strong>
                         <ServiceFields idPrefix="create"
