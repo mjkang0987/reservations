@@ -3,6 +3,7 @@ import {useState} from 'react';
 import {createPortal} from 'react-dom';
 
 import styled from 'styled-components';
+import {useCalendarStore} from '../../store/calendarStore';
 
 import type {Reservation, ReservationHistoryEntry, ReservationMap, ReservationStatus} from '../../utils/reservations';
 import {findOverlap} from '../../utils/reservations';
@@ -53,23 +54,34 @@ interface FormState {
     startTime: string;
     endTime: string;
     service: string;
+    designerId: number;
     price: number;
 }
 
 const FIELD_LABELS: Record<keyof FormState, string> = {
     service: '시술',
+    designerId: '디자이너',
     date: '날짜',
     startTime: '시작시간',
     endTime: '종료시간',
     price: '가격'
 };
 
-const getChangedFields = (before: Reservation, after: FormState) => {
+const getChangedFields = (before: Reservation, after: FormState, designerNameMap: Record<number, string>) => {
     const fields: { label: string; before: string; after: string }[] = [];
     const beforePrice = before.price ?? sumPrice(parseServiceString(before.service));
 
     (Object.keys(FIELD_LABELS) as (keyof FormState)[]).forEach((key) => {
-        if (key === 'price') {
+        if (key === 'designerId') {
+            const beforeDesignerId = before.designerId ?? 0;
+            if (beforeDesignerId !== after.designerId) {
+                fields.push({
+                    label: FIELD_LABELS[key],
+                    before: designerNameMap[beforeDesignerId] ?? '-',
+                    after: designerNameMap[after.designerId] ?? '-'
+                });
+            }
+        } else if (key === 'price') {
             if (beforePrice !== after.price) {
                 fields.push({
                     label: FIELD_LABELS[key],
@@ -89,7 +101,7 @@ const getChangedFields = (before: Reservation, after: FormState) => {
     return fields;
 };
 
-const getHistoryDiffs = (entry: ReservationHistoryEntry) => {
+const getHistoryDiffs = (entry: ReservationHistoryEntry, designerNameMap: Record<number, string>) => {
     const diffs: { label: string; before: string; after: string }[] = [];
 
     if (entry.after.status === 'cancelled' && entry.before.status !== 'cancelled') {
@@ -103,7 +115,17 @@ const getHistoryDiffs = (entry: ReservationHistoryEntry) => {
     }
 
     (Object.keys(FIELD_LABELS) as (keyof FormState)[]).forEach((key) => {
-        if (key === 'price') {
+        if (key === 'designerId') {
+            const beforeDesignerId = entry.before.designerId ?? 0;
+            const afterDesignerId = entry.after.designerId ?? 0;
+            if (beforeDesignerId !== afterDesignerId) {
+                diffs.push({
+                    label: FIELD_LABELS[key],
+                    before: designerNameMap[beforeDesignerId] ?? '-',
+                    after: designerNameMap[afterDesignerId] ?? '-'
+                });
+            }
+        } else if (key === 'price') {
             const beforePrice = entry.before.price ?? sumPrice(parseServiceString(entry.before.service));
             const afterPrice = entry.after.price ?? sumPrice(parseServiceString(entry.after.service));
             if (beforePrice !== afterPrice) {
@@ -133,15 +155,22 @@ const formatTimestamp = (iso: string) => {
 
 export const ReservationDetail = ({reservation, customerMap, reservationMap, history, onClose, onCustomerClick, onUpdate, onCancel}: ReservationDetailProps) => {
     const customer = customerMap[reservation.customerId];
+    const designers = useCalendarStore((s) => s.designers);
+    const designerNameMap = designers.reduce<Record<number, string>>((acc, designer) => {
+        acc[designer.id] = designer.name;
+        return acc;
+    }, {});
     const modalRoot = document.getElementById('modal-root');
 
     const [mode, setMode] = useState<Mode>('view');
     const initialPrice = reservation.price ?? sumPrice(parseServiceString(reservation.service));
+    const initialDesignerId = reservation.designerId ?? (designers[0]?.id ?? 0);
     const [form, setForm] = useState<FormState>({
         date: reservation.date,
         startTime: reservation.startTime,
         endTime: reservation.endTime,
         service: reservation.service,
+        designerId: initialDesignerId,
         price: initialPrice
     });
     const [error, setError] = useState('');
@@ -151,11 +180,12 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
     const [isEndTimeManual, setIsEndTimeManual] = useState(false);
     const [isPriceManual, setIsPriceManual] = useState(false);
 
-    const changedFields = getChangedFields(reservation, form);
+    const changedFields = getChangedFields(reservation, form, designerNameMap);
     const thisHistory = history.filter((h) => h.reservationId === reservation.id);
     const totalDuration = sumDurationMinutes(selectedServices);
     const totalPrice = sumPrice(selectedServices);
     const displayPrice = reservation.price ?? sumPrice(parseServiceString(reservation.service));
+    const displayDesignerName = reservation.designerId ? (designerNameMap[reservation.designerId] ?? '-') : '-';
 
     const handleChange = (field: keyof FormState, value: string) => {
         setForm((prev) => ({...prev, [field]: value}));
@@ -216,6 +246,7 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
     };
 
     const validateForm = (): string => {
+        if (designers.length > 0 && !form.designerId) return '디자이너를 선택해주세요.';
         if (!form.service.trim()) return '시술을 선택해주세요.';
         if (!form.date) return '날짜를 선택해주세요.';
         if (!form.startTime) return '시작 시간을 입력해주세요.';
@@ -267,6 +298,7 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
             startTime: reservation.startTime,
             endTime: reservation.endTime,
             service: reservation.service,
+            designerId: initialDesignerId,
             price: initialPrice
         });
         setSelectedServices(parseServiceString(reservation.service));
@@ -329,6 +361,8 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
                         </dd>
                         <dt>연락처</dt>
                         <dd>{customer?.tel ?? '-'}</dd>
+                        <dt>디자이너</dt>
+                        <dd>{displayDesignerName}</dd>
                     </dl>
                     {thisHistory.length > 0 && (
                         <StyledHistorySection>
@@ -368,6 +402,20 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
                                        }}/>
                                 <StyledPriceUnit>원</StyledPriceUnit>
                             </StyledPriceRow>
+                        </label>
+                        <label htmlFor="edit-designer">
+                            <span>디자이너</span>
+                            <select id="edit-designer"
+                                    value={form.designerId}
+                                    onChange={(e) => {
+                                        setForm((prev) => ({...prev, designerId: Number(e.target.value)}));
+                                        setError('');
+                                    }}>
+                                {designers.length === 0 && <option value={0}>디자이너 없음</option>}
+                                {designers.map((designer) => (
+                                    <option key={designer.id} value={designer.id}>{designer.name}</option>
+                                ))}
+                            </select>
                         </label>
                         <label htmlFor="edit-date">
                             <span>날짜</span>
@@ -487,7 +535,7 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
                 <StyledBody>
                     <StyledHistoryDetailList>
                         {[...thisHistory].reverse().map((entry, i) => {
-                            const diffs = getHistoryDiffs(entry);
+                            const diffs = getHistoryDiffs(entry, designerNameMap);
                             const isCancelEntry = entry.after.status === 'cancelled' && entry.before.status !== 'cancelled';
                             const isNoshowEntry = entry.after.status === 'noshow' && entry.before.status !== 'noshow';
                             const entryType = isCancelEntry ? 'cancelled' : isNoshowEntry ? 'noshow' : 'edit';
@@ -721,4 +769,3 @@ const StyledHistoryDiffGrid = styled(StyledDiffGrid)`
     gap: var(--gap-sm);
   }
 `;
-

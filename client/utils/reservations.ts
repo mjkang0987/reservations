@@ -7,6 +7,7 @@ export interface Reservation {
     endTime: string;
     service: string;
     customerId: number;
+    designerId?: number;
     status?: ReservationStatus;
     price?: number;
     memo?: string;
