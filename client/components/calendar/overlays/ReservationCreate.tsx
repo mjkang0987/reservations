@@ -16,7 +16,6 @@ import {
     joinServiceNames,
     sumDurationMinutes,
     sumPrice,
-    formatPrice,
     calcEndTime,
 } from '../../../utils/services';
 
@@ -25,16 +24,11 @@ import {
     StyledDetail,
     StyledHeader,
     StyledBody,
-    StyledForm,
-    StyledFieldRow,
     StyledError,
     StyledFooter,
     StyledActionButton,
-    StyledPriceRow,
-    StyledPriceUnit,
 } from './ModalStyles';
-
-import {ServiceFields} from '../service/ServiceFields';
+import {ReservationFormFields, type ReservationDetailFormState} from './ReservationDetailSections';
 
 interface ReservationCreateProps {
     initial: CreateReservationInitial;
@@ -58,14 +52,16 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
     const blurTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const [designerId, setDesignerId] = useState<number>(selectableDesigners[0]?.id ?? 0);
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
-    const [price, setPrice] = useState(0);
     const [isPriceManual, setIsPriceManual] = useState(false);
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<ReservationDetailFormState>({
         date: initial.date,
         startTime: initial.startTime,
         endTime: calcEndTime(initial.startTime, 30),
+        service: '',
+        designerId: selectableDesigners[0]?.id ?? 0,
+        price: 0,
+        memo: '',
     });
-    const [memo, setMemo] = useState('');
     const [isEndTimeManual, setIsEndTimeManual] = useState(false);
     const [error, setError] = useState('');
 
@@ -78,6 +74,7 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
     useEffect(() => {
         if (designerId === 0 && selectableDesigners.length > 0) {
             setDesignerId(selectableDesigners[0].id);
+            setForm((prev) => ({...prev, designerId: selectableDesigners[0].id}));
         }
     }, [designerId, selectableDesigners]);
 
@@ -138,10 +135,11 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
                 ? prev.filter((s) => s !== serviceName)
                 : [...prev, serviceName];
 
+            const nextService = joinServiceNames(next);
             const duration = sumDurationMinutes(next);
 
             setForm((f) => {
-                const updated = {...f};
+                const updated = {...f, service: nextService};
                 if (duration > 0) {
                     updated.endTime = calcEndTime(f.startTime, duration);
                 }
@@ -149,7 +147,7 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
             });
 
             if (!isPriceManual) {
-                setPrice(sumPrice(next));
+                setForm((prev) => ({...prev, price: sumPrice(next)}));
             }
 
             setIsEndTimeManual(false);
@@ -189,12 +187,12 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
             date: form.date,
             startTime: form.startTime,
             endTime: form.endTime,
-            service: joinServiceNames(selectedServices),
+            service: form.service,
             customerId,
             ...(designerId ? {designerId} : {}),
             status: 'active',
-            price,
-            ...(memo.trim() && {memo: memo.trim()}),
+            price: form.price,
+            ...(form.memo.trim() && {memo: form.memo.trim()}),
         };
 
         onSave(reservation);
@@ -213,7 +211,7 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
             </StyledHeader>
 
             <StyledBody>
-                <StyledForm>
+                <StyledCreateForm>
                     <StyledAutocomplete>
                         <label htmlFor="create-customer">
                             <strong>고객</strong>
@@ -245,90 +243,37 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
                             </StyledSuggestionList>
                         )}
                     </StyledAutocomplete>
-                    {selectableDesigners.length > 0 && (
-                        <label htmlFor="create-designer">
-                            <strong>디자이너</strong>
-                            <select id="create-designer"
-                                    value={designerId}
-                                    onChange={(e) => {
-                                        setDesignerId(Number(e.target.value));
-                                        setError('');
-                                    }}>
-                                {activeDesigners.map((designer) => (
-                                    <option key={designer.id} value={designer.id}>{designer.name}</option>
-                                ))}
-                                {onLeaveDesigners.length > 0 && (
-                                    <optgroup label="휴직자">
-                                        {onLeaveDesigners.map((designer) => (
-                                            <option key={designer.id} value={designer.id}>{designer.name}</option>
-                                        ))}
-                                    </optgroup>
-                                )}
-                                {resignedDesigners.length > 0 && (
-                                    <optgroup label="퇴직자">
-                                        {resignedDesigners.map((designer) => (
-                                            <option key={designer.id} value={designer.id}>{designer.name}</option>
-                                        ))}
-                                    </optgroup>
-                                )}
-                            </select>
-                        </label>
-                    )}
-                    <StyledFieldRow role="group" aria-labelledby="create-service-label">
-                        <strong id="create-service-label">시술</strong>
-                        <ServiceFields idPrefix="create"
-                                       selectedServices={selectedServices}
-                                       onServiceToggle={handleServiceToggle}
-                                       totalDuration={totalDuration}
-                                       totalPrice={totalPrice}/>
-                    </StyledFieldRow>
-                    <label htmlFor="create-price">
-                        <strong>가격</strong>
-                        <StyledPriceRow>
-                            <input id="create-price"
-                                   type="text"
-                                   inputMode="numeric"
-                                   value={price.toLocaleString('ko-KR')}
-                                   onChange={(e) => {
-                                       const raw = e.target.value.replace(/[^0-9]/g, '');
-                                       const num = raw === '' ? 0 : parseInt(raw, 10);
-                                       setPrice(num);
-                                       setIsPriceManual(true);
-                                       setError('');
-                                   }}/>
-                            <StyledPriceUnit>원</StyledPriceUnit>
-                        </StyledPriceRow>
-                    </label>
-                    <label htmlFor="create-date">
-                        <strong>날짜</strong>
-                        <input id="create-date"
-                               type="date"
-                               value={form.date}
-                               onChange={(e) => { setForm((f) => ({...f, date: e.target.value})); setError(''); }}/>
-                    </label>
-                    <label htmlFor="create-startTime">
-                        <strong>시작</strong>
-                        <input id="create-startTime"
-                               type="time"
-                               value={form.startTime}
-                               onChange={(e) => handleStartTimeChange(e.target.value)}/>
-                    </label>
-                    <label htmlFor="create-endTime">
-                        <strong>종료</strong>
-                        <input id="create-endTime"
-                               type="time"
-                               value={form.endTime}
-                               onChange={(e) => handleEndTimeChange(e.target.value)}/>
-                    </label>
-                    <label htmlFor="create-memo">
-                        <strong>메모</strong>
-                        <StyledMemo id="create-memo"
-                                    placeholder="특이사항, 요청사항 등"
-                                    value={memo}
-                                    onChange={(e) => setMemo(e.target.value)}
-                                    rows={2}/>
-                    </label>
-                </StyledForm>
+                    <ReservationFormFields
+                        idPrefix="create"
+                        form={{...form, designerId}}
+                        selectableDesigners={selectableDesigners}
+                        activeDesigners={activeDesigners}
+                        onLeaveDesigners={onLeaveDesigners}
+                        resignedDesigners={resignedDesigners}
+                        selectedServices={selectedServices}
+                        totalDuration={totalDuration}
+                        totalPrice={totalPrice}
+                        onServiceToggle={handleServiceToggle}
+                        onPriceChange={(value) => {
+                            const raw = value.replace(/[^0-9]/g, '');
+                            const num = raw === '' ? 0 : parseInt(raw, 10);
+                            setForm((prev) => ({...prev, price: num}));
+                            setIsPriceManual(true);
+                            setError('');
+                        }}
+                        onDesignerChange={(nextDesignerId) => {
+                            setDesignerId(nextDesignerId);
+                            setForm((prev) => ({...prev, designerId: nextDesignerId}));
+                            setError('');
+                        }}
+                        onFieldChange={(field, value) => {
+                            setForm((prev) => ({...prev, [field]: value}));
+                            setError('');
+                        }}
+                        onStartTimeChange={handleStartTimeChange}
+                        onEndTimeChange={handleEndTimeChange}
+                    />
+                </StyledCreateForm>
                 {error && <StyledError>{error}</StyledError>}
             </StyledBody>
 
@@ -339,6 +284,12 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
         </StyledDetail>
     </StyledOverlay>, modalRoot);
 };
+
+const StyledCreateForm = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
 
 const StyledAutocomplete = styled.div`
   position: relative;
@@ -386,24 +337,4 @@ const StyledNoResult = styled.li`
   font-size: 12px;
   color: var(--gray-color);
   text-align: center;
-`;
-
-const StyledMemo = styled.textarea`
-  width: 100%;
-  padding: var(--gap-md);
-  border: 1px solid var(--light-gray-color);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-family: inherit;
-  resize: vertical;
-  box-sizing: border-box;
-  outline: none;
-
-  &:focus {
-    border-color: var(--blue-color);
-  }
-
-  &::placeholder {
-    color: var(--gray-color);
-  }
 `;

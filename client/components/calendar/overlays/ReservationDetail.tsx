@@ -62,7 +62,8 @@ const FIELD_LABELS: Record<keyof ReservationDetailFormState, string> = {
     date: '날짜',
     startTime: '시작시간',
     endTime: '종료시간',
-    price: '가격'
+    price: '가격',
+    memo: '메모'
 };
 
 const getChangedFields = (before: Reservation, after: ReservationDetailFormState, designerNameMap: Record<number, string>) => {
@@ -185,7 +186,8 @@ export const ReservationDetail = ({
         endTime: reservation.endTime,
         service: reservation.service,
         designerId: initialDesignerId,
-        price: initialPrice
+        price: initialPrice,
+        memo: reservation.memo ?? ''
     });
     const [error, setError] = useState('');
     const [selectedServices, setSelectedServices] = useState<string[]>(
@@ -313,7 +315,8 @@ export const ReservationDetail = ({
             endTime: reservation.endTime,
             service: reservation.service,
             designerId: initialDesignerId,
-            price: initialPrice
+            price: initialPrice,
+            memo: reservation.memo ?? ''
         });
         setSelectedServices(parseServiceString(reservation.service));
         setIsEndTimeManual(false);
