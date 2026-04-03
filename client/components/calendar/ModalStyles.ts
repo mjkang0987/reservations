@@ -12,8 +12,9 @@ export const StyledOverlay = styled.div`
   box-sizing: border-box;
 `;
 
-export const StyledDetail = styled.div`
-  width: 300px;
+export const StyledDetail = styled.div<{ $width?: number | string }>`
+  width: ${({$width = 400}) => typeof $width === 'number' ? `${$width}px` : $width};
+  max-width: 100%;
   max-height: 80vh;
   display: flex;
   flex-direction: column;  background-color: #fff;
@@ -43,7 +44,7 @@ export const StyledHeader = styled.div`
     cursor: pointer;
     padding: 0;
     line-height: 1;
-    color: var(--gray-color);
+    color: var(--dark-gray-color);
   }
 `;
 
@@ -71,7 +72,7 @@ export const StyledForm = styled.div`
         }
 
         input, select {
-            height: 32px;
+            height: 28px;
             padding: 0 8px;
             border: 1px solid var(--light-gray-color);
             border-radius: 4px;
@@ -185,8 +186,8 @@ export const StyledFooter = styled.div`
 `;
 
 export const StyledActionButton = styled.button<{ $primary?: boolean; $danger?: boolean; $warning?: boolean }>`
-  height: 32px;
-  padding: 0 16px;
+  min-height: 24px;
+  padding: 0 8px;
   border: 1px solid ${(props) => props.$danger ? '#c93a30' : props.$warning ? '#EA4335' : props.$primary ? 'var(--blue-color)' : 'var(--light-gray-color)'};
   border-radius: 4px;
   background-color: ${(props) => props.$danger ? '#c93a30' : props.$warning ? '#EA4335' : props.$primary ? 'var(--blue-color)' : 'var(--white-color)'};

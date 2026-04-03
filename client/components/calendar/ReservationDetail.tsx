@@ -2,7 +2,6 @@ import {useState} from 'react';
 
 import {createPortal} from 'react-dom';
 
-import styled from 'styled-components';
 import {useCalendarStore} from '../../store/calendarStore';
 
 import type {Reservation, ReservationHistoryEntry, ReservationMap, ReservationStatus} from '../../utils/reservations';
@@ -23,21 +22,28 @@ import {
     StyledDetail,
     StyledHeader,
     StyledBody,
-    StyledForm,
-    StyledFieldRow,
-    StyledError,
-    StyledFooter,
     StyledActionButton,
-    StyledPriceRow,
-    StyledPriceUnit,
-    StyledStatusBadge,
-    StyledModalMessage,
-    StyledDiffGrid,
 } from './ModalStyles';
+import {
+    ReservationDiffSection,
+    ReservationEditSection,
+    ReservationFooter,
+    ReservationHistoryLayer,
+    ReservationStaticDiffSection,
+    ReservationViewSection,
+    type ReservationDetailFormState,
+} from './ReservationDetailSections';
 
-import {ServiceFields} from './ServiceFields';
+type Mode = 'view' | 'editing' | 'confirming' | 'pastConfirm' | 'noChanges' | 'cancelling' | 'noshow';
 
-type Mode = 'view' | 'editing' | 'confirming' | 'pastConfirm' | 'noChanges' | 'cancelling' | 'noshow' | 'history';
+const MODE_LABELS: Partial<Record<Mode, string>> = {
+    editing: '예약 수정',
+    confirming: '변경 확인',
+    pastConfirm: '변경 확인',
+    noChanges: '알림',
+    cancelling: '예약 취소',
+    noshow: '노쇼 처리',
+};
 
 interface ReservationDetailProps {
     reservation: Reservation;
@@ -50,16 +56,7 @@ interface ReservationDetailProps {
     onCancel: (reservation: Reservation, status?: ReservationStatus) => void;
 }
 
-interface FormState {
-    date: string;
-    startTime: string;
-    endTime: string;
-    service: string;
-    designerId: number;
-    price: number;
-}
-
-const FIELD_LABELS: Record<keyof FormState, string> = {
+const FIELD_LABELS: Record<keyof ReservationDetailFormState, string> = {
     service: '시술',
     designerId: '디자이너',
     date: '날짜',
@@ -68,11 +65,11 @@ const FIELD_LABELS: Record<keyof FormState, string> = {
     price: '가격'
 };
 
-const getChangedFields = (before: Reservation, after: FormState, designerNameMap: Record<number, string>) => {
+const getChangedFields = (before: Reservation, after: ReservationDetailFormState, designerNameMap: Record<number, string>) => {
     const fields: { label: string; before: string; after: string }[] = [];
     const beforePrice = before.price ?? sumPrice(parseServiceString(before.service));
 
-    (Object.keys(FIELD_LABELS) as (keyof FormState)[]).forEach((key) => {
+    (Object.keys(FIELD_LABELS) as (keyof ReservationDetailFormState)[]).forEach((key) => {
         if (key === 'designerId') {
             const beforeDesignerId = before.designerId ?? 0;
             if (beforeDesignerId !== after.designerId) {
@@ -115,7 +112,7 @@ const getHistoryDiffs = (entry: ReservationHistoryEntry, designerNameMap: Record
         return diffs;
     }
 
-    (Object.keys(FIELD_LABELS) as (keyof FormState)[]).forEach((key) => {
+    (Object.keys(FIELD_LABELS) as (keyof ReservationDetailFormState)[]).forEach((key) => {
         if (key === 'designerId') {
             const beforeDesignerId = entry.before.designerId ?? 0;
             const afterDesignerId = entry.after.designerId ?? 0;
@@ -154,10 +151,23 @@ const formatTimestamp = (iso: string) => {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-export const ReservationDetail = ({reservation, customerMap, reservationMap, history, onClose, onCustomerClick, onUpdate, onCancel}: ReservationDetailProps) => {
+export const ReservationDetail = ({
+                                      reservation,
+                                      customerMap,
+                                      reservationMap,
+                                      history,
+                                      onClose,
+                                      onCustomerClick,
+                                      onUpdate,
+                                      onCancel
+                                  }: ReservationDetailProps) => {
     const customer = customerMap[reservation.customerId];
     const designers = useCalendarStore((s) => s.designers);
-    const {active: activeDesigners, onLeave: onLeaveDesigners, resigned: resignedDesigners} = splitDesignersByStatus(designers);
+    const {
+        active: activeDesigners,
+        onLeave: onLeaveDesigners,
+        resigned: resignedDesigners
+    } = splitDesignersByStatus(designers);
     const selectableDesigners = [...activeDesigners, ...onLeaveDesigners, ...resignedDesigners];
     const designerNameMap = designers.reduce<Record<number, string>>((acc, designer) => {
         acc[designer.id] = designer.name;
@@ -166,9 +176,10 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
     const modalRoot = document.getElementById('modal-root');
 
     const [mode, setMode] = useState<Mode>('view');
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const initialPrice = reservation.price ?? sumPrice(parseServiceString(reservation.service));
     const initialDesignerId = reservation.designerId ?? (selectableDesigners[0]?.id ?? 0);
-    const [form, setForm] = useState<FormState>({
+    const [form, setForm] = useState<ReservationDetailFormState>({
         date: reservation.date,
         startTime: reservation.startTime,
         endTime: reservation.endTime,
@@ -190,7 +201,7 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
     const displayPrice = reservation.price ?? sumPrice(parseServiceString(reservation.service));
     const displayDesignerName = reservation.designerId ? (designerNameMap[reservation.designerId] ?? '-') : '-';
 
-    const handleChange = (field: keyof FormState, value: string) => {
+    const handleChange = (field: keyof ReservationDetailFormState, value: string) => {
         setForm((prev) => ({...prev, [field]: value}));
         setError('');
     };
@@ -307,16 +318,20 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
         setSelectedServices(parseServiceString(reservation.service));
         setIsEndTimeManual(false);
         setIsPriceManual(false);
+        setIsHistoryOpen(false);
         setMode('view');
     };
 
     const handleBack = () => {
+        if (isHistoryOpen) {
+            setIsHistoryOpen(false);
+            return;
+        }
+
         if (mode === 'confirming' || mode === 'pastConfirm' || mode === 'noChanges') {
             setMode('editing');
         } else if (mode === 'editing' || mode === 'cancelling' || mode === 'noshow') {
             handleCancel();
-        } else if (mode === 'history') {
-            setMode('view');
         } else {
             onClose();
         }
@@ -325,465 +340,187 @@ export const ReservationDetail = ({reservation, customerMap, reservationMap, his
     const isCancelled = reservation.status === 'cancelled';
     const isNoshow = reservation.status === 'noshow';
     const isInactive = isCancelled || isNoshow;
+    const dialogLabel = MODE_LABELS[mode] ?? '예약 상세';
+    const dialogTitle = MODE_LABELS[mode] ?? `${reservation.service} - ${customer?.name}`;
+    const footerActions = mode === 'view'
+        ? (!isInactive ? (
+            <>
+                <StyledActionButton type="button"
+                                    $danger
+                                    onClick={() => setMode('cancelling')}>예약취소</StyledActionButton>
+                <StyledActionButton type="button"
+                                    $warning
+                                    onClick={() => setMode('noshow')}>노쇼</StyledActionButton>
+                <StyledActionButton type="button"
+                                    $primary
+                                    onClick={() => setMode('editing')}>수정</StyledActionButton>
+            </>
+        ) : null)
+        : mode === 'editing'
+            ? (
+                <>
+                    <StyledActionButton type="button"
+                                        onClick={handleCancel}>취소</StyledActionButton>
+                    <StyledActionButton type="button"
+                                        $primary
+                                        onClick={handleConfirmRequest}>저장</StyledActionButton>
+                </>
+            )
+            : mode === 'confirming'
+                ? (
+                    <>
+                        <StyledActionButton type="button"
+                                            onClick={() => setMode('editing')}>돌아가기</StyledActionButton>
+                        <StyledActionButton type="button"
+                                            $primary
+                                            onClick={handleConfirmSave}>확인</StyledActionButton>
+                    </>
+                )
+                : mode === 'noChanges'
+                    ? (
+                        <StyledActionButton type="button"
+                                            $primary
+                                            onClick={() => setMode('editing')}>확인</StyledActionButton>
+                    )
+                    : mode === 'pastConfirm'
+                        ? (
+                            <>
+                                <StyledActionButton type="button"
+                                                    onClick={() => setMode('editing')}>아니오</StyledActionButton>
+                                <StyledActionButton type="button"
+                                                    $primary
+                                                    onClick={handleConfirmSave}>네</StyledActionButton>
+                            </>
+                        )
+                        : mode === 'cancelling'
+                            ? (
+                                <>
+                                    <StyledActionButton type="button"
+                                                        onClick={() => setMode('view')}>돌아가기</StyledActionButton>
+                                    <StyledActionButton type="button"
+                                                        $danger
+                                                        onClick={() => onCancel(reservation)}>예약취소</StyledActionButton>
+                                </>
+                            )
+                            : mode === 'noshow'
+                                ? (
+                                    <>
+                                        <StyledActionButton type="button"
+                                                            onClick={() => setMode('view')}>돌아가기</StyledActionButton>
+                                        <StyledActionButton type="button"
+                                                            $warning
+                                                            onClick={() => onCancel(reservation, 'noshow')}>노쇼 처리</StyledActionButton>
+                                    </>
+                                )
+                                : null;
 
     if (!modalRoot) return null;
 
     return createPortal(<StyledOverlay onClick={handleBack}
                                        role="dialog"
                                        aria-modal="true"
-                                       aria-label="예약 상세">
-        <StyledDetail onClick={(e) => e.stopPropagation()}>
+                                       aria-label={dialogLabel}>
+        <StyledDetail onClick={(e) => e.stopPropagation()}
+                      $width={400}>
             <StyledHeader>
-                <h3>{mode === 'editing' ? '예약 수정' : mode === 'confirming' || mode === 'pastConfirm' ? '변경 확인' : mode === 'noChanges' ? '알림' : mode === 'cancelling' ? '예약 취소' : mode === 'noshow' ? '노쇼 처리' : mode === 'history' ? '변경 이력' : reservation.service}</h3>
-                <button type="button" onClick={handleBack} aria-label="닫기">&#x2715;</button>
+                <h3>{dialogTitle}</h3>
+                <button type="button"
+                        onClick={handleBack}
+                        aria-label="닫기">&#x2715;</button>
             </StyledHeader>
 
             {mode === 'view' && (
-                <StyledDetailBody>
-                    <dl>
-                        {isCancelled && (<>
-                            <dt>상태</dt>
-                            <dd><StyledStatusBadge $variant="danger">취소됨</StyledStatusBadge></dd>
-                        </>)}
-                        {isNoshow && (<>
-                            <dt>상태</dt>
-                            <dd><StyledStatusBadge $variant="warning">노쇼</StyledStatusBadge></dd>
-                        </>)}
-                        <dt>날짜</dt>
-                        <dd>{reservation.date}</dd>
-                        <dt>시간</dt>
-                        <dd>{reservation.startTime} ~ {reservation.endTime}</dd>
-                        <dt>가격</dt>
-                        <dd>{formatPrice(displayPrice)}</dd>
-                        <dt>고객명</dt>
-                        <dd>
-                            <StyledCustomerButton type="button"
-                                                  onClick={() => onCustomerClick(reservation.customerId)}>
-                                {customer?.name ?? '-'}
-                            </StyledCustomerButton>
-                        </dd>
-                        <dt>연락처</dt>
-                        <dd>{customer?.tel ?? '-'}</dd>
-                        <dt>디자이너</dt>
-                        <dd>{displayDesignerName}</dd>
-                    </dl>
-                    {thisHistory.length > 0 && (
-                        <StyledHistorySection>
-                            <StyledHistoryButton type="button"
-                                                  onClick={() => setMode('history')}>
-                                변경 이력 ({thisHistory.length})
-                            </StyledHistoryButton>
-                        </StyledHistorySection>
-                    )}
-                </StyledDetailBody>
+                <ReservationViewSection
+                    reservation={reservation}
+                    customerMap={customerMap}
+                    displayPrice={displayPrice}
+                    displayDesignerName={displayDesignerName}
+                    historyCount={thisHistory.length}
+                    onCustomerClick={onCustomerClick}
+                    onOpenHistory={() => setIsHistoryOpen(true)}
+                />
             )}
 
             {mode === 'editing' && (
-                <StyledBody>
-                    <StyledForm>
-                        <StyledFieldRow role="group" aria-labelledby="edit-service-label">
-                            <span id="edit-service-label">시술</span>
-                            <ServiceFields idPrefix="edit"
-                                           selectedServices={selectedServices}
-                                           onServiceToggle={handleServiceToggle}
-                                           totalDuration={totalDuration}
-                                           totalPrice={totalPrice}/>
-                        </StyledFieldRow>
-                        <label htmlFor="edit-price">
-                            <span>가격</span>
-                            <StyledPriceRow>
-                                <input id="edit-price"
-                                       type="text"
-                                       inputMode="numeric"
-                                       value={form.price.toLocaleString('ko-KR')}
-                                       onChange={(e) => {
-                                           const raw = e.target.value.replace(/[^0-9]/g, '');
-                                           const num = raw === '' ? 0 : parseInt(raw, 10);
-                                           setForm((f) => ({...f, price: num}));
-                                           setIsPriceManual(true);
-                                           setError('');
-                                       }}/>
-                                <StyledPriceUnit>원</StyledPriceUnit>
-                            </StyledPriceRow>
-                        </label>
-                        {selectableDesigners.length > 0 && (
-                            <label htmlFor="edit-designer">
-                                <span>디자이너</span>
-                                <select id="edit-designer"
-                                        value={form.designerId}
-                                        onChange={(e) => {
-                                            setForm((prev) => ({...prev, designerId: Number(e.target.value)}));
-                                            setError('');
-                                        }}>
-                                    {activeDesigners.map((designer) => (
-                                        <option key={designer.id} value={designer.id}>{designer.name}</option>
-                                    ))}
-                                    {onLeaveDesigners.length > 0 && (
-                                        <optgroup label="휴직자">
-                                            {onLeaveDesigners.map((designer) => (
-                                                <option key={designer.id} value={designer.id}>{designer.name}</option>
-                                            ))}
-                                        </optgroup>
-                                    )}
-                                    {resignedDesigners.length > 0 && (
-                                        <optgroup label="퇴직자">
-                                            {resignedDesigners.map((designer) => (
-                                                <option key={designer.id} value={designer.id}>{designer.name}</option>
-                                            ))}
-                                        </optgroup>
-                                    )}
-                                </select>
-                            </label>
-                        )}
-                        <label htmlFor="edit-date">
-                            <span>날짜</span>
-                            <input id="edit-date"
-                                   type="date"
-                                   value={form.date}
-                                   onChange={(e) => handleChange('date', e.target.value)}/>
-                        </label>
-                        <label htmlFor="edit-startTime">
-                            <span>시작</span>
-                            <input id="edit-startTime"
-                                   type="time"
-                                   value={form.startTime}
-                                   onChange={(e) => handleStartTimeChange(e.target.value)}/>
-                        </label>
-                        <label htmlFor="edit-endTime">
-                            <span>종료</span>
-                            <input id="edit-endTime"
-                                   type="time"
-                                   value={form.endTime}
-                                   onChange={(e) => handleEndTimeChange(e.target.value)}/>
-                        </label>
-                    </StyledForm>
-                    {error && <StyledError>{error}</StyledError>}
-                </StyledBody>
+                <ReservationEditSection
+                    form={form}
+                    error={error}
+                    selectableDesigners={selectableDesigners}
+                    activeDesigners={activeDesigners}
+                    onLeaveDesigners={onLeaveDesigners}
+                    resignedDesigners={resignedDesigners}
+                    selectedServices={selectedServices}
+                    totalDuration={totalDuration}
+                    totalPrice={totalPrice}
+                    onServiceToggle={handleServiceToggle}
+                    onPriceChange={(value) => {
+                        const raw = value.replace(/[^0-9]/g, '');
+                        const num = raw === '' ? 0 : parseInt(raw, 10);
+                        setForm((f) => ({...f, price: num}));
+                        setIsPriceManual(true);
+                        setError('');
+                    }}
+                    onDesignerChange={(designerId) => {
+                        setForm((prev) => ({...prev, designerId}));
+                        setError('');
+                    }}
+                    onFieldChange={handleChange}
+                    onStartTimeChange={handleStartTimeChange}
+                    onEndTimeChange={handleEndTimeChange}
+                />
             )}
 
             {mode === 'confirming' && (
-                <StyledBody>
-                    <StyledModalMessage>수정하시겠습니까?</StyledModalMessage>
-                    <StyledDiffList>
-                        {changedFields.map((d) => (
-                            <StyledDiffGrid key={d.label}>
-                                <dt>{d.label}</dt>
-                                <dd>
-                                    <del>{d.before}</del>
-                                    <ins>{d.after}</ins>
-                                </dd>
-                            </StyledDiffGrid>
-                        ))}
-                    </StyledDiffList>
-                </StyledBody>
+                <ReservationDiffSection message="수정하시겠습니까?" diffs={changedFields} />
             )}
 
             {mode === 'noChanges' && (
-                <StyledBody>
-                    <StyledModalMessage>변경내역이 없습니다.</StyledModalMessage>
-                </StyledBody>
+                <ReservationDiffSection message="변경내역이 없습니다." diffs={[]} />
             )}
 
             {mode === 'pastConfirm' && (
-                <StyledBody>
-                    <StyledModalMessage $color="var(--caution-color)">현재 시간보다 과거입니다. 변경하시겠습니까?</StyledModalMessage>
-                    <StyledDiffList>
-                        {changedFields.map((d) => (
-                            <StyledDiffGrid key={d.label}>
-                                <dt>{d.label}</dt>
-                                <dd>
-                                    <del>{d.before}</del>
-                                    <ins>{d.after}</ins>
-                                </dd>
-                            </StyledDiffGrid>
-                        ))}
-                    </StyledDiffList>
-                </StyledBody>
+                <ReservationDiffSection
+                    message="현재 시간보다 과거입니다. 변경하시겠습니까?"
+                    color="var(--caution-color)"
+                    diffs={changedFields}
+                />
             )}
 
             {mode === 'cancelling' && (
-                <StyledBody>
-                    <StyledModalMessage $color="var(--danger-color)">이 예약을 취소하시겠습니까?</StyledModalMessage>
-                    <StyledDiffList>
-                        <StyledDiffGrid>
-                            <dt>시술</dt>
-                            <dd>{reservation.service}</dd>
-                        </StyledDiffGrid>
-                        <StyledDiffGrid>
-                            <dt>날짜</dt>
-                            <dd>{reservation.date}</dd>
-                        </StyledDiffGrid>
-                        <StyledDiffGrid>
-                            <dt>시간</dt>
-                            <dd>{reservation.startTime} ~ {reservation.endTime}</dd>
-                        </StyledDiffGrid>
-                        <StyledDiffGrid>
-                            <dt>고객명</dt>
-                            <dd>{customer?.name ?? '-'}</dd>
-                        </StyledDiffGrid>
-                    </StyledDiffList>
-                </StyledBody>
+                <ReservationStaticDiffSection
+                    message="이 예약을 취소하시겠습니까?"
+                    color="var(--danger-color)"
+                    items={[
+                        {label: '시술', value: reservation.service},
+                        {label: '날짜', value: reservation.date},
+                        {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
+                        {label: '고객명', value: customer?.name ?? '-'},
+                    ]}
+                />
             )}
 
             {mode === 'noshow' && (
-                <StyledBody>
-                    <StyledModalMessage $color="var(--warning-color)">이 예약을 노쇼 처리하시겠습니까?</StyledModalMessage>
-                    <StyledDiffList>
-                        <StyledDiffGrid>
-                            <dt>시술</dt>
-                            <dd>{reservation.service}</dd>
-                        </StyledDiffGrid>
-                        <StyledDiffGrid>
-                            <dt>날짜</dt>
-                            <dd>{reservation.date}</dd>
-                        </StyledDiffGrid>
-                        <StyledDiffGrid>
-                            <dt>시간</dt>
-                            <dd>{reservation.startTime} ~ {reservation.endTime}</dd>
-                        </StyledDiffGrid>
-                        <StyledDiffGrid>
-                            <dt>고객명</dt>
-                            <dd>{customer?.name ?? '-'}</dd>
-                        </StyledDiffGrid>
-                    </StyledDiffList>
-                </StyledBody>
+                <ReservationStaticDiffSection
+                    message="이 예약을 노쇼 처리하시겠습니까?"
+                    color="var(--warning-color)"
+                    items={[
+                        {label: '시술', value: reservation.service},
+                        {label: '날짜', value: reservation.date},
+                        {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
+                        {label: '고객명', value: customer?.name ?? '-'},
+                    ]}
+                />
             )}
 
-            {mode === 'history' && (
-                <StyledBody>
-                    <StyledHistoryDetailList>
-                        {[...thisHistory].reverse().map((entry, i) => {
-                            const diffs = getHistoryDiffs(entry, designerNameMap);
-                            const isCancelEntry = entry.after.status === 'cancelled' && entry.before.status !== 'cancelled';
-                            const isNoshowEntry = entry.after.status === 'noshow' && entry.before.status !== 'noshow';
-                            const entryType = isCancelEntry ? 'cancelled' : isNoshowEntry ? 'noshow' : 'edit';
-                            return (
-                                <StyledHistoryDetailItem key={i} $type={entryType}>
-                                    <StyledHistoryDetailHeader>
-                                        <time dateTime={entry.timestamp}>{formatTimestamp(entry.timestamp)}</time>
-                                        <StyledHistoryTypeBadge $type={entryType}>
-                                            {isCancelEntry ? '예약취소' : isNoshowEntry ? '노쇼' : '수정'}
-                                        </StyledHistoryTypeBadge>
-                                    </StyledHistoryDetailHeader>
-                                    <StyledHistoryDetailDiffs>
-                                        {diffs.map((d) => (
-                                            <StyledHistoryDiffGrid key={d.label}>
-                                                <dt>{d.label}</dt>
-                                                <dd>
-                                                    <del>{d.before}</del>
-                                                    <ins>{d.after}</ins>
-                                                </dd>
-                                            </StyledHistoryDiffGrid>
-                                        ))}
-                                    </StyledHistoryDetailDiffs>
-                                </StyledHistoryDetailItem>
-                            );
-                        })}
-                    </StyledHistoryDetailList>
-                </StyledBody>
-            )}
-
-            <StyledFooter>
-                {mode === 'view' && !isInactive && (<>
-                    <StyledActionButton type="button"
-                                        $danger
-                                        onClick={() => setMode('cancelling')}>예약취소</StyledActionButton>
-                    <StyledActionButton type="button"
-                                        $warning
-                                        onClick={() => setMode('noshow')}>노쇼</StyledActionButton>
-                    <StyledActionButton type="button"
-                                        $primary
-                                        onClick={() => setMode('editing')}>수정</StyledActionButton>
-                </>)}
-                {mode === 'editing' && (<>
-                    <StyledActionButton type="button"
-                                        onClick={handleCancel}>취소</StyledActionButton>
-                    <StyledActionButton type="button"
-                                        $primary
-                                        onClick={handleConfirmRequest}>저장</StyledActionButton>
-                </>)}
-                {mode === 'confirming' && (<>
-                    <StyledActionButton type="button"
-                                        onClick={() => setMode('editing')}>돌아가기</StyledActionButton>
-                    <StyledActionButton type="button"
-                                        $primary
-                                        onClick={handleConfirmSave}>확인</StyledActionButton>
-                </>)}
-                {mode === 'noChanges' && (
-                    <StyledActionButton type="button"
-                                        $primary
-                                        onClick={() => setMode('editing')}>확인</StyledActionButton>
-                )}
-                {mode === 'pastConfirm' && (<>
-                    <StyledActionButton type="button"
-                                        onClick={() => setMode('editing')}>아니오</StyledActionButton>
-                    <StyledActionButton type="button"
-                                        $primary
-                                        onClick={handleConfirmSave}>네</StyledActionButton>
-                </>)}
-                {mode === 'cancelling' && (<>
-                    <StyledActionButton type="button"
-                                        onClick={() => setMode('view')}>돌아가기</StyledActionButton>
-                    <StyledActionButton type="button"
-                                        $danger
-                                        onClick={() => onCancel(reservation)}>예약취소</StyledActionButton>
-                </>)}
-                {mode === 'noshow' && (<>
-                    <StyledActionButton type="button"
-                                        onClick={() => setMode('view')}>돌아가기</StyledActionButton>
-                    <StyledActionButton type="button"
-                                        $warning
-                                        onClick={() => onCancel(reservation, 'noshow')}>노쇼 처리</StyledActionButton>
-                </>)}
-                {mode === 'history' && (
-                    <StyledActionButton type="button"
-                                        onClick={() => setMode('view')}>돌아가기</StyledActionButton>
-                )}
-            </StyledFooter>
+            <ReservationFooter actions={footerActions} />
         </StyledDetail>
+        <ReservationHistoryLayer
+            history={thisHistory}
+            designerNameMap={designerNameMap}
+            getHistoryDiffs={getHistoryDiffs}
+            formatTimestamp={formatTimestamp}
+            isOpen={isHistoryOpen}
+            onClose={() => setIsHistoryOpen(false)}
+        />
     </StyledOverlay>, modalRoot);
 };
-
-const StyledDetailBody = styled(StyledBody)`
-  > dl {
-    display: grid;
-    grid-template-columns: 60px 1fr;
-    gap: 8px 12px;
-    margin: 0;
-  }
-
-  dt {
-    font-size: 13px;
-    color: var(--gray-color);
-    font-weight: 500;
-  }
-
-  dd {
-    margin: 0;
-    font-size: 13px;
-  }
-`;
-
-const StyledCustomerButton = styled.button`
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 13px;
-  color: #4285F4;
-  cursor: pointer;
-  text-decoration: underline;
-
-  &:hover {
-    color: #1a73e8;
-  }
-`;
-
-const StyledDiffList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-md);
-  padding: 12px;
-  background-color: var(--black-color-10);
-  border-radius: var(--radius-md);
-`;
-
-const StyledHistorySection = styled.div`
-  margin-top: 16px;
-  border-top: 1px solid var(--light-gray-color);
-  padding-top: 12px;
-`;
-
-const StyledHistoryButton = styled.button`
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--light-gray-color);
-  border-radius: 6px;
-  background: var(--white-color);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--dark-gray-color);
-  cursor: pointer;
-  text-align: left;
-
-  &::after {
-    content: "\\203A";
-    float: right;
-    font-size: 16px;
-    line-height: 1;
-    color: var(--gray-color);
-  }
-
-  &:hover {
-    background-color: var(--black-color-10);
-  }
-`;
-
-const StyledHistoryDetailList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 320px;
-  overflow-y: auto;
-  overscroll-behavior: auto;
-`;
-
-const HISTORY_ITEM_STYLES: Record<string, { bg: string; border: string }> = {
-  cancelled: {bg: 'var(--danger-bg)', border: 'var(--danger-border)'},
-  noshow: {bg: 'var(--warning-bg)', border: 'var(--warning-border)'},
-};
-
-const StyledHistoryDetailItem = styled.div<{ $type: string }>`
-  padding: var(--gap-lg);
-  background-color: ${(props) => HISTORY_ITEM_STYLES[props.$type]?.bg || 'var(--black-color-10)'};
-  border: 1px solid ${(props) => HISTORY_ITEM_STYLES[props.$type]?.border || 'transparent'};
-  border-radius: var(--radius-md);
-`;
-
-const StyledHistoryDetailHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-
-  > time {
-    font-size: var(--xsmall-font);
-    color: var(--gray-color);
-  }
-`;
-
-const HISTORY_BADGE_COLORS: Record<string, string> = {
-  cancelled: 'var(--danger-color)',
-  noshow: 'var(--warning-color)',
-};
-
-const StyledHistoryTypeBadge = styled.span<{ $type: string }>`
-  display: inline-block;
-  padding: 2px var(--gap-sm);
-  border-radius: var(--radius-sm);
-  font-size: var(--tiny-font);
-  font-weight: 600;
-  background-color: ${(props) => HISTORY_BADGE_COLORS[props.$type] || 'var(--blue-color)'};
-  color: #fff;
-`;
-
-const StyledHistoryDetailDiffs = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-xs);
-`;
-
-const StyledHistoryDiffGrid = styled(StyledDiffGrid)`
-  grid-template-columns: 55px 1fr;
-
-  dt {
-    font-size: var(--xsmall-font);
-  }
-
-  del, ins {
-    font-size: var(--xsmall-font);
-  }
-
-  dd {
-    gap: var(--gap-sm);
-  }
-`;
