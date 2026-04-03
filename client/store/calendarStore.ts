@@ -4,7 +4,7 @@ import type {Reservation, ReservationMap, ReservationHistoryEntry, ReservationSt
 import type {CustomerMap} from '../utils/customers';
 import type {ServiceItem} from '../utils/services';
 import {CATEGORY_BASE_COLOR_MAP, SERVICE_CATALOG} from '../utils/services';
-import type {DaySchedule, Designer} from '../utils/designers';
+import type {DaySchedule, Designer, DesignerStatus} from '../utils/designers';
 import {createDefaultSchedule, DEFAULT_DESIGNERS} from '../utils/designers';
 
 export type FullType = Date | null;
@@ -78,8 +78,8 @@ export interface CalendarState {
     setServiceCatalog: (catalog: ServiceItem[]) => void;
     setCategoryBaseColorMap: (colorMap: Record<string, string>) => void;
     setDesigners: (designers: Designer[]) => void;
-    addDesigner: (name: string) => void;
-    updateDesigner: (designerId: number, patch: Partial<Pick<Designer, 'name'>>) => void;
+    addDesigner: (name: string, status?: DesignerStatus) => void;
+    updateDesigner: (designerId: number, patch: Partial<Pick<Designer, 'name' | 'status'>>) => void;
     updateDesignerDay: (designerId: number, dayIndex: number, patch: Partial<DaySchedule>) => void;
     deleteDesigner: (designerId: number) => void;
     updateCategoryBaseColor: (category: string, color: string) => void;
@@ -244,18 +244,21 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     setCategoryBaseColorMap: (categoryBaseColorMap) => set({categoryBaseColorMap}),
     setDesigners: (designers) => set({designers}),
 
-    addDesigner: (name) =>
+    addDesigner: (name, status = '재직') =>
         set((state) => {
             const cleanName = name.trim();
             if (!cleanName) return state;
 
+            const nextDesigner: Designer = {
+                id: Date.now(),
+                name: cleanName,
+                schedule: createDefaultSchedule(),
+                status,
+            };
+
             const nextDesigners = [
                 ...state.designers,
-                {
-                    id: Date.now(),
-                    name: cleanName,
-                    schedule: createDefaultSchedule()
-                }
+                nextDesigner
             ];
 
             syncDesignerSettings(nextDesigners);
@@ -264,12 +267,13 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
     updateDesigner: (designerId, patch) =>
         set((state) => {
-            const nextName = patch.name?.trim();
-            if (patch.name !== undefined && !nextName) return state;
-
             const nextDesigners = state.designers.map((designer) =>
                 designer.id === designerId
-                    ? {...designer, ...(nextName ? {name: nextName} : {})}
+                    ? {
+                        ...designer,
+                        ...(patch.name !== undefined ? {name: patch.name} : {}),
+                        ...(patch.status ? {status: patch.status} : {})
+                    }
                     : designer
             );
 
