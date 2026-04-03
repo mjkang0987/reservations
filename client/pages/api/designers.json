@@ -1,8 +1,8 @@
 {
     "designers": [
         {
-            "id": 1,
-            "name": "뿅뿅",
+            "id": 1775183550311,
+            "name": "아",
             "schedule": [
                 {
                     "enabled": true,
@@ -42,8 +42,8 @@
             ]
         },
         {
-            "id": 1775175884450,
-            "name": "영감",
+            "id": 1775183559011,
+            "name": "디자이너1",
             "schedule": [
                 {
                     "enabled": true,
@@ -80,7 +80,50 @@
                     "start": "10:00",
                     "end": "20:00"
                 }
-            ]
+            ],
+            "status": "퇴직"
+        },
+        {
+            "id": 1775183630516,
+            "name": "디자이너 1",
+            "schedule": [
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": false,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": false,
+                    "start": "10:00",
+                    "end": "20:00"
+                }
+            ],
+            "status": "퇴직"
         }
     ]
 }
