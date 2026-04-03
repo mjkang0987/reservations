@@ -14,12 +14,12 @@ import {
 
 import {setRouter} from '../../utils/router';
 
-import {Icon} from '../common/Icons';
-import {ButtonText} from '../common/ButtonText';
+import {Icon} from '../ui/Icons';
+import {ButtonText} from '../ui/ButtonText';
 import {
     ButtonCircle,
     ButtonSquare
-} from '../common/Buttons';
+} from '../ui/Buttons';
 
 export const CalendarDirection = () => {
     const router = useRouter();

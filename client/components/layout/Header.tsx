@@ -6,8 +6,8 @@ import {useCalendarStore} from '../../store/calendarStore';
 
 import {CalendarDirection} from '../calendar/CalendarDirection';
 import {CalendarHeading} from '../calendar/CalendarHeading';
-import {Icon} from './Icons';
-import {ButtonText} from './ButtonText';
+import {Icon} from '../ui/Icons';
+import {ButtonText} from '../ui/ButtonText';
 
 export const Header = () => {
     const {data: session} = useSession();

@@ -2,8 +2,8 @@ import {useMemo, useState} from 'react';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
-import {buildServiceColorMap, getGroupedCatalog, getServiceColor} from '../../utils/services';
+import {useCalendarStore} from '../../../store/calendarStore';
+import {buildServiceColorMap, getGroupedCatalog, getServiceColor} from '../../../utils/services';
 
 export const ServiceLegend = () => {
     const [open, setOpen] = useState(false);

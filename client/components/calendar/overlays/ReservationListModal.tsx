@@ -4,9 +4,9 @@ import {createPortal} from 'react-dom';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import {buildServiceColorMap, getServiceColor} from '../../utils/services';
+import {buildServiceColorMap, getServiceColor} from '../../../utils/services';
 
 import {
     StyledOverlay,
@@ -15,7 +15,7 @@ import {
     StyledBody,
 } from './ModalStyles';
 
-import type {Reservation} from '../../utils/reservations';
+import type {Reservation} from '../../../utils/reservations';
 
 const STATUS_LABELS: Record<string, string> = {
     cancelled: '취소',

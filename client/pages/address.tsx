@@ -11,13 +11,13 @@ import {toCustomerMap} from '../utils/customers';
 import type {Reservation, ReservationHistoryEntry} from '../utils/reservations';
 import {groupByDate} from '../utils/reservations';
 
-import {ReservationDetail} from '../components/calendar/ReservationDetail';
-import {CustomerDetail} from '../components/calendar/CustomerDetail';
+import {ReservationDetail} from '../components/calendar/overlays/ReservationDetail';
+import {CustomerDetail} from '../components/calendar/overlays/CustomerDetail';
 
 import {useCalendarStore} from '../store/calendarStore';
 
 import customersData from './api/customers.json';
-import {InputWrap} from "../components/common/Input";
+import {InputWrap} from "../components/ui/Input";
 
 type AddressProps = {
     customers: Customer[];

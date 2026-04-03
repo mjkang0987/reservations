@@ -2,11 +2,11 @@ import {useMemo} from 'react';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import {buildServiceColorMap, getServiceColor} from '../../utils/services';
+import {buildServiceColorMap, getServiceColor} from '../../../utils/services';
 
-import type {Reservation} from '../../utils/reservations';
+import type {Reservation} from '../../../utils/reservations';
 
 interface ReservationListProps {
     reservations: Reservation[];

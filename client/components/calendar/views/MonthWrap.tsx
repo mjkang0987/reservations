@@ -3,9 +3,9 @@ import {useMemo} from 'react';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import {computeTargetDerived} from '../../utils/calendarDerived';
+import {computeTargetDerived} from '../../../utils/calendarDerived';
 
 import {Month} from './Month';
 

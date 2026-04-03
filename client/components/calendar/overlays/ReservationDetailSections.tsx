@@ -1,9 +1,9 @@
 import styled from 'styled-components';
 
-import type {CustomerMap} from '../../utils/customers';
-import type {Reservation, ReservationHistoryEntry} from '../../utils/reservations';
-import type {Designer} from '../../utils/designers';
-import {formatPrice} from '../../utils/services';
+import type {CustomerMap} from '../../../utils/customers';
+import type {Reservation, ReservationHistoryEntry} from '../../../utils/reservations';
+import type {Designer} from '../../../utils/designers';
+import {formatPrice} from '../../../utils/services';
 
 import {
     StyledActionButton,
@@ -21,7 +21,7 @@ import {
     StyledPriceUnit,
     StyledStatusBadge,
 } from './ModalStyles';
-import {ServiceFields} from './ServiceFields';
+import {ServiceFields} from '../service/ServiceFields';
 
 export interface ReservationDetailFormState {
     date: string;

@@ -14,15 +14,15 @@ import {groupByDate, Reservation, ReservationHistoryEntry} from '../utils/reserv
 
 import {Customer, toCustomerMap} from '../utils/customers';
 
-import {Calendar} from '../components/calendar/Calendar';
+import {Calendar} from '../components/calendar/views/Calendar';
 
-import {ReservationDetail} from '../components/calendar/ReservationDetail';
+import {ReservationDetail} from '../components/calendar/overlays/ReservationDetail';
 
-import {ReservationListModal} from '../components/calendar/ReservationListModal';
+import {ReservationListModal} from '../components/calendar/overlays/ReservationListModal';
 
-import {CustomerDetail} from '../components/calendar/CustomerDetail';
+import {CustomerDetail} from '../components/calendar/overlays/CustomerDetail';
 
-import {ServiceLegend} from '../components/calendar/ServiceLegend';
+import {ServiceLegend} from '../components/calendar/service/ServiceLegend';
 
 import customersData from './api/customers.json';
 

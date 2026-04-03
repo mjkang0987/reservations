@@ -2,12 +2,12 @@ import {useState} from 'react';
 
 import {createPortal} from 'react-dom';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import type {Reservation, ReservationHistoryEntry, ReservationMap, ReservationStatus} from '../../utils/reservations';
-import {findOverlap} from '../../utils/reservations';
-import type {CustomerMap} from '../../utils/customers';
-import {splitDesignersByStatus} from '../../utils/designers';
+import type {Reservation, ReservationHistoryEntry, ReservationMap, ReservationStatus} from '../../../utils/reservations';
+import {findOverlap} from '../../../utils/reservations';
+import type {CustomerMap} from '../../../utils/customers';
+import {splitDesignersByStatus} from '../../../utils/designers';
 import {
     parseServiceString,
     joinServiceNames,
@@ -15,7 +15,7 @@ import {
     sumPrice,
     formatPrice,
     calcEndTime,
-} from '../../utils/services';
+} from '../../../utils/services';
 
 import {
     StyledOverlay,

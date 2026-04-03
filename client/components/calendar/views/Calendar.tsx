@@ -1,8 +1,8 @@
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import {ViewType} from '../../utils/constants';
+import {ViewType} from '../../../utils/constants';
 
 import {Days} from './Days';
 import {Year} from './Year';

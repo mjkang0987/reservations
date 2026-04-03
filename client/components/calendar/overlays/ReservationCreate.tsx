@@ -4,13 +4,13 @@ import {createPortal} from 'react-dom';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
-import type {CreateReservationInitial} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
+import type {CreateReservationInitial} from '../../../store/calendarStore';
 
-import type {Reservation} from '../../utils/reservations';
-import {findOverlap} from '../../utils/reservations';
-import type {CustomerMap} from '../../utils/customers';
-import {splitDesignersByStatus} from '../../utils/designers';
+import type {Reservation} from '../../../utils/reservations';
+import {findOverlap} from '../../../utils/reservations';
+import type {CustomerMap} from '../../../utils/customers';
+import {splitDesignersByStatus} from '../../../utils/designers';
 
 import {
     joinServiceNames,
@@ -18,7 +18,7 @@ import {
     sumPrice,
     formatPrice,
     calcEndTime,
-} from '../../utils/services';
+} from '../../../utils/services';
 
 import {
     StyledOverlay,
@@ -34,7 +34,7 @@ import {
     StyledPriceUnit,
 } from './ModalStyles';
 
-import {ServiceFields} from './ServiceFields';
+import {ServiceFields} from '../service/ServiceFields';
 
 interface ReservationCreateProps {
     initial: CreateReservationInitial;

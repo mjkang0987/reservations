@@ -1,12 +1,12 @@
 import {useMemo} from 'react';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import {computeTargetDerived} from '../../utils/calendarDerived';
+import {computeTargetDerived} from '../../../utils/calendarDerived';
 
 import {
     isTodayValue,
-} from '../../utils/constants';
+} from '../../../utils/constants';
 
 import {Timeline} from './Timeline';
 

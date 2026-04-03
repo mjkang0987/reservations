@@ -19,8 +19,8 @@ import type {Customer} from '../utils/customers';
 import {toCustomerMap} from '../utils/customers';
 import type {CustomerMap} from '../utils/customers';
 
-import {ReservationDetail} from '../components/calendar/ReservationDetail';
-import {CustomerDetail} from '../components/calendar/CustomerDetail';
+import {ReservationDetail} from '../components/calendar/overlays/ReservationDetail';
+import {CustomerDetail} from '../components/calendar/overlays/CustomerDetail';
 
 import customersData from './api/customers.json';
 

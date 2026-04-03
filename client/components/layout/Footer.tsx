@@ -7,8 +7,8 @@ import Link from 'next/link';
 
 import {useCalendarStore} from '../../store/calendarStore';
 
-import {Icon} from './Icons';
-import {ButtonText} from './ButtonText';
+import {Icon} from '../ui/Icons';
+import {ButtonText} from '../ui/ButtonText';
 
 export const Footer = () => {
     const [isSearchOpen, setIsSearchOpen] = useState(false);

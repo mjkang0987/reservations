@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
 export const TimelineTitle = () => {
     const time = useCalendarStore((s) => s.time);

@@ -2,13 +2,13 @@ import {useMemo} from 'react';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import {computeTargetDerived} from '../../utils/calendarDerived';
+import {computeTargetDerived} from '../../../utils/calendarDerived';
 
 import {
     ViewType
-} from '../../utils/constants';
+} from '../../../utils/constants';
 
 import {Week} from './Week';
 

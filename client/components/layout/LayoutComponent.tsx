@@ -7,25 +7,25 @@ import {useRouter} from 'next/router';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../store/calendarStore';
-import type {CreateReservationInitial} from '../store/calendarStore';
+import {useCalendarStore} from '../../store/calendarStore';
+import type {CreateReservationInitial} from '../../store/calendarStore';
 
-import {useIsomorphicEffect} from '../hooks/useIsomorphicEffect';
+import {useIsomorphicEffect} from '../../hooks/useIsomorphicEffect';
 
-import {useRouteChangeSync} from '../hooks/useRouteChangeSync';
+import {useRouteChangeSync} from '../../hooks/useRouteChangeSync';
 
-import {NodeType} from '../utils/types';
-import {isCalendar, setRouter} from '../utils/router';
-import {ViewType} from '../utils/constants';
-import {roundToHalfHour, pad} from '../utils/timeRound';
-import {toDateKey} from '../utils/reservations';
+import {NodeType} from '../../utils/types';
+import {isCalendar, setRouter} from '../../utils/router';
+import {ViewType} from '../../utils/constants';
+import {roundToHalfHour, pad} from '../../utils/timeRound';
+import {toDateKey} from '../../utils/reservations';
 
-import {Header} from './common/Header';
-import {Aside} from './common/Aside';
-import {Footer} from './common/Footer';
-import {Icon} from './common/Icons';
-import {ButtonText} from './common/ButtonText';
-import {ReservationCreate} from './calendar/ReservationCreate';
+import {Header} from './Header';
+import {Aside} from './Aside';
+import {Footer} from './Footer';
+import {Icon} from '../ui/Icons';
+import {ButtonText} from '../ui/ButtonText';
+import {ReservationCreate} from '../calendar/overlays/ReservationCreate';
 
 export default function LayoutComponent({children}: NodeType) {
     const router = useRouter();

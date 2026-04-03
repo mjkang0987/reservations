@@ -2,19 +2,19 @@ import React, {useMemo} from 'react';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
 import {
     TIMELINE_DAY_TOP,
     TIMELINE_TOP,
     ViewType,
-} from '../../utils/constants';
+} from '../../../utils/constants';
 
-import {buildServiceColorMap, getServiceColor} from '../../utils/services';
+import {buildServiceColorMap, getServiceColor} from '../../../utils/services';
 
-import {toDateKey} from '../../utils/reservations';
-import {roundToHalfHour, pad} from '../../utils/timeRound';
-import {ButtonReserve} from "../common/Buttons";
+import {toDateKey} from '../../../utils/reservations';
+import {roundToHalfHour, pad} from '../../../utils/timeRound';
+import {ButtonReserve} from "../../ui/Buttons";
 
 export const Timeline = ({
                              fullYear,

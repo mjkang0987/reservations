@@ -4,8 +4,8 @@ import {createPortal} from 'react-dom';
 
 import styled from 'styled-components';
 
-import type {Customer} from '../../utils/customers';
-import type {Reservation, ReservationMap} from '../../utils/reservations';
+import type {Customer} from '../../../utils/customers';
+import type {Reservation, ReservationMap} from '../../../utils/reservations';
 
 import {
     StyledOverlay,
@@ -13,8 +13,8 @@ import {
     StyledHeader,
 } from './ModalStyles';
 
-import {buildServiceColorMap, getServiceColor} from '../../utils/services';
-import {useCalendarStore} from '../../store/calendarStore';
+import {buildServiceColorMap, getServiceColor} from '../../../utils/services';
+import {useCalendarStore} from '../../../store/calendarStore';
 
 const PAGE_SIZE = 5;
 

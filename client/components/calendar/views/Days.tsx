@@ -5,11 +5,11 @@ import styled from 'styled-components';
 import {
     ViewType,
     DAYS
-} from '../../utils/constants';
+} from '../../../utils/constants';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import {computeTargetDerived} from '../../utils/calendarDerived';
+import {computeTargetDerived} from '../../../utils/calendarDerived';
 
 interface DaysType {
     type: string | null;

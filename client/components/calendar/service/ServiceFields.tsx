@@ -2,7 +2,7 @@ import {useMemo} from 'react';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 import {
     getGroupedCatalog,
     getServicePrice,
@@ -11,7 +11,7 @@ import {
     formatDuration,
     formatPrice,
     getServiceColor
-} from '../../utils/services';
+} from '../../../utils/services';
 
 interface ServiceFieldsProps {
     selectedServices: string[];

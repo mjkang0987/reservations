@@ -11,7 +11,7 @@ import {
     ViewType
 } from '../../utils/constants';
 
-import {InputWrap} from './Input';
+import {InputWrap} from '../ui/Input';
 
 interface Props {
     $isVisible: boolean;

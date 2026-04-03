@@ -2,19 +2,19 @@ import {useMemo} from 'react';
 
 import styled from 'styled-components';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import {computeTargetDerived} from '../../utils/calendarDerived';
+import {computeTargetDerived} from '../../../utils/calendarDerived';
 
 import {
     isTodayValue,
     ViewType,
-} from '../../utils/constants';
+} from '../../../utils/constants';
 
-import {toDateKey} from '../../utils/reservations';
+import {toDateKey} from '../../../utils/reservations';
 
 import {Num} from './Num';
-import {ButtonAdd} from '../common/Buttons';
+import {ButtonAdd} from '../../ui/Buttons';
 import {ReservationList} from './ReservationList';
 
 interface MonthType {

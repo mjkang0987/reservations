@@ -14,7 +14,7 @@ import {useCalendarStore} from '../store/calendarStore';
 import type {ServiceItem} from '../utils/services';
 import type {Designer} from '../utils/designers';
 
-import LayoutComponent from '../components/LayoutComponent';
+import LayoutComponent from '../components/layout/LayoutComponent';
 
 function App({Component, pageProps: {session, ...pageProps}}: AppProps) {
     const setServiceCatalog = useCalendarStore((s) => s.setServiceCatalog);

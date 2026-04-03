@@ -5,16 +5,16 @@ import styled from 'styled-components';
 import {
     isTodayValue,
     ViewType,
-} from '../../utils/constants';
+} from '../../../utils/constants';
 
-import type {Reservation} from '../../utils/reservations';
+import type {Reservation} from '../../../utils/reservations';
 
-import {useCalendarStore} from '../../store/calendarStore';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-import {toDateKey} from '../../utils/reservations';
+import {toDateKey} from '../../../utils/reservations';
 
 import {Num} from './Num';
-import {ButtonAdd} from '../common/Buttons';
+import {ButtonAdd} from '../../ui/Buttons';
 import {ReservationList} from './ReservationList';
 
 export const Year = () => {
