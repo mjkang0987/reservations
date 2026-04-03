@@ -1082,14 +1082,16 @@ const footerActionStackStyle = css`
 `;
 
 const StyledRangeFilter = styled.div`
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: flex-end;
     gap: 8px;
-    padding: 10px 16px;
+    padding: 8px 0;
 `;
 
 const StyledRangeInputWrap = styled.label`
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -1098,6 +1100,8 @@ const StyledRangeInputWrap = styled.label`
 `;
 
 const StyledDateInput = styled.input`
+    width: 100%;
+    appearance: none;
     min-height: 34px;
     border: 1px solid var(--light-gray-color);
     border-radius: var(--radius-md);
