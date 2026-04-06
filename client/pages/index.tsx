@@ -40,6 +40,7 @@ const Home: NextPage<HomeProps> = (props) => {
     const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
     const selectedReservation = useCalendarStore((s) => s.selectedReservation);
     const setSelectedReservation = useCalendarStore((s) => s.setSelectedReservation);
+    const openReservationDetailFromCustomer = useCalendarStore((s) => s.openReservationDetailFromCustomer);
     const updateReservation = useCalendarStore((s) => s.updateReservation);
     const cancelReservation = useCalendarStore((s) => s.cancelReservation);
     const reservationHistory = useCalendarStore((s) => s.reservationHistory);
@@ -51,6 +52,7 @@ const Home: NextPage<HomeProps> = (props) => {
 
     const selectedCustomerId = useCalendarStore((s) => s.selectedCustomerId);
     const setSelectedCustomerId = useCalendarStore((s) => s.setSelectedCustomerId);
+    const openCustomerDetail = useCalendarStore((s) => s.openCustomerDetail);
 
     const selectedCustomer = selectedCustomerId !== null ? customerMap[selectedCustomerId] : null;
     const handleCloseReservationDetail = () => {
@@ -83,11 +85,12 @@ const Home: NextPage<HomeProps> = (props) => {
                                                        reservationMap={reservationMap}
                                                        history={reservationHistory}
                                                        onClose={handleCloseReservationDetail}
-                                                       onCustomerClick={(customerId) => setSelectedCustomerId(customerId)}
+                                                       onCustomerClick={openCustomerDetail}
                                                        onUpdate={updateReservation}
                                                        onCancel={cancelReservation}/>}
             {selectedCustomer && <CustomerDetail customer={selectedCustomer}
                                                  reservationMap={reservationMap}
+                                                 onReservationClick={openReservationDetailFromCustomer}
                                                  onClose={() => setSelectedCustomerId(null)}/>}
             <ServiceLegend/>
         </>

@@ -1018,6 +1018,8 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
     const designers = useCalendarStore((s) => s.designers);
     const updateReservation = useCalendarStore((s) => s.updateReservation);
     const cancelReservation = useCalendarStore((s) => s.cancelReservation);
+    const openReservationDetailFromCustomer = useCalendarStore((s) => s.openReservationDetailFromCustomer);
+    const openCustomerDetail = useCalendarStore((s) => s.openCustomerDetail);
     const storeReservationMap = useCalendarStore((s) => s.reservationMap);
     const storeHistory = useCalendarStore((s) => s.reservationHistory);
 
@@ -1175,7 +1177,7 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
                                    reservationMap={storeReservationMap}
                                    history={storeHistory}
                                    onClose={() => setSelectedReservation(null)}
-                                   onCustomerClick={(customerId) => setSelectedCustomerId(customerId)}
+                                   onCustomerClick={openCustomerDetail}
                                    onUpdate={(prev, updated) => {
                                        updateReservation(prev, updated);
                                        setSelectedReservation(updated);
@@ -1188,6 +1190,7 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
             {selectedCustomerId !== null && customerMap[selectedCustomerId] && (
                 <CustomerDetail customer={customerMap[selectedCustomerId]}
                                 reservationMap={storeReservationMap}
+                                onReservationClick={openReservationDetailFromCustomer}
                                 onClose={() => setSelectedCustomerId(null)}/>
             )}
         </StyledSection>

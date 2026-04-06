@@ -76,10 +76,13 @@ export interface CalendarState {
     setCustomerMap: (map: CustomerMap) => void;
     addCustomer: (customer: Customer) => void;
     setSelectedReservation: (v: Reservation | null) => void;
+    openReservationDetail: (reservation: Reservation) => void;
+    openReservationDetailFromCustomer: (reservation: Reservation) => void;
     setReservationHistory: (history: ReservationHistoryEntry[]) => void;
     setReservationListFilter: (v: CalendarState['reservationListFilter']) => void;
     setCreateReservationInitial: (v: CreateReservationInitial | null) => void;
     setSelectedCustomerId: (v: number | null) => void;
+    openCustomerDetail: (customerId: number) => void;
     setCalendarDesignerId: (v: number | null) => void;
     setServiceCatalog: (catalog: ServiceItem[]) => void;
     setCategoryBaseColorMap: (colorMap: Record<string, string>) => void;
@@ -277,6 +280,18 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
     setSelectedReservation: (selectedReservation) => set({selectedReservation}),
 
+    openReservationDetail: (selectedReservation) =>
+        set({
+            selectedReservation,
+            createReservationInitial: null,
+        }),
+
+    openReservationDetailFromCustomer: (selectedReservation) =>
+        set({
+            selectedReservation,
+            createReservationInitial: null,
+        }),
+
     setReservationHistory: (reservationHistory) => set({reservationHistory}),
 
     setReservationListFilter: (reservationListFilter) => set({reservationListFilter}),
@@ -284,6 +299,12 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     setCreateReservationInitial: (createReservationInitial) => set({createReservationInitial}),
 
     setSelectedCustomerId: (selectedCustomerId) => set({selectedCustomerId}),
+
+    openCustomerDetail: (selectedCustomerId) =>
+        set({
+            selectedCustomerId,
+            createReservationInitial: null,
+        }),
 
     setCalendarDesignerId: (calendarDesignerId) => set({calendarDesignerId}),
 

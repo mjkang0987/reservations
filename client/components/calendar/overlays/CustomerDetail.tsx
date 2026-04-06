@@ -8,6 +8,7 @@ import type {Customer} from '../../../utils/customers';
 import type {Reservation, ReservationMap} from '../../../utils/reservations';
 
 import {
+    OVERLAY_Z_INDEX,
     StyledOverlay,
     StyledDetail,
     StyledHeader,
@@ -22,9 +23,10 @@ interface CustomerDetailProps {
     customer: Customer;
     reservationMap: ReservationMap;
     onClose: () => void;
+    onReservationClick?: (reservation: Reservation) => void;
 }
 
-export const CustomerDetail = ({customer, reservationMap, onClose}: CustomerDetailProps) => {
+export const CustomerDetail = ({customer, reservationMap, onClose, onReservationClick}: CustomerDetailProps) => {
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const serviceCatalog = useCalendarStore((s) => s.serviceCatalog);
     const categoryBaseColorMap = useCalendarStore((s) => s.categoryBaseColorMap);
@@ -54,10 +56,10 @@ export const CustomerDetail = ({customer, reservationMap, onClose}: CustomerDeta
 
     if (!modalRoot) return null;
 
-    return createPortal(<StyledOverlay onClick={onClose}
-                                       role="dialog"
-                                       aria-modal="true"
-                                       aria-label="고객 정보">
+    return createPortal(<StyledCustomerOverlay onClick={onClose}
+                                               role="dialog"
+                                               aria-modal="true"
+                                               aria-label="고객 정보">
         <StyledCustomerDetail onClick={(e) => e.stopPropagation()}>
             <StyledHeader>
                 <h3>{customer.name}</h3>
@@ -72,9 +74,12 @@ export const CustomerDetail = ({customer, reservationMap, onClose}: CustomerDeta
             <StyledReservationSection>
                 <h4>예약 내역 ({customerReservations.length})</h4>
                 <StyledReservationList>
-                    {visibleList.map((r, index) => (
+                    {visibleList.map((r) => (
                         <StyledReservationItem key={r.id}
-                                               $color={getServiceColor(r.service, serviceColorMap)}>
+                                               type="button"
+                                               $clickable={!!onReservationClick}
+                                               $color={getServiceColor(r.service, serviceColorMap)}
+                                               onClick={() => onReservationClick?.(r)}>
                             <span className="date">{r.date}</span>
                             <span className="time">{r.startTime} ~ {r.endTime}</span>
                             <strong>{r.service}</strong>
@@ -87,8 +92,12 @@ export const CustomerDetail = ({customer, reservationMap, onClose}: CustomerDeta
                 </StyledMoreButton>}
             </StyledReservationSection>
         </StyledCustomerDetail>
-    </StyledOverlay>, modalRoot);
+    </StyledCustomerOverlay>, modalRoot);
 };
+
+const StyledCustomerOverlay = styled(StyledOverlay)`
+  z-index: ${OVERLAY_Z_INDEX.childDetail};
+`;
 
 const StyledCustomerDetail = styled(StyledDetail)`
   width: 360px;
@@ -136,15 +145,19 @@ const StyledReservationList = styled.ul`
   gap: 6px;
 `;
 
-const StyledReservationItem = styled.li<{ $color: string }>`
+const StyledReservationItem = styled.button<{ $color: string; $clickable: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   padding: 8px 10px;
+  border: none;
   border-radius: 4px;
   background-color: ${props => props.$color};
   color: #fff;
   font-size: 12px;
+  text-align: left;
+  cursor: ${props => props.$clickable ? 'pointer' : 'default'};
 
   .date {
     opacity: 0.9;
@@ -157,6 +170,10 @@ const StyledReservationItem = styled.li<{ $color: string }>`
   strong {
     font-weight: 600;
     margin-left: auto;
+  }
+
+  &:hover {
+    filter: ${props => props.$clickable ? 'brightness(0.96)' : 'none'};
   }
 `;
 

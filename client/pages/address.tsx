@@ -47,6 +47,8 @@ const TAG_COLORS = [
 const Address: NextPage<AddressProps> = ({customers, reservations, history}) => {
     const selectedCustomerId = useCalendarStore((s) => s.selectedCustomerId);
     const setSelectedCustomerId = useCalendarStore((s) => s.setSelectedCustomerId);
+    const openReservationDetailFromCustomer = useCalendarStore((s) => s.openReservationDetailFromCustomer);
+    const openCustomerDetail = useCalendarStore((s) => s.openCustomerDetail);
 
     const [tags, setTags] = useState<Record<number, Tag[]>>({});
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -327,13 +329,14 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history}) => 
                                                        onClose={() => setSelectedReservation(null)}
                                                        onCustomerClick={(customerId) => {
                                                            setSelectedReservation(null);
-                                                           setSelectedCustomerId(customerId);
+                                                           openCustomerDetail(customerId);
                                                        }}
                                                        onUpdate={(prev, updated) => setSelectedReservation(updated)}
                                                        onCancel={() => setSelectedReservation(null)}/>}
             {selectedCustomerId !== null && customerMap[selectedCustomerId] && (
                 <CustomerDetail customer={customerMap[selectedCustomerId]}
                                 reservationMap={reservationMap}
+                                onReservationClick={openReservationDetailFromCustomer}
                                 onClose={() => setSelectedCustomerId(null)}/>
             )}
         </StyledSection>
