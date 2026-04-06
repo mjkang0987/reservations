@@ -12,7 +12,7 @@ import {getDailyRevenue, getRangeRevenue} from '../utils/revenue';
 import {buildServiceColorMap, formatPrice, formatDuration, getCategoryBaseColor, getGroupedCatalog, getServiceColor} from '../utils/services';
 import type {ServiceItem} from '../utils/services';
 import type {Designer, DesignerStatus} from '../utils/designers';
-import {WEEKDAY_LABELS, getDesignerStatus, splitDesignersByStatus} from '../utils/designers';
+import {WEEKDAY_LABELS, getDesignerColor, getDesignerStatus, splitDesignersByStatus} from '../utils/designers';
 import type {Reservation, ReservationMap, ReservationHistoryEntry} from '../utils/reservations';
 import {groupByDate, toDateKey} from '../utils/reservations';
 import type {Customer} from '../utils/customers';
@@ -30,7 +30,7 @@ type SettingsProps = {
     history: ReservationHistoryEntry[];
 };
 
-type SettingsTab = 'revenue' | 'service' | 'designer';
+type SettingsTab = 'revenue' | 'service' | 'designer' | 'store';
 type RevenueDesignerKey = 'all' | `${number}`;
 type RevenueQuickRange = 'month' | 'week' | 'today';
 
@@ -244,12 +244,167 @@ const RevenueSection = ({
 
 /* ── Service Manage Section ── */
 
+const StoreManageSection = () => {
+    const storeSettings = useCalendarStore((s) => s.storeSettings);
+    const updateStoreBusinessHours = useCalendarStore((s) => s.updateStoreBusinessHours);
+    const updateStoreClosedDates = useCalendarStore((s) => s.updateStoreClosedDates);
+    const [businessHours, setBusinessHours] = useState(storeSettings.businessHours);
+    const [closedDates, setClosedDates] = useState(storeSettings.closedDates);
+    const [closedDateInput, setClosedDateInput] = useState('');
+    const [closedDateError, setClosedDateError] = useState('');
+    const [isEditingBusinessHours, setIsEditingBusinessHours] = useState(false);
+    const [isEditingClosedDates, setIsEditingClosedDates] = useState(false);
+
+    useEffect(() => {
+        setBusinessHours(storeSettings.businessHours);
+        setClosedDates(storeSettings.closedDates);
+    }, [storeSettings]);
+
+    const isBusinessHoursDirty = businessHours.start !== storeSettings.businessHours.start
+        || businessHours.end !== storeSettings.businessHours.end;
+    const isClosedDatesDirty = closedDates.join('|') !== storeSettings.closedDates.join('|');
+
+    const handleSaveBusinessHours = () => {
+        updateStoreBusinessHours(businessHours);
+        setIsEditingBusinessHours(false);
+    };
+
+    const handleAddClosedDate = () => {
+        if (!closedDateInput) {
+            setClosedDateError('휴업일을 선택해 주세요.');
+            return;
+        }
+
+        if (closedDates.includes(closedDateInput)) {
+            setClosedDateError('이미 등록된 휴업일입니다.');
+            return;
+        }
+
+        setClosedDates((prev) => [...prev, closedDateInput].sort());
+        setClosedDateInput('');
+        setClosedDateError('');
+    };
+
+    const handleSaveClosedDates = () => {
+        updateStoreClosedDates(closedDates);
+        setIsEditingClosedDates(false);
+    };
+
+    return (
+        <StyledStoreSection>
+            <StyledStoreCard>
+                <StyledStoreCardHeader>
+                    <StyledStoreCardTitle>영업시간</StyledStoreCardTitle>
+                    {!isEditingBusinessHours && (
+                        <StyledEditBtn type="button" onClick={() => setIsEditingBusinessHours(true)}>수정</StyledEditBtn>
+                    )}
+                </StyledStoreCardHeader>
+                <StyledStoreFieldGrid>
+                    <StyledRangeInputWrap>
+                        <span>오픈</span>
+                        <StyledDateInput
+                            type="time"
+                            value={businessHours.start}
+                            disabled={!isEditingBusinessHours}
+                            onChange={(e) => setBusinessHours((prev) => ({...prev, start: e.target.value}))}
+                        />
+                    </StyledRangeInputWrap>
+                    <StyledRangeInputWrap>
+                        <span>마감</span>
+                        <StyledDateInput
+                            type="time"
+                            value={businessHours.end}
+                            disabled={!isEditingBusinessHours}
+                            onChange={(e) => setBusinessHours((prev) => ({...prev, end: e.target.value}))}
+                        />
+                    </StyledRangeInputWrap>
+                </StyledStoreFieldGrid>
+                {isEditingBusinessHours && (
+                    <StyledStoreActionRow>
+                        <StyledCancelBtn
+                            type="button"
+                            onClick={() => {
+                                setBusinessHours(storeSettings.businessHours);
+                                setIsEditingBusinessHours(false);
+                            }}
+                        >
+                            취소
+                        </StyledCancelBtn>
+                        <StyledSaveBtn type="button" onClick={handleSaveBusinessHours} disabled={!isBusinessHoursDirty}>저장</StyledSaveBtn>
+                    </StyledStoreActionRow>
+                )}
+            </StyledStoreCard>
+
+            <StyledStoreCard>
+                <StyledStoreCardHeader>
+                    <StyledStoreCardTitle>휴업일</StyledStoreCardTitle>
+                    {!isEditingClosedDates && (
+                        <StyledEditBtn type="button" onClick={() => setIsEditingClosedDates(true)}>수정</StyledEditBtn>
+                    )}
+                </StyledStoreCardHeader>
+                {isEditingClosedDates && (
+                    <>
+                        <StyledClosedDateAddRow>
+                            <StyledDateInput
+                                type="date"
+                                value={closedDateInput}
+                                onChange={(e) => {
+                                    setClosedDateInput(e.target.value);
+                                    setClosedDateError('');
+                                }}
+                            />
+                            <StyledSaveBtn type="button" onClick={handleAddClosedDate}>추가</StyledSaveBtn>
+                        </StyledClosedDateAddRow>
+                        {closedDateError && <StyledAddNotice>{closedDateError}</StyledAddNotice>}
+                    </>
+                )}
+                {closedDates.length === 0 ? (
+                    <StyledEmpty>등록된 휴업일 없음</StyledEmpty>
+                ) : (
+                    <StyledClosedDateList>
+                        {closedDates.map((date) => (
+                            <StyledClosedDateItem key={date}>
+                                <span>{formatDateLabel(date)}</span>
+                                {isEditingClosedDates && (
+                                    <StyledDeleteBtn
+                                        type="button"
+                                        onClick={() => setClosedDates((prev) => prev.filter((item) => item !== date))}
+                                    >
+                                        삭제
+                                    </StyledDeleteBtn>
+                                )}
+                            </StyledClosedDateItem>
+                        ))}
+                    </StyledClosedDateList>
+                )}
+                {isEditingClosedDates && (
+                    <StyledStoreActionRow>
+                        <StyledCancelBtn
+                            type="button"
+                            onClick={() => {
+                                setClosedDates(storeSettings.closedDates);
+                                setClosedDateInput('');
+                                setClosedDateError('');
+                                setIsEditingClosedDates(false);
+                            }}
+                        >
+                            취소
+                        </StyledCancelBtn>
+                        <StyledSaveBtn type="button" onClick={handleSaveClosedDates} disabled={!isClosedDatesDirty}>저장</StyledSaveBtn>
+                    </StyledStoreActionRow>
+                )}
+            </StyledStoreCard>
+        </StyledStoreSection>
+    );
+};
+
 const ServiceManageSection = () => {
     const serviceCatalog = useCalendarStore((s) => s.serviceCatalog);
     const categoryBaseColorMap = useCalendarStore((s) => s.categoryBaseColorMap);
     const addService = useCalendarStore((s) => s.addService);
     const updateService = useCalendarStore((s) => s.updateService);
     const deleteService = useCalendarStore((s) => s.deleteService);
+    const renameCategory = useCalendarStore((s) => s.renameCategory);
     const moveCategory = useCalendarStore((s) => s.moveCategory);
     const moveServiceInCategory = useCalendarStore((s) => s.moveServiceInCategory);
     const updateCategoryBaseColor = useCalendarStore((s) => s.updateCategoryBaseColor);
@@ -265,11 +420,14 @@ const ServiceManageSection = () => {
     const [editState, setEditState] = useState<EditState>({name: '', durationMinutes: '', price: ''});
     const [form, setForm] = useState(EMPTY_FORM);
     const [newCategory, setNewCategory] = useState('');
+    const [addError, setAddError] = useState('');
     const [showAdd, setShowAdd] = useState(false);
     const [draggingName, setDraggingName] = useState<string | null>(null);
     const [dragOverName, setDragOverName] = useState<string | null>(null);
     const [draggingCategory, setDraggingCategory] = useState<string | null>(null);
     const [dragOverCategory, setDragOverCategory] = useState<string | null>(null);
+    const [editingCategory, setEditingCategory] = useState<string | null>(null);
+    const [editingCategoryName, setEditingCategoryName] = useState('');
 
     const startEdit = (item: ServiceItem) => {
         setEditingName(item.name);
@@ -301,7 +459,17 @@ const ServiceManageSection = () => {
     const handleAdd = () => {
         const name = form.name.trim();
         const category = form.category === '__new' ? newCategory.trim() : form.category.trim();
-        if (!name || !category) return;
+        if (!category) {
+            setAddError(form.category === '__new'
+                ? '새 카테고리명을 입력해 주세요.'
+                : '카테고리를 선택하거나 새 카테고리를 추가해 주세요.');
+            return;
+        }
+        if (!name) return;
+        if (serviceCatalog.some((item) => item.name === name)) {
+            setAddError(`"${name}" 시술은 이미 등록되어 있습니다.`);
+            return;
+        }
 
         addService({
             name,
@@ -309,6 +477,7 @@ const ServiceManageSection = () => {
             durationMinutes: Number(form.durationMinutes) || 0,
             price: Number(form.price) || 0,
         });
+        setAddError('');
         setForm(EMPTY_FORM);
         setNewCategory('');
         setShowAdd(false);
@@ -361,6 +530,19 @@ const ServiceManageSection = () => {
         setDraggingCategory(null);
     };
 
+    const startCategoryEdit = (category: string) => {
+        setEditingCategory(category);
+        setEditingCategoryName(category);
+    };
+
+    const saveCategoryEdit = (category: string) => {
+        const nextName = editingCategoryName.trim();
+        if (!nextName) return;
+        renameCategory(category, nextName);
+        setEditingCategory(null);
+        setEditingCategoryName('');
+    };
+
     return (
         <>
             <StyledServiceBody>
@@ -372,16 +554,35 @@ const ServiceManageSection = () => {
                                  $isCategoryDragging={draggingCategory === category}
                                  $isCategoryDragOver={dragOverCategory === category && draggingCategory !== category}>
                         <StyledCategoryHeader>
-                            <StyledCategoryLabel>
-                                <StyledCategoryDragHandle
-                                    draggable
-                                    onDragStart={() => handleCategoryDragStart(category)}
-                                    title="카테고리 순서 이동"
-                                >
-                                    ::
-                                </StyledCategoryDragHandle>
-                                <span>{category}</span>
-                            </StyledCategoryLabel>
+                            {editingCategory === category ? (
+                                <StyledCategoryEditRow>
+                                    <StyledCategoryEditInput
+                                        value={editingCategoryName}
+                                        onChange={(e) => setEditingCategoryName(e.target.value)}
+                                        placeholder="카테고리명"
+                                    />
+                                    <StyledSaveBtn type="button" onClick={() => saveCategoryEdit(category)}>저장</StyledSaveBtn>
+                                    <StyledCancelBtn type="button" onClick={() => {
+                                        setEditingCategory(null);
+                                        setEditingCategoryName('');
+                                    }}>취소</StyledCancelBtn>
+                                </StyledCategoryEditRow>
+                            ) : (
+                                <StyledCategoryLabel>
+                                    <StyledCategoryDragHandle
+                                        draggable
+                                        onDragStart={() => handleCategoryDragStart(category)}
+                                        title="카테고리 순서 이동"
+                                    >
+                                        ::
+                                    </StyledCategoryDragHandle>
+                                    <span>{category}</span>
+                                </StyledCategoryLabel>
+                            )}
+                            <StyledCategoryActions>
+                                {editingCategory !== category && (
+                                    <StyledEditBtn type="button" onClick={() => startCategoryEdit(category)}>이름수정</StyledEditBtn>
+                                )}
                             <StyledCategoryColorInput
                                 type="color"
                                 value={getCategoryBaseColor(category, categoryBaseColorMap)}
@@ -389,6 +590,7 @@ const ServiceManageSection = () => {
                                 aria-label={`${category} 대표 컬러`}
                                 title={`${category} 대표 컬러`}
                             />
+                            </StyledCategoryActions>
                         </StyledCategoryHeader>
                         {items.map((item) => (
                             <StyledItem key={item.name}
@@ -449,7 +651,10 @@ const ServiceManageSection = () => {
                         <StyledAddRow>
                             <select value={form.category}
                                     aria-label="시술 카테고리"
-                                    onChange={(e) => setForm({...form, category: e.target.value})}>
+                                    onChange={(e) => {
+                                        setForm({...form, category: e.target.value});
+                                        setAddError('');
+                                    }}>
                                 <option value="">카테고리</option>
                                 {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                                 <option value="__new">+ 새 카테고리</option>
@@ -458,13 +663,24 @@ const ServiceManageSection = () => {
                                 <StyledAddInput
                                     value={newCategory}
                                     placeholder="카테고리명"
-                                    onChange={(e) => setNewCategory(e.target.value)}/>
+                                    onChange={(e) => {
+                                        setNewCategory(e.target.value);
+                                        setAddError('');
+                                    }}/>
                             )}
                         </StyledAddRow>
+                        {(addError || !form.category) && (
+                            <StyledAddNotice>
+                                {addError || '카테고리를 먼저 선택하거나 새 카테고리를 추가해 주세요.'}
+                            </StyledAddNotice>
+                        )}
                         <StyledAddRow>
                             <StyledAddInput
                                 value={form.name}
-                                onChange={(e) => setForm({...form, name: e.target.value})}
+                                onChange={(e) => {
+                                    setForm({...form, name: e.target.value});
+                                    setAddError('');
+                                }}
                                 placeholder="시술명"/>
                             <StyledAddSmall
                                 type="number"
@@ -479,11 +695,19 @@ const ServiceManageSection = () => {
                         </StyledAddRow>
                         <StyledAddActions>
                             <StyledSaveBtn type="button" onClick={handleAdd}>추가</StyledSaveBtn>
-                            <StyledCancelBtn type="button" onClick={() => { setShowAdd(false); setForm(EMPTY_FORM); setNewCategory(''); }}>취소</StyledCancelBtn>
+                            <StyledCancelBtn type="button" onClick={() => {
+                                setShowAdd(false);
+                                setForm(EMPTY_FORM);
+                                setNewCategory('');
+                                setAddError('');
+                            }}>취소</StyledCancelBtn>
                         </StyledAddActions>
                     </StyledAddForm>
                 ) : (
-                    <StyledAddButton type="button" onClick={() => setShowAdd(true)}>+ 시술 추가</StyledAddButton>
+                    <StyledAddButton type="button" onClick={() => {
+                        setShowAdd(true);
+                        setAddError('');
+                    }}>+ 시술 추가</StyledAddButton>
                 )}
             </StyledServiceFooter>
         </>
@@ -497,7 +721,7 @@ const DESIGNER_STATUS_OPTIONS: DesignerStatus[] = ['재직', '휴직', '퇴직']
 interface DesignerCardProps {
     designer: Designer;
     isEditing: boolean;
-    onUpdateDesigner: (designerId: number, patch: Partial<Pick<Designer, 'name' | 'status' | 'phone' | 'note'>>) => void;
+    onUpdateDesigner: (designerId: number, patch: Partial<Pick<Designer, 'name' | 'status' | 'phone' | 'note' | 'color'>>) => void;
     onUpdateDesignerDay: (designerId: number, dayIndex: number, patch: {enabled?: boolean; start?: string; end?: string}) => void;
     onStartEdit: (designerId: number) => void;
     onFinishEdit: () => void;
@@ -564,14 +788,24 @@ const DesignerCard = ({
                     placeholder="010-0000-0000"
                 />
             </StyledDesignerMetaField>
-                <StyledDesignerMetaField>
-                    <StyledDesignerMetaLabel>메모</StyledDesignerMetaLabel>
+            <StyledDesignerMetaField>
+                <StyledDesignerMetaLabel>메모</StyledDesignerMetaLabel>
                 <StyledDesignerMetaInput
                     value={designer.note ?? ''}
                     disabled={!isEditing}
                     aria-label={`${designer.name} 메모`}
                     onChange={(e) => onUpdateDesigner(designer.id, {note: e.target.value})}
                     placeholder="특이사항 메모"
+                />
+            </StyledDesignerMetaField>
+            <StyledDesignerMetaField>
+                <StyledDesignerMetaLabel>컬러</StyledDesignerMetaLabel>
+                <StyledDesignerColorInput
+                    type="color"
+                    value={getDesignerColor(designer)}
+                    disabled={!isEditing}
+                    aria-label={`${designer.name} 컬러`}
+                    onChange={(e) => onUpdateDesigner(designer.id, {color: e.target.value})}
                 />
             </StyledDesignerMetaField>
         </StyledDesignerMetaGrid>
@@ -621,7 +855,7 @@ interface DesignerSectionProps {
     title: string;
     designers: Designer[];
     editingDesignerId: number | null;
-    onUpdateDesigner: (designerId: number, patch: Partial<Pick<Designer, 'name' | 'status' | 'phone' | 'note'>>) => void;
+    onUpdateDesigner: (designerId: number, patch: Partial<Pick<Designer, 'name' | 'status' | 'phone' | 'note' | 'color'>>) => void;
     onUpdateDesignerDay: (designerId: number, dayIndex: number, patch: {enabled?: boolean; start?: string; end?: string}) => void;
     onStartEdit: (designerId: number) => void;
     onFinishEdit: () => void;
@@ -666,6 +900,7 @@ const DesignerManageSection = () => {
     const [newStatus, setNewStatus] = useState<DesignerStatus>('재직');
     const [newPhone, setNewPhone] = useState('');
     const [newNote, setNewNote] = useState('');
+    const [newColor, setNewColor] = useState(getDesignerColor({id: 1}));
     const [editingDesignerId, setEditingDesignerId] = useState<number | null>(null);
     const [isAddingDesigner, setIsAddingDesigner] = useState(false);
     const {active: activeDesigners, onLeave: onLeaveDesigners, resigned: resignedDesigners} = splitDesignersByStatus(designers);
@@ -673,11 +908,12 @@ const DesignerManageSection = () => {
     const handleAdd = () => {
         const name = newName.trim();
         if (!name) return;
-        addDesigner(name, newStatus, newPhone.trim(), newNote.trim());
+        addDesigner(name, newStatus, newPhone.trim(), newNote.trim(), newColor);
         setNewName('');
         setNewStatus('재직');
         setNewPhone('');
         setNewNote('');
+        setNewColor(getDesignerColor({id: designers.length + 2}));
         setIsAddingDesigner(false);
     };
 
@@ -741,6 +977,12 @@ const DesignerManageSection = () => {
                                     placeholder="연락처"
                                     aria-label="새 디자이너 연락처"
                                 />
+                                <StyledDesignerColorInput
+                                    type="color"
+                                    value={newColor}
+                                    aria-label="새 디자이너 컬러"
+                                    onChange={(e) => setNewColor(e.target.value)}
+                                />
                                 <StyledSaveBtn type="button" onClick={handleAdd}>추가</StyledSaveBtn>
                             </StyledDesignerAddRow>
                             <StyledDesignerMetaInput
@@ -755,6 +997,7 @@ const DesignerManageSection = () => {
                                 setNewStatus('재직');
                                 setNewPhone('');
                                 setNewNote('');
+                                setNewColor(getDesignerColor({id: designers.length + 1}));
                             }}>취소</StyledCancelBtn>
                         </>
                     ) : (
@@ -790,7 +1033,7 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
     const revenueWeekStartKey = shiftDateKey(now, -7);
 
     const q = router.query;
-    const tab: SettingsTab = q.tab === 'service' || q.tab === 'designer' ? q.tab : 'revenue';
+    const tab: SettingsTab = q.tab === 'service' || q.tab === 'designer' || q.tab === 'store' ? q.tab : 'revenue';
     const parsedDesignerId = typeof q.designer === 'string' ? Number(q.designer) : NaN;
     const revenueDesignerKey: RevenueDesignerKey = Number.isInteger(parsedDesignerId) && parsedDesignerId > 0
         ? String(parsedDesignerId) as RevenueDesignerKey
@@ -899,11 +1142,12 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
     return (
         <StyledSection>
             <Head>
-                <title>RESERVATION - 설정</title>
+                <title>Chairtime - 설정</title>
             </Head>
             <StyledHeading>설정</StyledHeading>
             <StyledPageTabs>
                 <StyledPageTab type="button" $active={tab === 'revenue'} onClick={() => setTab('revenue')}>매출</StyledPageTab>
+                <StyledPageTab type="button" $active={tab === 'store'} onClick={() => setTab('store')}>매장관리</StyledPageTab>
                 <StyledPageTab type="button" $active={tab === 'service'} onClick={() => setTab('service')}>서비스 관리</StyledPageTab>
                 <StyledPageTab type="button" $active={tab === 'designer'} onClick={() => setTab('designer')}>디자이너 관리</StyledPageTab>
             </StyledPageTabs>
@@ -921,6 +1165,7 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
                                                       setSelectedDateKey={setRevenueSelectedDate}
                                                       quickRange={quickRange}
                                                       setQuickRange={setRevenueQuickRange}/>}
+                {tab === 'store' && <StoreManageSection/>}
                 {tab === 'service' && <ServiceManageSection/>}
                 {tab === 'designer' && <DesignerManageSection/>}
             </StyledContent>
@@ -1032,7 +1277,7 @@ const StyledRevenueStickyArea = styled.div`
 `;
 
 const compactInputStyle = css`
-    min-height: 32px;
+    height: 30px;
     border: 1px solid var(--light-gray-color);
     border-radius: var(--radius-md);
     background: var(--white-color);
@@ -1055,7 +1300,7 @@ const compactInputStyle = css`
 
 const actionButtonStyle = css`
     flex-shrink: 0;
-    min-height: 32px;
+    height: 30px;
     padding: 0 12px;
     border-radius: var(--radius-md);
     font-size: 12px;
@@ -1102,7 +1347,7 @@ const StyledRangeInputWrap = styled.label`
 const StyledDateInput = styled.input`
     width: 100%;
     appearance: none;
-    min-height: 34px;
+    height: 30px;
     border: 1px solid var(--light-gray-color);
     border-radius: var(--radius-md);
     background: var(--white-color);
@@ -1135,7 +1380,6 @@ const StyledQuickFilters = styled.div`
 
 const StyledQuickFilterButton = styled.button<{ $active: boolean }>`
     ${actionButtonStyle};
-    min-height: 28px;
     padding: 0 11px;
     border: 1px solid ${(p) => p.$active ? 'var(--blue-color)' : 'var(--light-gray-color)'};
     border-radius: 13px;
@@ -1304,6 +1548,81 @@ const StyledLayerCloseButton = styled.button`
 
 /* ── Service Manage Styles ── */
 
+const StyledStoreSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0;
+`;
+
+const StyledStoreCard = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 10px;
+    background: var(--white-color);
+`;
+
+const StyledStoreCardHeader = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+`;
+
+const StyledStoreCardTitle = styled.strong`
+    font-size: 14px;
+    color: var(--dark-gray-color);
+`;
+
+const StyledStoreFieldGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+
+    @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+    }
+`;
+
+const StyledStoreActionRow = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+
+    @media (max-width: 640px) {
+        justify-content: stretch;
+    }
+`;
+
+const StyledClosedDateAddRow = styled.div`
+    display: flex;
+    gap: 8px;
+
+    @media (max-width: 640px) {
+        flex-direction: column;
+    }
+`;
+
+const StyledClosedDateList = styled.div`
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--black-color-10);
+`;
+
+const StyledClosedDateItem = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--black-color-10);
+    font-size: 13px;
+    color: var(--dark-gray-color);
+`;
+
 const StyledServiceBody = styled.div`
     overflow-y: auto;
     overscroll-behavior: auto;
@@ -1324,6 +1643,7 @@ const StyledCategoryHeader = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     font-size: var(--xsmall-font);
     font-weight: 600;
     color: var(--dark-gray-color);
@@ -1338,6 +1658,40 @@ const StyledCategoryLabel = styled.span`
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
+`;
+
+const StyledCategoryActions = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+`;
+
+const StyledCategoryEditRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+`;
+
+const StyledCategoryEditInput = styled.input`
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: var(--radius-md);
+    background: var(--white-color);
+    font-size: 12px;
+    color: var(--dark-gray-color);
+    outline: none;
+
+    &:focus {
+        border-color: var(--blue-color);
+        box-shadow: 0 0 0 3px rgba(0, 169, 230, 0.14);
+    }
 `;
 
 const StyledCategoryDragHandle = styled.span`
@@ -1504,7 +1858,6 @@ const StyledServiceFooter = styled.div`
 const StyledAddButton = styled.button`
     width: 100%;
     ${actionButtonStyle};
-    min-height: 36px;
     border: 1px dashed var(--light-gray-color);
     background: none;
     font-size: 13px;
@@ -1544,6 +1897,13 @@ const StyledAddInput = styled.input`
     flex: 1;
     ${compactInputStyle};
     padding: 0 6px;
+`;
+
+const StyledAddNotice = styled.p`
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--red-color);
 `;
 
 const StyledAddSmall = styled.input`
@@ -1620,11 +1980,11 @@ const StyledDesignerHeaderActions = styled.div`
 
 const StyledDesignerMetaGrid = styled.div`
     display: grid;
-    grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 180px) minmax(0, 1fr) 96px;
     gap: 8px;
     margin-bottom: 10px;
 
-    @media (max-width: 640px) {
+    @media (max-width: 760px) {
         grid-template-columns: 1fr;
     }
 `;
@@ -1639,6 +1999,16 @@ const StyledDesignerMetaField = styled.div`
 const StyledDesignerMetaLabel = styled.label`
     font-size: 11px;
     color: var(--dark-gray-color2);
+`;
+
+const StyledDesignerColorInput = styled.input`
+    width: 100%;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: var(--radius-md);
+    background: var(--white-color);
+    cursor: pointer;
 `;
 
 const StyledDesignerNameInput = styled.input`
@@ -1666,7 +2036,6 @@ const StyledDesignerStatusSelect = styled.select`
     ${compactInputStyle};
     min-height: 28px;
     padding: 0 8px;
-    border-radius: 999px;
     font-size: 11px;
     color: var(--dark-gray-color2);
 
