@@ -1,4 +1,10 @@
 export type ReservationStatus = 'active' | 'cancelled' | 'noshow';
+export type PaymentMethod = '현금' | '현금+현금영수증' | '카드' | '네이버페이' | '지역화폐' | '지역화폐+현금영수증' | '상품권';
+
+export interface PaymentEntry {
+    method: PaymentMethod;
+    amount: number;
+}
 
 export interface Reservation {
     id: number;
@@ -11,6 +17,9 @@ export interface Reservation {
     status?: ReservationStatus;
     price?: number;
     memo?: string;
+    paymentCompleted?: boolean;
+    paymentMethod?: PaymentMethod;
+    paymentEntries?: PaymentEntry[];
 }
 
 export type ReservationMap = Record<string, Reservation[]>;
@@ -36,9 +45,10 @@ export function groupByDate(list: Reservation[]): ReservationMap {
 }
 
 export function toDateKey(fullYear: number, month: number, date: number): string {
-    const m = String(month + 1).padStart(2, '0');
-    const d = String(date).padStart(2, '0');
-    return `${fullYear}-${m}-${d}`;
+    const normalized = new Date(fullYear, month, date);
+    const m = String(normalized.getMonth() + 1).padStart(2, '0');
+    const d = String(normalized.getDate()).padStart(2, '0');
+    return `${normalized.getFullYear()}-${m}-${d}`;
 }
 
 export function findOverlap(
