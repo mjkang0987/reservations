@@ -1,12 +1,101 @@
 {
     "reservations": [
         {
+            "id": 36,
+            "date": "2026-02-03",
+            "startTime": "10:00",
+            "endTime": "10:30",
+            "service": "남성커트",
+            "customerId": 1,
+            "status": "active",
+            "designerId": 1775183550311
+        },
+        {
+            "id": 37,
+            "date": "2026-02-03",
+            "startTime": "11:00",
+            "endTime": "13:00",
+            "service": "일반펌",
+            "customerId": 4,
+            "status": "active",
+            "designerId": 1775183559011
+        },
+        {
+            "id": 38,
+            "date": "2026-02-07",
+            "startTime": "14:00",
+            "endTime": "15:30",
+            "service": "전체염색",
+            "customerId": 6,
+            "status": "active",
+            "designerId": 1775183630516
+        },
+        {
+            "id": 39,
+            "date": "2026-02-12",
+            "startTime": "16:00",
+            "endTime": "17:00",
+            "service": "크리닉 3단계",
+            "customerId": 8,
+            "status": "active",
+            "designerId": 1775183550311
+        },
+        {
+            "id": 40,
+            "date": "2026-02-14",
+            "startTime": "10:30",
+            "endTime": "11:00",
+            "service": "여성커트",
+            "customerId": 10,
+            "status": "cancelled"
+        },
+        {
+            "id": 41,
+            "date": "2026-02-18",
+            "startTime": "13:00",
+            "endTime": "15:30",
+            "service": "디지털/셋팅",
+            "customerId": 11,
+            "status": "active",
+            "designerId": 1775183630516
+        },
+        {
+            "id": 42,
+            "date": "2026-02-21",
+            "startTime": "15:00",
+            "endTime": "17:00",
+            "service": "매직",
+            "customerId": 3,
+            "status": "active",
+            "designerId": 1775183550311
+        },
+        {
+            "id": 43,
+            "date": "2026-02-27",
+            "startTime": "11:00",
+            "endTime": "12:30",
+            "service": "뿌리염색",
+            "customerId": 7,
+            "status": "noshow",
+            "designerId": 1775183559011
+        },
+        {
             "id": 1,
             "date": "2026-03-07",
             "startTime": "10:00",
             "endTime": "10:30",
             "service": "남성커트",
-            "customerId": 1
+            "customerId": 1,
+            "designerId": 1775183559011
+        },
+        {
+            "id": 6,
+            "date": "2026-03-07",
+            "startTime": "11:00",
+            "endTime": "13:00",
+            "service": "여자 디자인펌",
+            "customerId": 6,
+            "designerId": 1775183550311
         },
         {
             "id": 2,
@@ -14,7 +103,8 @@
             "startTime": "14:00",
             "endTime": "15:30",
             "service": "뿌리/전체(멋내기)",
-            "customerId": 2
+            "customerId": 2,
+            "designerId": 1775183630516
         },
         {
             "id": 3,
@@ -23,31 +113,8 @@
             "endTime": "13:00",
             "service": "여자 일반펌",
             "customerId": 3,
-            "status": "noshow"
-        },
-        {
-            "id": 4,
-            "date": "2026-03-15",
-            "startTime": "13:00",
-            "endTime": "13:30",
-            "service": "여성커트",
-            "customerId": 4
-        },
-        {
-            "id": 5,
-            "date": "2026-03-24",
-            "startTime": "16:00",
-            "endTime": "18:00",
-            "service": "뿌리/전체(멋내기)+여성커트",
-            "customerId": 5
-        },
-        {
-            "id": 6,
-            "date": "2026-03-07",
-            "startTime": "11:00",
-            "endTime": "13:00",
-            "service": "여자 디자인펌",
-            "customerId": 6
+            "status": "noshow",
+            "designerId": 1775183550311
         },
         {
             "id": 7,
@@ -56,7 +123,8 @@
             "endTime": "14:30",
             "service": "남성커트",
             "customerId": 7,
-            "status": "cancelled"
+            "status": "cancelled",
+            "designerId": 1775183559011
         },
         {
             "id": 8,
@@ -64,7 +132,18 @@
             "startTime": "16:00",
             "endTime": "17:00",
             "service": "클리닉 3단계",
-            "customerId": 8
+            "customerId": 8,
+            "designerId": 1775183630516
+        },
+        {
+            "id": 1774569817952,
+            "date": "2026-03-11",
+            "startTime": "11:00",
+            "endTime": "11:30",
+            "service": "남성커트",
+            "customerId": 2,
+            "status": "cancelled",
+            "designerId": 1775183630516
         },
         {
             "id": 9,
@@ -73,15 +152,8 @@
             "endTime": "13:00",
             "service": "뿌리/전체(새치)+남자 일반펌",
             "customerId": 2,
-            "status": "cancelled"
-        },
-        {
-            "id": 10,
-            "date": "2026-03-30",
-            "startTime": "10:00",
-            "endTime": "12:00",
-            "service": "남자 매직",
-            "customerId": 9
+            "status": "cancelled",
+            "designerId": 1775183550311
         },
         {
             "id": 11,
@@ -89,7 +161,17 @@
             "startTime": "10:30",
             "endTime": "11:00",
             "service": "남성커트",
-            "customerId": 10
+            "customerId": 10,
+            "designerId": 1775183630516
+        },
+        {
+            "id": 4,
+            "date": "2026-03-15",
+            "startTime": "13:00",
+            "endTime": "13:30",
+            "service": "여성커트",
+            "customerId": 4,
+            "designerId": 1775183559011
         },
         {
             "id": 12,
@@ -97,7 +179,8 @@
             "startTime": "15:00",
             "endTime": "16:30",
             "service": "뿌리/전체(멋내기)",
-            "customerId": 6
+            "customerId": 6,
+            "designerId": 1775183550311
         },
         {
             "id": 13,
@@ -105,7 +188,8 @@
             "startTime": "11:00",
             "endTime": "11:30",
             "service": "여성커트",
-            "customerId": 1
+            "customerId": 1,
+            "designerId": 1775183559011
         },
         {
             "id": 14,
@@ -113,7 +197,8 @@
             "startTime": "13:00",
             "endTime": "15:30",
             "service": "셋팅펌",
-            "customerId": 11
+            "customerId": 11,
+            "designerId": 1775183630516
         },
         {
             "id": 15,
@@ -129,15 +214,17 @@
             "startTime": "10:00",
             "endTime": "10:30",
             "service": "남성커트",
-            "customerId": 12
+            "customerId": 12,
+            "designerId": 1775183559011
         },
         {
             "id": 17,
             "date": "2026-03-19",
-            "startTime": "11:00",
-            "endTime": "12:00",
+            "startTime": "10:30",
+            "endTime": "11:30",
             "service": "하오니코",
-            "customerId": 5
+            "customerId": 5,
+            "designerId": 1775183630516
         },
         {
             "id": 18,
@@ -145,7 +232,18 @@
             "startTime": "14:00",
             "endTime": "16:00",
             "service": "여자 디자인펌",
-            "customerId": 10
+            "customerId": 10,
+            "designerId": 1775183550311
+        },
+        {
+            "id": 1774569765719,
+            "date": "2026-03-19",
+            "startTime": "18:00",
+            "endTime": "19:30",
+            "service": "남자 일반펌",
+            "customerId": 2,
+            "status": "active",
+            "designerId": 1775183630516
         },
         {
             "id": 19,
@@ -153,7 +251,8 @@
             "startTime": "10:00",
             "endTime": "11:30",
             "service": "뿌리/전체(멋내기)",
-            "customerId": 7
+            "customerId": 7,
+            "designerId": 1775183559011
         },
         {
             "id": 20,
@@ -169,7 +268,8 @@
             "startTime": "11:00",
             "endTime": "13:30",
             "service": "여자 일반펌+여성커트",
-            "customerId": 4
+            "customerId": 4,
+            "designerId": 1775183550311
         },
         {
             "id": 22,
@@ -177,7 +277,8 @@
             "startTime": "14:00",
             "endTime": "16:30",
             "service": "여자 매직",
-            "customerId": 8
+            "customerId": 8,
+            "designerId": 1775183559011
         },
         {
             "id": 23,
@@ -185,7 +286,8 @@
             "startTime": "10:00",
             "endTime": "12:00",
             "service": "남성커트+남자 일반펌",
-            "customerId": 11
+            "customerId": 11,
+            "designerId": 1775183630516
         },
         {
             "id": 24,
@@ -193,7 +295,16 @@
             "startTime": "13:00",
             "endTime": "15:30",
             "service": "셋팅펌",
-            "customerId": 12
+            "customerId": 12,
+            "designerId": 1775183550311
+        },
+        {
+            "id": 5,
+            "date": "2026-03-24",
+            "startTime": "16:00",
+            "endTime": "18:00",
+            "service": "뿌리/전체(멋내기)+여성커트",
+            "customerId": 5
         },
         {
             "id": 25,
@@ -210,7 +321,8 @@
             "endTime": "12:00",
             "service": "여성커트",
             "customerId": 6,
-            "status": "cancelled"
+            "status": "cancelled",
+            "designerId": 1775183630516
         },
         {
             "id": 27,
@@ -218,7 +330,8 @@
             "startTime": "14:00",
             "endTime": "15:30",
             "service": "뿌리/전체(멋내기)",
-            "customerId": 2
+            "customerId": 2,
+            "designerId": 1775183550311
         },
         {
             "id": 28,
@@ -226,7 +339,8 @@
             "startTime": "16:00",
             "endTime": "17:00",
             "service": "클리닉 3단계",
-            "customerId": 3
+            "customerId": 3,
+            "designerId": 1775183559011
         },
         {
             "id": 29,
@@ -234,7 +348,8 @@
             "startTime": "10:00",
             "endTime": "12:00",
             "service": "여자 디자인펌",
-            "customerId": 4
+            "customerId": 4,
+            "designerId": 1775183630516
         },
         {
             "id": 30,
@@ -250,7 +365,8 @@
             "startTime": "11:00",
             "endTime": "11:30",
             "service": "주니어커트",
-            "customerId": 5
+            "customerId": 5,
+            "designerId": 1775183559011
         },
         {
             "id": 32,
@@ -258,7 +374,8 @@
             "startTime": "14:00",
             "endTime": "17:00",
             "service": "뿌리/전체(새치)+남자 일반펌",
-            "customerId": 8
+            "customerId": 8,
+            "designerId": 1775183630516
         },
         {
             "id": 33,
@@ -266,7 +383,8 @@
             "startTime": "10:00",
             "endTime": "10:30",
             "service": "남성커트",
-            "customerId": 9
+            "customerId": 9,
+            "designerId": 1775183550311
         },
         {
             "id": 34,
@@ -275,7 +393,8 @@
             "endTime": "13:30",
             "service": "셋팅펌",
             "customerId": 10,
-            "status": "cancelled"
+            "status": "cancelled",
+            "designerId": 1775183559011
         },
         {
             "id": 35,
@@ -286,22 +405,120 @@
             "customerId": 11
         },
         {
-            "id": 1774569765719,
-            "date": "2026-03-19",
-            "startTime": "18:00",
-            "endTime": "19:30",
-            "service": "남자 일반펌",
+            "id": 10,
+            "date": "2026-03-30",
+            "startTime": "10:00",
+            "endTime": "12:00",
+            "service": "남자 매직",
+            "customerId": 9
+        },
+        {
+            "id": 44,
+            "date": "2026-04-02",
+            "startTime": "10:00",
+            "endTime": "11:30",
+            "service": "뿌리염색",
             "customerId": 2,
+            "status": "active",
+            "designerId": 1775183630516
+        },
+        {
+            "id": 45,
+            "date": "2026-04-04",
+            "startTime": "13:00",
+            "endTime": "13:30",
+            "service": "남성커트",
+            "customerId": 9,
             "status": "active"
         },
         {
-            "id": 1774569817952,
-            "date": "2026-03-11",
+            "id": 46,
+            "date": "2026-04-08",
+            "startTime": "14:00",
+            "endTime": "16:00",
+            "service": "디자인펌",
+            "customerId": 5,
+            "status": "active",
+            "designerId": 1775183559011
+        },
+        {
+            "id": 47,
+            "date": "2026-04-11",
             "startTime": "11:00",
-            "endTime": "11:30",
-            "service": "남성커트",
-            "customerId": 2,
+            "endTime": "12:00",
+            "service": "하오니코",
+            "customerId": 12,
+            "status": "active",
+            "designerId": 1775183630516
+        },
+        {
+            "id": 48,
+            "date": "2026-04-16",
+            "startTime": "15:00",
+            "endTime": "17:30",
+            "service": "디지털/셋팅",
+            "customerId": 1,
+            "status": "active",
+            "designerId": 1775183550311
+        },
+        {
+            "id": 49,
+            "date": "2026-04-18",
+            "startTime": "10:00",
+            "endTime": "10:30",
+            "service": "주니어커트",
+            "customerId": 6,
+            "status": "active",
+            "designerId": 1775183559011
+        },
+        {
+            "id": 50,
+            "date": "2026-04-23",
+            "startTime": "12:00",
+            "endTime": "13:30",
+            "service": "전체염색",
+            "customerId": 4,
             "status": "cancelled"
+        },
+        {
+            "id": 51,
+            "date": "2026-04-29",
+            "startTime": "17:00",
+            "endTime": "18:30",
+            "service": "매직",
+            "customerId": 10,
+            "status": "active",
+            "designerId": 1775183550311
+        },
+        {
+            "id": 1774569817953,
+            "date": "2026-04-06",
+            "startTime": "11:00",
+            "endTime": "12:30",
+            "service": "남성커트+크리닉",
+            "customerId": 1,
+            "status": "active",
+            "designerId": 1775183550311
+        },
+        {
+            "id": 1774569817954,
+            "date": "2026-04-06",
+            "startTime": "11:30",
+            "endTime": "13:00",
+            "service": "뿌리염색",
+            "customerId": 2,
+            "status": "active",
+            "designerId": 1775183559011
+        },
+        {
+            "id": 1774569817955,
+            "date": "2026-04-06",
+            "startTime": "11:00",
+            "endTime": "12:00",
+            "service": "하오니코",
+            "customerId": 3,
+            "status": "active",
+            "designerId": 1775183630516
         }
     ],
     "history": [
@@ -313,7 +530,8 @@
                 "startTime": "11:30",
                 "endTime": "12:00",
                 "service": "여성커트",
-                "customerId": 6
+                "customerId": 6,
+                "designerId": 1775183630516
             },
             "after": {
                 "id": 26,
@@ -322,7 +540,8 @@
                 "endTime": "12:00",
                 "service": "여성커트",
                 "customerId": 6,
-                "status": "cancelled"
+                "status": "cancelled",
+                "designerId": 1775183630516
             },
             "timestamp": "2026-03-25T07:04:47.811Z"
         },
@@ -334,7 +553,8 @@
                 "startTime": "11:00",
                 "endTime": "13:30",
                 "service": "여자 매직",
-                "customerId": 5
+                "customerId": 5,
+                "designerId": 1775183559011
             },
             "after": {
                 "id": 31,
@@ -342,7 +562,8 @@
                 "startTime": "11:00",
                 "endTime": "11:30",
                 "service": "주니어커트",
-                "customerId": 5
+                "customerId": 5,
+                "designerId": 1775183559011
             },
             "timestamp": "2026-03-25T07:06:03.121Z"
         },
@@ -354,7 +575,8 @@
                 "startTime": "11:00",
                 "endTime": "13:00",
                 "service": "여자 일반펌",
-                "customerId": 3
+                "customerId": 3,
+                "designerId": 1775183550311
             },
             "after": {
                 "id": 3,
@@ -363,7 +585,8 @@
                 "endTime": "13:00",
                 "service": "여자 일반펌",
                 "customerId": 3,
-                "status": "noshow"
+                "status": "noshow",
+                "designerId": 1775183550311
             },
             "timestamp": "2026-03-26T03:11:36.502Z"
         },
@@ -375,7 +598,8 @@
                 "startTime": "14:00",
                 "endTime": "14:30",
                 "service": "남성커트",
-                "customerId": 7
+                "customerId": 7,
+                "designerId": 1775183559011
             },
             "after": {
                 "id": 7,
@@ -384,7 +608,8 @@
                 "endTime": "14:30",
                 "service": "남성커트",
                 "customerId": 7,
-                "status": "cancelled"
+                "status": "cancelled",
+                "designerId": 1775183559011
             },
             "timestamp": "2026-03-26T03:11:53.174Z"
         },
@@ -397,7 +622,8 @@
                 "endTime": "15:30",
                 "service": "남성커트",
                 "customerId": 2,
-                "status": "active"
+                "status": "active",
+                "designerId": 1775183630516
             },
             "after": {
                 "id": 1774569817952,
@@ -406,7 +632,8 @@
                 "endTime": "18:30",
                 "service": "남성커트",
                 "customerId": 2,
-                "status": "active"
+                "status": "active",
+                "designerId": 1775183630516
             },
             "timestamp": "2026-03-27T00:03:56.059Z"
         },
@@ -419,7 +646,8 @@
                 "endTime": "18:30",
                 "service": "남성커트",
                 "customerId": 2,
-                "status": "active"
+                "status": "active",
+                "designerId": 1775183630516
             },
             "after": {
                 "id": 1774569817952,
@@ -428,7 +656,8 @@
                 "endTime": "18:30",
                 "service": "남성커트",
                 "customerId": 2,
-                "status": "active"
+                "status": "active",
+                "designerId": 1775183630516
             },
             "timestamp": "2026-03-27T00:04:11.029Z"
         },
@@ -441,7 +670,8 @@
                 "endTime": "18:30",
                 "service": "남성커트",
                 "customerId": 2,
-                "status": "active"
+                "status": "active",
+                "designerId": 1775183630516
             },
             "after": {
                 "id": 1774569817952,
@@ -450,7 +680,8 @@
                 "endTime": "11:30",
                 "service": "남성커트",
                 "customerId": 2,
-                "status": "active"
+                "status": "active",
+                "designerId": 1775183630516
             },
             "timestamp": "2026-03-27T00:04:37.812Z"
         },
@@ -463,7 +694,8 @@
                 "endTime": "11:30",
                 "service": "남성커트",
                 "customerId": 2,
-                "status": "active"
+                "status": "active",
+                "designerId": 1775183630516
             },
             "after": {
                 "id": 1774569817952,
@@ -472,7 +704,8 @@
                 "endTime": "11:30",
                 "service": "남성커트",
                 "customerId": 2,
-                "status": "cancelled"
+                "status": "cancelled",
+                "designerId": 1775183630516
             },
             "timestamp": "2026-03-27T00:04:52.594Z"
         },
@@ -484,7 +717,8 @@
                 "startTime": "10:00",
                 "endTime": "13:00",
                 "service": "뿌리/전체(새치)+남자 일반펌",
-                "customerId": 2
+                "customerId": 2,
+                "designerId": 1775183550311
             },
             "after": {
                 "id": 9,
@@ -492,7 +726,8 @@
                 "startTime": "10:00",
                 "endTime": "13:00",
                 "service": "뿌리/전체(새치)+남자 일반펌",
-                "customerId": 2
+                "customerId": 2,
+                "designerId": 1775183550311
             },
             "timestamp": "2026-03-30T00:59:40.831Z"
         },
@@ -504,7 +739,8 @@
                 "startTime": "10:00",
                 "endTime": "13:00",
                 "service": "뿌리/전체(새치)+남자 일반펌",
-                "customerId": 2
+                "customerId": 2,
+                "designerId": 1775183550311
             },
             "after": {
                 "id": 9,
@@ -513,7 +749,8 @@
                 "endTime": "13:00",
                 "service": "뿌리/전체(새치)+남자 일반펌",
                 "customerId": 2,
-                "status": "cancelled"
+                "status": "cancelled",
+                "designerId": 1775183550311
             },
             "timestamp": "2026-03-30T00:59:43.544Z"
         },
@@ -605,7 +842,8 @@
                 "startTime": "10:00",
                 "endTime": "10:30",
                 "service": "남성커트",
-                "customerId": 11
+                "customerId": 11,
+                "designerId": 1775183630516
             },
             "after": {
                 "id": 23,
@@ -613,7 +851,8 @@
                 "startTime": "10:00",
                 "endTime": "12:00",
                 "service": "남성커트+남자 일반펌",
-                "customerId": 11
+                "customerId": 11,
+                "designerId": 1775183630516
             },
             "timestamp": "2026-03-30T01:39:54.309Z"
         },
@@ -645,7 +884,8 @@
                 "startTime": "11:00",
                 "endTime": "13:30",
                 "service": "셋팅펌",
-                "customerId": 10
+                "customerId": 10,
+                "designerId": 1775183559011
             },
             "after": {
                 "id": 34,
@@ -654,9 +894,76 @@
                 "endTime": "13:30",
                 "service": "셋팅펌",
                 "customerId": 10,
-                "status": "cancelled"
+                "status": "cancelled",
+                "designerId": 1775183559011
             },
             "timestamp": "2026-03-30T07:36:03.931Z"
+        },
+        {
+            "reservationId": 17,
+            "before": {
+                "id": 17,
+                "date": "2026-03-19",
+                "startTime": "11:00",
+                "endTime": "12:00",
+                "service": "하오니코",
+                "customerId": 5,
+                "designerId": 1775183630516
+            },
+            "after": {
+                "id": 17,
+                "date": "2026-03-19",
+                "startTime": "11:30",
+                "endTime": "12:30",
+                "service": "하오니코",
+                "customerId": 5,
+                "designerId": 1775183630516
+            },
+            "timestamp": "2026-04-05T23:30:16.741Z"
+        },
+        {
+            "reservationId": 17,
+            "before": {
+                "id": 17,
+                "date": "2026-03-19",
+                "startTime": "11:30",
+                "endTime": "12:30",
+                "service": "하오니코",
+                "customerId": 5,
+                "designerId": 1775183630516
+            },
+            "after": {
+                "id": 17,
+                "date": "2026-03-19",
+                "startTime": "12:00",
+                "endTime": "13:00",
+                "service": "하오니코",
+                "customerId": 5,
+                "designerId": 1775183630516
+            },
+            "timestamp": "2026-04-05T23:30:20.857Z"
+        },
+        {
+            "reservationId": 17,
+            "before": {
+                "id": 17,
+                "date": "2026-03-19",
+                "startTime": "12:00",
+                "endTime": "13:00",
+                "service": "하오니코",
+                "customerId": 5,
+                "designerId": 1775183630516
+            },
+            "after": {
+                "id": 17,
+                "date": "2026-03-19",
+                "startTime": "10:30",
+                "endTime": "11:30",
+                "service": "하오니코",
+                "customerId": 5,
+                "designerId": 1775183630516
+            },
+            "timestamp": "2026-04-05T23:30:31.730Z"
         }
     ]
 }

@@ -25,7 +25,19 @@
             "price": 50000
         },
         {
+            "name": "여자 일반펌",
+            "category": "펌",
+            "durationMinutes": 120,
+            "price": 50000
+        },
+        {
             "name": "남자 디자인펌",
+            "category": "펌",
+            "durationMinutes": 90,
+            "price": 70000
+        },
+        {
+            "name": "여자 디자인펌",
             "category": "펌",
             "durationMinutes": 120,
             "price": 70000
@@ -38,38 +50,32 @@
         },
         {
             "name": "남자 매직",
-            "category": "매직",
+            "category": "펌",
             "durationMinutes": 120,
             "price": 100000
         },
         {
-            "name": "볼륨매직",
-            "category": "매직",
-            "durationMinutes": 180,
-            "price": 150000
-        },
-        {
-            "name": "매직셋팅",
-            "durationMinutes": 180,
-            "category": "매직",
-            "price": 150000
-        },
-        {
             "name": "여자 매직",
-            "category": "매직",
+            "category": "펌",
             "durationMinutes": 150,
             "price": 100000
         },
         {
-            "name": "뿌리염색",
-            "durationMinutes": 90,
+            "name": "볼륨매직",
+            "category": "펌",
+            "durationMinutes": 180,
+            "price": 150000
+        },
+        {
+            "name": "뿌리염색(멋내기)",
             "category": "컬러",
+            "durationMinutes": 90,
             "price": 45000
         },
         {
-            "name": "전체염색",
-            "durationMinutes": 90,
+            "name": "전체염색(멋내기)",
             "category": "컬러",
+            "durationMinutes": 90,
             "price": 65000
         },
         {
@@ -77,12 +83,6 @@
             "durationMinutes": 120,
             "category": "컬러",
             "price": 80000
-        },
-        {
-            "name": "크리닉",
-            "durationMinutes": 30,
-            "category": "크리닉",
-            "price": 30000
         },
         {
             "name": "크리닉 3단계",
@@ -109,16 +109,58 @@
             "price": 20000
         },
         {
-            "name": "기장추가",
-            "durationMinutes": 0,
+            "name": "기장추가-어깨아래",
             "category": "기타",
-            "price": 0
+            "durationMinutes": 0,
+            "price": 20000
+        },
+        {
+            "name": "기장추가-가슴아래",
+            "category": "기타",
+            "durationMinutes": 0,
+            "price": 40000
         },
         {
             "name": "숱추가",
             "durationMinutes": 0,
             "category": "기타",
             "price": 10000
+        },
+        {
+            "name": "옆머리 다운펌+커트",
+            "category": "펌",
+            "durationMinutes": 90,
+            "price": 38000
+        },
+        {
+            "name": "앞머리펌 롤",
+            "category": "펌",
+            "durationMinutes": 90,
+            "price": 35000
+        },
+        {
+            "name": "앞머리펌 매직",
+            "category": "펌",
+            "durationMinutes": 40000,
+            "price": 90
+        },
+        {
+            "name": "뿌리염색(새치)",
+            "category": "컬러",
+            "durationMinutes": 90,
+            "price": 45000
+        },
+        {
+            "name": "전채염색(새치)",
+            "category": "컬러",
+            "durationMinutes": 90,
+            "price": 65000
+        },
+        {
+            "name": "숱추가2",
+            "category": "기타",
+            "durationMinutes": 0,
+            "price": 20000
         }
     ],
     "categoryBaseColors": {

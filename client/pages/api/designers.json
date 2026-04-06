@@ -3,9 +3,15 @@
         {
             "id": 1775183550311,
             "name": "제인",
+            "color": "#E85D75",
             "schedule": [
                 {
-                    "enabled": false,
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": true,
                     "start": "10:00",
                     "end": "20:00"
                 },
@@ -15,27 +21,22 @@
                     "end": "20:00"
                 },
                 {
-                    "enabled": false,
+                    "enabled": true,
                     "start": "10:00",
                     "end": "20:00"
                 },
                 {
-                    "enabled": false,
+                    "enabled": true,
                     "start": "10:00",
                     "end": "20:00"
                 },
                 {
-                    "enabled": false,
+                    "enabled": true,
                     "start": "10:00",
                     "end": "20:00"
                 },
                 {
-                    "enabled": false,
-                    "start": "10:00",
-                    "end": "20:00"
-                },
-                {
-                    "enabled": false,
+                    "enabled": true,
                     "start": "10:00",
                     "end": "20:00"
                 }
@@ -44,6 +45,7 @@
         {
             "id": 1775183559011,
             "name": "찰스",
+            "color": "#2D7FF9",
             "schedule": [
                 {
                     "enabled": true,
@@ -86,6 +88,7 @@
         {
             "id": 1775183630516,
             "name": "마이클",
+            "color": "#00A896",
             "schedule": [
                 {
                     "enabled": true,
@@ -124,6 +127,51 @@
                 }
             ],
             "status": "퇴직"
+        },
+        {
+            "id": 1775437273510,
+            "name": "브로콜리",
+            "schedule": [
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": true,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": false,
+                    "start": "10:00",
+                    "end": "20:00"
+                },
+                {
+                    "enabled": false,
+                    "start": "10:00",
+                    "end": "20:00"
+                }
+            ],
+            "status": "재직",
+            "phone": "01000000000",
+            "note": "",
+            "color": "#6D6F78"
         }
     ]
 }
