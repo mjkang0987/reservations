@@ -3,6 +3,7 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import styled from 'styled-components';
 
 import {useCalendarStore} from '../../../store/calendarStore';
+import {ReservationMoveConfirmModal} from '../overlays/ReservationMoveConfirmModal';
 
 import {
     TIMELINE_DAY_TOP,
@@ -10,7 +11,8 @@ import {
     ViewType,
 } from '../../../utils/constants';
 
-import {buildServiceColorMap, calcEndTime, getServiceColor} from '../../../utils/services';
+import {getDesignerColor} from '../../../utils/designers';
+import {buildServiceColorMap, calcEndTime, getServiceColor, parseServiceString} from '../../../utils/services';
 
 import {findOverlap, toDateKey, type Reservation} from '../../../utils/reservations';
 import {roundToHalfHour, pad} from '../../../utils/timeRound';
@@ -19,8 +21,13 @@ import {ButtonReserve} from "../../ui/Buttons";
 interface DragPreview {
     reservationId: number;
     top: number;
+    date: string;
     startTime: string;
     endTime: string;
+    ghostLeft: number;
+    ghostTop: number;
+    ghostWidth: number;
+    ghostHeight: number;
 }
 
 interface DragState {
@@ -29,6 +36,94 @@ interface DragState {
     pointerOffsetY: number;
     originTop: number;
     didDrag: boolean;
+}
+
+interface PendingMove {
+    prev: Reservation;
+    next: Reservation;
+    customerName?: string;
+}
+
+interface ReservationCluster {
+    id: string;
+    reservations: Reservation[];
+    startMinutes: number;
+    endMinutes: number;
+}
+
+type TimelineEntry =
+    | { kind: 'single'; reservation: Reservation }
+    | { kind: 'cluster'; cluster: ReservationCluster };
+
+function toMinutes(time: string): number {
+    const [hour, minute] = time.split(':').map(Number);
+    return (hour * 60) + minute;
+}
+
+function buildTimelineEntries(reservations: Reservation[]): TimelineEntry[] {
+    const sorted = [...reservations].sort((a, b) => (
+        a.startTime.localeCompare(b.startTime) ||
+        a.endTime.localeCompare(b.endTime) ||
+        a.id - b.id
+    ));
+    const entries: TimelineEntry[] = [];
+    let current: Reservation[] = [];
+    let currentStart = 0;
+    let currentEnd = 0;
+
+    const flush = () => {
+        if (current.length === 0) return;
+
+        const designerKeys = new Set(current.map((reservation) => reservation.designerId ?? 0));
+
+        if (current.length > 1 && designerKeys.size > 1) {
+            entries.push({
+                kind: 'cluster',
+                cluster: {
+                    id: `${current[0].date}-${currentStart}-${currentEnd}-${current.map((reservation) => reservation.id).join('-')}`,
+                    reservations: current,
+                    startMinutes: currentStart,
+                    endMinutes: currentEnd,
+                }
+            });
+        } else {
+            current.forEach((reservation) => {
+                entries.push({kind: 'single', reservation});
+            });
+        }
+
+        current = [];
+        currentStart = 0;
+        currentEnd = 0;
+    };
+
+    sorted.forEach((reservation) => {
+        const startMinutes = toMinutes(reservation.startTime);
+        const endMinutes = toMinutes(reservation.endTime);
+
+        if (current.length === 0) {
+            current = [reservation];
+            currentStart = startMinutes;
+            currentEnd = endMinutes;
+            return;
+        }
+
+        if (startMinutes < currentEnd) {
+            current.push(reservation);
+            currentStart = Math.min(currentStart, startMinutes);
+            currentEnd = Math.max(currentEnd, endMinutes);
+            return;
+        }
+
+        flush();
+        current = [reservation];
+        currentStart = startMinutes;
+        currentEnd = endMinutes;
+    });
+
+    flush();
+
+    return entries;
 }
 
 export const Timeline = ({
@@ -47,18 +142,30 @@ export const Timeline = ({
     const updateReservation = useCalendarStore((s) => s.updateReservation);
     const serviceCatalog = useCalendarStore((s) => s.serviceCatalog);
     const categoryBaseColorMap = useCalendarStore((s) => s.categoryBaseColorMap);
+    const designers = useCalendarStore((s) => s.designers);
 
     const {start, end} = time;
 
     const customerMap = useCalendarStore((s) => s.customerMap);
+    const calendarDesignerId = useCalendarStore((s) => s.calendarDesignerId);
 
     const dateKey = toDateKey(fullYear, month, date);
-    const reservations = reservationMap[dateKey] || [];
+    const reservations = (reservationMap[dateKey] || []).filter((reservation) => (
+        calendarDesignerId == null || reservation.designerId === calendarDesignerId
+    ));
     const serviceColorMap = useMemo(
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
         [serviceCatalog, categoryBaseColorMap]
     );
+    const designerColorMap = useMemo(
+        () => designers.reduce<Record<number, string>>((acc, designer) => {
+            acc[designer.id] = getDesignerColor(designer);
+            return acc;
+        }, {}),
+        [designers]
+    );
     const blockOffset = type === ViewType.Day ? 50 : 20;
+    const timelineEntries = useMemo(() => buildTimelineEntries(reservations), [reservations]);
 
     const today = new Date();
     const hour = today.getHours();
@@ -73,6 +180,8 @@ export const Timeline = ({
     const dragPreviewRef = useRef<DragPreview | null>(null);
     const suppressCreateClickRef = useRef(false);
     const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
+    const [pendingMove, setPendingMove] = useState<PendingMove | null>(null);
+    const [openClusterId, setOpenClusterId] = useState<string | null>(null);
 
     const pxPerMinute = 4 / 3;
 
@@ -104,10 +213,26 @@ export const Timeline = ({
         return `${pad(h)}:${pad(minute)}`;
     };
 
-    const handlePointerMove = (clientY: number) => {
+    const getTimelineTarget = (clientX: number, clientY: number) => {
+        const pointedElement = document.elementFromPoint(clientX, clientY);
+        const timelineElement = pointedElement?.closest('[data-timeline-date]');
+
+        if (!(timelineElement instanceof HTMLDivElement)) return null;
+
+        const targetDate = timelineElement.dataset.timelineDate;
+        if (!targetDate) return null;
+
+        return {element: timelineElement, date: targetDate};
+    };
+
+    const handlePointerMove = (clientX: number, clientY: number) => {
         const dragState = dragStateRef.current;
-        const timeline = timelineRef.current;
-        if (!dragState || !timeline) return;
+        if (!dragState) return;
+
+        const targetTimeline = getTimelineTarget(clientX, clientY);
+        const timeline = targetTimeline?.element ?? timelineRef.current;
+        const targetDate = targetTimeline?.date ?? dateKey;
+        if (!timeline) return;
 
         const rect = timeline.getBoundingClientRect();
         const paddingTop = typeRef.current === ViewType.Day ? TIMELINE_DAY_TOP : TIMELINE_TOP;
@@ -116,6 +241,7 @@ export const Timeline = ({
         const [nextHour, nextMinute] = nextStartTime.split(':').map(Number);
         const nextTop = (nextHour - startRef.current) * 80 + nextMinute * pxPerMinute + blockOffsetRef.current;
         const movedPx = Math.abs(nextTop - dragState.originTop);
+        const nextHeight = dragState.durationMinutes * pxPerMinute;
 
         if (movedPx > 3) {
             dragState.didDrag = true;
@@ -124,8 +250,13 @@ export const Timeline = ({
         const preview: DragPreview = {
             reservationId: dragState.reservation.id,
             top: nextTop,
+            date: targetDate,
             startTime: nextStartTime,
             endTime: calcEndTime(nextStartTime, dragState.durationMinutes),
+            ghostLeft: rect.left + 5,
+            ghostTop: rect.top + nextTop,
+            ghostWidth: Math.max(rect.width - 10, 0),
+            ghostHeight: nextHeight,
         };
         dragPreviewRef.current = preview;
         setDragPreview(preview);
@@ -150,14 +281,24 @@ export const Timeline = ({
             suppressCreateClickRef.current = false;
         }, 0);
 
-        if (preview.startTime !== dragState.reservation.startTime || preview.endTime !== dragState.reservation.endTime) {
-            const overlap = findOverlap(reservationMapRef.current, dateKeyValue, preview.startTime, preview.endTime, dragState.reservation.id);
+        if (
+            preview.date !== dragState.reservation.date ||
+            preview.startTime !== dragState.reservation.startTime ||
+            preview.endTime !== dragState.reservation.endTime
+        ) {
+            const overlap = findOverlap(reservationMapRef.current, preview.date, preview.startTime, preview.endTime, dragState.reservation.id);
 
             if (!overlap) {
-                updateReservationRef.current(dragState.reservation, {
+                const nextReservation = {
                     ...dragState.reservation,
+                    date: preview.date,
                     startTime: preview.startTime,
                     endTime: preview.endTime,
+                };
+                setPendingMove({
+                    prev: dragState.reservation,
+                    next: nextReservation,
+                    customerName: customerMap[dragState.reservation.customerId]?.name,
                 });
             }
         }
@@ -169,7 +310,7 @@ export const Timeline = ({
         const dateKeyValue = toDateKey(fullYear, month, date);
 
         const handleMouseMove = (event: MouseEvent) => {
-            handlePointerMove(event.clientY);
+            handlePointerMove(event.clientX, event.clientY);
         };
 
         const handleMouseUp = () => {
@@ -180,7 +321,7 @@ export const Timeline = ({
             if (!dragStateRef.current) return;
             event.preventDefault();
             const touch = event.touches[0];
-            handlePointerMove(touch.clientY);
+            handlePointerMove(touch.clientX, touch.clientY);
         };
 
         const handleTouchEnd = () => {
@@ -200,7 +341,15 @@ export const Timeline = ({
         };
     }, [fullYear, month, date]);
 
+    useEffect(() => {
+        setOpenClusterId(null);
+    }, [dateKey, reservations.length]);
+
     const setMousePositionHandler = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (openClusterId) {
+            setOpenClusterId(null);
+            return;
+        }
         if (suppressCreateClickRef.current) return;
 
         const el = e.currentTarget;
@@ -222,6 +371,10 @@ export const Timeline = ({
     };
 
     const setTouchPositionHandler = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (openClusterId) {
+            setOpenClusterId(null);
+            return;
+        }
         if (dragStateRef.current) return;
         if (suppressCreateClickRef.current) return;
 
@@ -244,7 +397,13 @@ export const Timeline = ({
         setCreateReservationInitial({date: dateStr, startTime});
     };
 
+    const draggingReservation = dragStateRef.current?.reservation ?? null;
+    const isDateChanging = !!(dragPreview && draggingReservation && dragPreview.date !== draggingReservation.date);
+    const showDragGhost = isDateChanging && !!dragPreview && !!draggingReservation;
+    const draggingCustomer = draggingReservation ? customerMap[draggingReservation.customerId] : null;
+
     return (<StyledTimelineWrap ref={timelineRef}
+                                data-timeline-date={dateKey}
                                 onClick={setMousePositionHandler}
                                 onTouchEnd={setTouchPositionHandler}
                                 type={type}
@@ -252,7 +411,79 @@ export const Timeline = ({
                                 $top={top}
                                 $full={full}>
         {isToday && <StyledBar />}
-        {reservations.map((r) => {
+        {timelineEntries.map((entry) => {
+            if (entry.kind === 'cluster') {
+                const {cluster} = entry;
+                const blockTop = (Math.floor(cluster.startMinutes / 60) - start) * 80 + (cluster.startMinutes % 60) * 4 / 3 + blockOffset;
+                const blockHeight = (cluster.endMinutes - cluster.startMinutes) * 4 / 3;
+                const isOpen = openClusterId === cluster.id;
+                const designerDots = Array.from(new Map(cluster.reservations.map((reservation) => [
+                    reservation.designerId ?? 0,
+                    reservation.designerId ? (designerColorMap[reservation.designerId] ?? '#8E8E93') : '#8E8E93'
+                ])).values());
+
+                return (
+                    <StyledOverlapWrap key={cluster.id}
+                                       style={{top: blockTop, height: blockHeight}}>
+                        <StyledOverlapButton
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenClusterId((prev) => prev === cluster.id ? null : cluster.id);
+                            }}
+                        >
+                            <StyledOverlapDotList>
+                                {designerDots.map((color, index) => (
+                                    <StyledOverlapDot key={`${cluster.id}-${index}`} $color={color} />
+                                ))}
+                            </StyledOverlapDotList>
+                            <strong>{cluster.reservations.length}건 예약</strong>
+                            <span>{`${pad(Math.floor(cluster.startMinutes / 60))}:${pad(cluster.startMinutes % 60)} ~ ${pad(Math.floor(cluster.endMinutes / 60))}:${pad(cluster.endMinutes % 60)}`}</span>
+                        </StyledOverlapButton>
+                        {isOpen && (
+                            <StyledOverlapDropdown onClick={(e) => e.stopPropagation()}>
+                                {cluster.reservations
+                                    .slice()
+                                    .sort((a, b) => a.startTime.localeCompare(b.startTime) || a.endTime.localeCompare(b.endTime))
+                                    .map((reservation) => {
+                                        const customer = customerMap[reservation.customerId];
+                                        const designerName = reservation.designerId
+                                            ? (designers.find((designer) => designer.id === reservation.designerId)?.name ?? '미지정')
+                                            : '미지정';
+
+                                        return (
+                                            <StyledOverlapItem key={reservation.id}
+                                                               type="button"
+                                                               onClick={() => {
+                                                                   setSelectedReservation(reservation);
+                                                                   setOpenClusterId(null);
+                                                               }}>
+                                                <StyledOverlapItemTop>
+                                                    <StyledOverlapItemDesigner>
+                                                        <StyledOverlapDot $color={reservation.designerId ? (designerColorMap[reservation.designerId] ?? '#8E8E93') : '#8E8E93'} />
+                                                        <span>{designerName}</span>
+                                                    </StyledOverlapItemDesigner>
+                                                    <span>{reservation.startTime}~{reservation.endTime}</span>
+                                                </StyledOverlapItemTop>
+                                                <StyledOverlapItemService>
+                                                    {parseServiceString(reservation.service).map((serviceName) => (
+                                                        <span className="service-token" key={`${reservation.id}-${serviceName}`}>
+                                                            <span className="dot" style={{backgroundColor: getServiceColor(serviceName, serviceColorMap)}} />
+                                                            {serviceName}
+                                                        </span>
+                                                    ))}
+                                                </StyledOverlapItemService>
+                                                {customer && <span className="detail">{customer.name}</span>}
+                                            </StyledOverlapItem>
+                                        );
+                                    })}
+                            </StyledOverlapDropdown>
+                        )}
+                    </StyledOverlapWrap>
+                );
+            }
+
+            const r = entry.reservation;
             const [sH, sM] = r.startTime.split(':').map(Number);
             const [eH, eM] = r.endTime.split(':').map(Number);
             const blockTop = (sH - start) * 80 + sM * 4 / 3 + blockOffset;
@@ -260,13 +491,26 @@ export const Timeline = ({
             const customer = customerMap[r.customerId];
             const preview = dragPreview?.reservationId === r.id ? dragPreview : null;
             const durationMinutes = (eH * 60 + eM) - (sH * 60 + sM);
+            const hideOriginalBlock = !!(
+                preview &&
+                draggingReservation &&
+                draggingReservation.id === r.id &&
+                preview.date !== r.date
+            );
 
             return (<ButtonReserve key={r.id}
+                                   style={hideOriginalBlock ? {visibility: 'hidden'} : undefined}
                                    $position='absolute'
                                    $top={preview?.top ?? blockTop}
                                    $height={blockHeight}
-                                   $color={getServiceColor(r.service, serviceColorMap)}
+                                   $color={r.designerId ? (designerColorMap[r.designerId] ?? '#8E8E93') : '#8E8E93'}
                                    $cancelled={r.status === 'cancelled' || r.status === 'noshow'}
+                                   onClick={(e: React.MouseEvent) => {
+                                       e.stopPropagation();
+                                       if (r.status === 'cancelled' || r.status === 'noshow') {
+                                           setSelectedReservation(r);
+                                       }
+                                   }}
                                    onMouseDown={(e: React.MouseEvent) => {
                                        e.stopPropagation();
                                        if (r.status === 'cancelled' || r.status === 'noshow') {
@@ -284,8 +528,13 @@ export const Timeline = ({
                                        const initialPreview: DragPreview = {
                                            reservationId: r.id,
                                            top: blockTop,
+                                           date: r.date,
                                            startTime: r.startTime,
                                            endTime: r.endTime,
+                                           ghostLeft: 0,
+                                           ghostTop: 0,
+                                           ghostWidth: 0,
+                                           ghostHeight: blockHeight,
                                        };
                                        dragPreviewRef.current = initialPreview;
                                        setDragPreview(initialPreview);
@@ -308,17 +557,59 @@ export const Timeline = ({
                                        const initialPreview: DragPreview = {
                                            reservationId: r.id,
                                            top: blockTop,
+                                           date: r.date,
                                            startTime: r.startTime,
                                            endTime: r.endTime,
+                                           ghostLeft: 0,
+                                           ghostTop: 0,
+                                           ghostWidth: 0,
+                                           ghostHeight: blockHeight,
                                        };
                                        dragPreviewRef.current = initialPreview;
                                        setDragPreview(initialPreview);
                                    }}>
-                <strong>{r.service}{r.status === 'cancelled' ? ' (취소)' : r.status === 'noshow' ? ' (노쇼)' : ''}</strong>
-                {preview && <span className="sub">{preview.startTime}~{preview.endTime}</span>}
+                <strong className="highlight">
+                    {parseServiceString(r.service).map((serviceName) => (
+                        <span className="service-token" key={`${r.id}-${serviceName}`}>
+                            <span className="dot" style={{backgroundColor: getServiceColor(serviceName, serviceColorMap)}} />
+                            {serviceName}
+                        </span>
+                    ))}
+                    {r.status === 'cancelled' ? ' (취소)' : r.status === 'noshow' ? ' (노쇼)' : ''}
+                </strong>
+                {preview && <span className="sub">{preview.date} {preview.startTime}~{preview.endTime}</span>}
                 {customer && <span className="detail">{customer.name}</span>}
             </ButtonReserve>);
         })}
+        {showDragGhost && dragPreview && draggingReservation && (
+            <StyledDragGhost aria-hidden="true"
+                             $left={dragPreview.ghostLeft}
+                             $top={dragPreview.ghostTop}
+                             $width={dragPreview.ghostWidth}
+                             $height={dragPreview.ghostHeight}
+                             $color={draggingReservation.designerId ? (designerColorMap[draggingReservation.designerId] ?? '#8E8E93') : '#8E8E93'}
+                             $cancelled={draggingReservation.status === 'cancelled' || draggingReservation.status === 'noshow'}>
+                <strong>
+                    {parseServiceString(draggingReservation.service).map((serviceName) => (
+                        <span className="service-token" key={`${draggingReservation.id}-${serviceName}`}>
+                            <span className="dot" style={{backgroundColor: getServiceColor(serviceName, serviceColorMap)}} />
+                            {serviceName}
+                        </span>
+                    ))}
+                    {draggingReservation.status === 'cancelled' ? ' (취소)' : draggingReservation.status === 'noshow' ? ' (노쇼)' : ''}
+                </strong>
+                <span className="sub">{dragPreview.date} {dragPreview.startTime}~{dragPreview.endTime}</span>
+                {draggingCustomer && <span className="detail">{draggingCustomer.name}</span>}
+            </StyledDragGhost>
+        )}
+        {pendingMove && <ReservationMoveConfirmModal reservation={pendingMove.prev}
+                                                     nextReservation={pendingMove.next}
+                                                     customerName={pendingMove.customerName}
+                                                     onClose={() => setPendingMove(null)}
+                                                     onConfirm={() => {
+                                                         updateReservationRef.current(pendingMove.prev, pendingMove.next);
+                                                         setPendingMove(null);
+                                                     }}/>}
     </StyledTimelineWrap>);
 };
 const StyledTimelineWrap = styled.div<{
@@ -363,5 +654,186 @@ const StyledBar = styled.span`
         height: 10px;
         background-color: var(--orange-color);
         border-radius: 100%;
+    }
+`;
+
+const StyledOverlapWrap = styled.div`
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    z-index: 12;
+`;
+
+const StyledOverlapButton = styled.button`
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    min-height: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--blue-color);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    background: rgba(45, 127, 249, 0.12);
+    color: var(--dark-gray-color);
+    text-align: left;
+    box-sizing: border-box;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+    cursor: pointer;
+
+    strong {
+        font-size: var(--small-font);
+        font-weight: 700;
+    }
+
+    span {
+        font-size: var(--tiny-font);
+        opacity: 0.9;
+    }
+`;
+
+const StyledOverlapDotList = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+`;
+
+const StyledOverlapDot = styled.span<{ $color: string }>`
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: ${(props) => props.$color};
+    flex-shrink: 0;
+`;
+
+const StyledOverlapDropdown = styled.div`
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: min(240px, calc(100vw - 32px));
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 10px;
+    background: var(--white-color);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+    z-index: 20;
+`;
+
+const StyledOverlapItem = styled.button`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 8px;
+    background: var(--white-color);
+    text-align: left;
+    color: var(--dark-gray-color);
+    cursor: pointer;
+
+    &:hover {
+        background: var(--black-color-10);
+    }
+
+    .detail {
+        font-size: var(--tiny-font);
+        color: var(--dark-gray-color2);
+    }
+
+    .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        margin-right: 4px;
+        border-radius: 50%;
+        vertical-align: middle;
+    }
+
+    .service-token {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 6px;
+    }
+`;
+
+const StyledOverlapItemTop = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: var(--tiny-font);
+`;
+
+const StyledOverlapItemDesigner = styled.span`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+`;
+
+const StyledOverlapItemService = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: var(--small-font);
+    font-weight: 600;
+`;
+
+const StyledDragGhost = styled.div<{ $left: number; $top: number; $width: number; $height: number; $color: string; $cancelled: boolean }>`
+    position: fixed;
+    left: ${(props) => props.$left}px;
+    top: ${(props) => props.$top}px;
+    width: ${(props) => props.$width}px;
+    height: ${(props) => props.$height}px;
+    max-height: ${(props) => props.$height}px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-sizing: border-box;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    background-color: ${(props) => props.$cancelled ? 'var(--cancelled-color)' : `${props.$color}12`};
+    border: 1px solid ${(props) => props.$cancelled ? 'var(--cancelled-color)' : props.$color};
+    border-left-width: 4px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+    color: ${(props) => props.$cancelled ? 'var(--white-color)' : 'var(--dark-gray-color)'};
+    opacity: 0.72;
+    pointer-events: none;
+
+    strong {
+        font-size: var(--small-font);
+        font-weight: 600;
+    }
+
+    .sub {
+        font-size: var(--tiny-font);
+        opacity: 0.9;
+    }
+
+    .detail {
+        margin-top: 2px;
+        font-size: var(--tiny-font);
+        opacity: 0.9;
+    }
+
+    .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        margin-right: 4px;
+        border-radius: 50%;
+        vertical-align: middle;
+    }
+
+    .service-token {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 6px;
     }
 `;
