@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import {useSession, signOut} from 'next-auth/react';
 
 import {useCalendarStore} from '../../store/calendarStore';
+import {splitDesignersByStatus} from '../../utils/designers';
 
 import {CalendarDirection} from '../calendar/CalendarDirection';
 import {CalendarHeading} from '../calendar/CalendarHeading';
@@ -14,6 +15,10 @@ export const Header = () => {
     const aside = useCalendarStore((s) => s.aside);
     const setAside = useCalendarStore((s) => s.setAside);
     const currValue = useCalendarStore((s) => s.target);
+    const designers = useCalendarStore((s) => s.designers);
+    const calendarDesignerId = useCalendarStore((s) => s.calendarDesignerId);
+    const setCalendarDesignerId = useCalendarStore((s) => s.setCalendarDesignerId);
+    const {active: activeDesigners, onLeave: onLeaveDesigners, resigned: resignedDesigners} = splitDesignersByStatus(designers);
 
     return (
         <StyledHeader>
@@ -24,6 +29,28 @@ export const Header = () => {
             {currValue.full !== null && <>
                 <CalendarDirection/>
                 <CalendarHeading/>
+                <StyledDesignerFilter value={calendarDesignerId ?? ''}
+                                      onChange={(e) => setCalendarDesignerId(e.target.value ? Number(e.target.value) : null)}
+                                      aria-label="달력 디자이너 필터">
+                    <option value="">전체 디자이너</option>
+                    {activeDesigners.map((designer) => (
+                        <option key={designer.id} value={designer.id}>{designer.name}</option>
+                    ))}
+                    {onLeaveDesigners.length > 0 && (
+                        <optgroup label="휴직자">
+                            {onLeaveDesigners.map((designer) => (
+                                <option key={designer.id} value={designer.id}>{designer.name}</option>
+                            ))}
+                        </optgroup>
+                    )}
+                    {resignedDesigners.length > 0 && (
+                        <optgroup label="퇴직자">
+                            {resignedDesigners.map((designer) => (
+                                <option key={designer.id} value={designer.id}>{designer.name}</option>
+                            ))}
+                        </optgroup>
+                    )}
+                </StyledDesignerFilter>
             </>}
             {session?.user && (
                 <StyledUserArea>
@@ -72,6 +99,25 @@ const StyledUserArea = styled.div`
   align-items: center;
   gap: 8px;
   margin-left: auto;
+`;
+
+const StyledDesignerFilter = styled.select`
+  min-width: 128px;
+  height: 30px;
+  margin-left: 4px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--white-color);
+  font-size: var(--small-font);
+  color: var(--dark-gray-color);
+  outline: none;
+  cursor: pointer;
+
+  @media (max-width: 640px) {
+    min-width: 96px;
+    margin-left: auto;
+  }
 `;
 
 const StyledUserName = styled.span`

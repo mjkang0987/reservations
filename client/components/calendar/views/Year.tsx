@@ -23,6 +23,7 @@ export const Year = () => {
     const setCurr = useCalendarStore((s) => s.setTargetFromDate);
     const setView = useCalendarStore((s) => s.setView);
     const reservationMap = useCalendarStore((s) => s.reservationMap);
+    const calendarDesignerId = useCalendarStore((s) => s.calendarDesignerId);
     const setReservationListFilter = useCalendarStore((s) => s.setReservationListFilter);
     const setCreateReservationInitial = useCalendarStore((s) => s.setCreateReservationInitial);
 
@@ -36,12 +37,14 @@ export const Year = () => {
         for (const [key, list] of Object.entries(reservationMap)) {
             const [y, m] = key.split('-').map(Number);
             if (y === fullYear) {
-                grouped[m - 1].push(...list);
+                grouped[m - 1].push(...list.filter((reservation) => (
+                    calendarDesignerId == null || reservation.designerId === calendarDesignerId
+                )));
             }
         }
 
         return grouped;
-    }, [reservationMap, fullYear]);
+    }, [reservationMap, fullYear, calendarDesignerId]);
 
     return (<StyledYear>
         {today && months.map((m) =>
@@ -104,4 +107,3 @@ const StyledMonth = styled.li`
     background-color: var(--black-color-10);
     text-align: center;
 `;
-

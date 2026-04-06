@@ -34,6 +34,7 @@ export const Month = ({
     const setCurr = useCalendarStore((s) => s.setTargetFromDate);
     const setView = useCalendarStore((s) => s.setView);
     const reservationMap = useCalendarStore((s) => s.reservationMap);
+    const calendarDesignerId = useCalendarStore((s) => s.calendarDesignerId);
     const setReservationListFilter = useCalendarStore((s) => s.setReservationListFilter);
     const setCreateReservationInitial = useCalendarStore((s) => s.setCreateReservationInitial);
 
@@ -42,7 +43,9 @@ export const Month = ({
     return (<>
         {monthDates.map((val, index) => {
             const dateKey = toDateKey(fullYear, currMonth, val);
-            const dateReservations = reservationMap[dateKey] || [];
+            const dateReservations = (reservationMap[dateKey] || []).filter((reservation) => (
+                calendarDesignerId == null || reservation.designerId === calendarDesignerId
+            ));
             const hasReservations = dateReservations.length > 0;
 
             return (<StyledDate key={`month_${val + index}`}
@@ -63,7 +66,10 @@ export const Month = ({
                                      hideViewAll/>
                 )}
                 <StyledViewAllButton type="button"
-                                     onClick={() => setReservationListFilter({type: 'date', dateKey})}>
+                                     onClick={(e) => {
+                                         e.stopPropagation();
+                                         setReservationListFilter({type: 'date', dateKey});
+                                     }}>
                     전체 ({dateReservations.length})
                 </StyledViewAllButton>
             </StyledDate>);
@@ -117,4 +123,3 @@ const StyledViewAllButton = styled.button`
         background-color: var(--light-gray-color);
     }
 `;
-
