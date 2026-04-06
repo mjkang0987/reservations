@@ -5,6 +5,8 @@ interface Props {
     children: React.ReactNode | string;
     onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
     onMouseDown?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+    onTouchStart?: (event: React.TouchEvent<HTMLButtonElement>) => void;
+    style?: React.CSSProperties;
     key?: number | undefined;
     $position?: string | undefined;
     $top?: number | undefined;
@@ -55,11 +57,12 @@ const StyledReserveButton = styled.button <Props>`
     width: calc(100% - 10px);
     height: ${props => props.$height}px;
     max-height: ${props => props.$height}px;
-    background-color: ${props => props.$cancelled ? 'var(--cancelled-color)' : props.$color};
-    border: none;
+    background-color: ${props => props.$cancelled ? 'var(--cancelled-color)' : `${props.$color}12`};
+    border: 1px solid ${props => props.$cancelled ? 'var(--cancelled-color)' : props.$color};
+    border-left-width: 4px;
     border-radius: var(--radius-sm);
     padding: 2px 6px;
-    color: var(--white-color);
+    color: ${props => props.$cancelled ? 'var(--white-color)' : 'var(--dark-gray-color)'};
     font-size: 12px;
     overflow: hidden;
     cursor: pointer;
@@ -93,6 +96,21 @@ const StyledReserveButton = styled.button <Props>`
         opacity: 0.9;
     }
 
+    .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        margin-right: 4px;
+        border-radius: 50%;
+        vertical-align: middle;
+    }
+
+    .service-token {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 6px;
+    }
+
     @media (max-width: 1024px) {
         .normal,
         .sub {
@@ -103,7 +121,7 @@ const StyledReserveButton = styled.button <Props>`
     &:hover {
         max-height: ${props => props.$height}px;
         z-index: 10;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
     }
 `;
 
