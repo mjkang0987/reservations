@@ -15,37 +15,46 @@ export const ServiceLegend = () => {
         [serviceCatalog, categoryBaseColorMap]
     );
 
-    return (<StyledWrap>
-        {open && <StyledPanel>
-            {Array.from(grouped.entries()).map(([category, items]) => (
-                <StyledGroup key={category}>
-                    <StyledCategoryLabel>{category}</StyledCategoryLabel>
-                    <StyledItems>
-                        {items.map((item) => (
-                            <StyledItem key={item.name}>
-                                <StyledDot $color={getServiceColor(item.name, serviceColorMap)}/>
-                                <span>{item.name}</span>
-                            </StyledItem>
-                        ))}
-                    </StyledItems>
-                </StyledGroup>
-            ))}
-        </StyledPanel>}
-        <StyledToggle type="button"
-                      onClick={() => setOpen((prev) => !prev)}
-                      aria-label="시술 범례 토글"
-                      $open={open}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                 strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="13.5" cy="6.5" r="2.5"/>
-                <circle cx="6" cy="12" r="2.5"/>
-                <circle cx="18" cy="12" r="2.5"/>
-                <circle cx="8" cy="19" r="2.5"/>
-                <circle cx="16" cy="19" r="2.5"/>
-            </svg>
-        </StyledToggle>
-    </StyledWrap>);
+    return (<>
+        {open && <StyledBackdrop onClick={() => setOpen(false)} />}
+        <StyledWrap>
+            {open && <StyledPanel>
+                {Array.from(grouped.entries()).map(([category, items]) => (
+                    <StyledGroup key={category}>
+                        <StyledCategoryLabel>{category}</StyledCategoryLabel>
+                        <StyledItems>
+                            {items.map((item) => (
+                                <StyledItem key={item.name}>
+                                    <StyledDot $color={getServiceColor(item.name, serviceColorMap)}/>
+                                    <span>{item.name}</span>
+                                </StyledItem>
+                            ))}
+                        </StyledItems>
+                    </StyledGroup>
+                ))}
+            </StyledPanel>}
+            <StyledToggle type="button"
+                          onClick={() => setOpen((prev) => !prev)}
+                          aria-label="시술 범례 토글"
+                          $open={open}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                     strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="13.5" cy="6.5" r="2.5"/>
+                    <circle cx="6" cy="12" r="2.5"/>
+                    <circle cx="18" cy="12" r="2.5"/>
+                    <circle cx="8" cy="19" r="2.5"/>
+                    <circle cx="16" cy="19" r="2.5"/>
+                </svg>
+            </StyledToggle>
+        </StyledWrap>
+    </>);
 };
+
+const StyledBackdrop = styled.div`
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+`;
 
 const StyledWrap = styled.div`
     position: fixed;
