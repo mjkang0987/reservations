@@ -439,7 +439,15 @@
             "service": "디자인펌",
             "customerId": 5,
             "status": "active",
-            "designerId": 1775183559011
+            "designerId": 1775183559011,
+            "paymentCompleted": true,
+            "paymentMethod": "현금",
+            "paymentEntries": [
+                {
+                    "method": "현금",
+                    "amount": 70000
+                }
+            ]
         },
         {
             "id": 47,
@@ -964,6 +972,38 @@
                 "designerId": 1775183630516
             },
             "timestamp": "2026-04-05T23:30:31.730Z"
+        },
+        {
+            "reservationId": 46,
+            "before": {
+                "id": 46,
+                "date": "2026-04-08",
+                "startTime": "14:00",
+                "endTime": "16:00",
+                "service": "디자인펌",
+                "customerId": 5,
+                "status": "active",
+                "designerId": 1775183559011
+            },
+            "after": {
+                "id": 46,
+                "date": "2026-04-08",
+                "startTime": "14:00",
+                "endTime": "16:00",
+                "service": "디자인펌",
+                "customerId": 5,
+                "status": "active",
+                "designerId": 1775183559011,
+                "paymentCompleted": true,
+                "paymentMethod": "현금",
+                "paymentEntries": [
+                    {
+                        "method": "현금",
+                        "amount": 70000
+                    }
+                ]
+            },
+            "timestamp": "2026-04-08T07:27:17.463Z"
         }
     ]
 }

@@ -1,4 +1,4 @@
-import {useState, useEffect, useMemo, type DragEvent} from 'react';
+import {Fragment, useState, useEffect, useMemo, type DragEvent} from 'react';
 
 import type {GetServerSideProps, NextPage} from 'next';
 
@@ -9,11 +9,11 @@ import styled, {css} from 'styled-components';
 
 import {useCalendarStore} from '../store/calendarStore';
 import {getDailyRevenue, getRangeRevenue, getRevenueInsights} from '../utils/revenue';
-import {buildServiceColorMap, formatPrice, formatDuration, getCategoryBaseColor, getGroupedCatalog, getServiceColor} from '../utils/services';
+import {buildServiceColorMap, formatPrice, formatDuration, getCategoryBaseColor, getGroupedCatalog, getServiceColor, parseServiceString} from '../utils/services';
 import type {ServiceItem} from '../utils/services';
 import type {Designer, DesignerStatus} from '../utils/designers';
 import {WEEKDAY_LABELS, getDesignerColor, getDesignerStatus, splitDesignersByStatus} from '../utils/designers';
-import type {Reservation, ReservationMap, ReservationHistoryEntry} from '../utils/reservations';
+import type {PaymentMethod, Reservation, ReservationMap, ReservationHistoryEntry} from '../utils/reservations';
 import {groupByDate, toDateKey} from '../utils/reservations';
 import type {Customer} from '../utils/customers';
 import {toCustomerMap} from '../utils/customers';
@@ -68,6 +68,9 @@ function shiftDateKey(baseDate: Date, days: number): string {
 }
 
 const PAYMENT_METHOD_COLORS = ['#2D7FF9', '#00A896', '#FB8C00', '#E85D75', '#7E57C2', '#4C6EF5', '#8E8E93'] as const;
+const PAYMENT_METHOD_ORDER: PaymentMethod[] = ['현금', '현금+현금영수증', '카드', '네이버페이', '지역화폐', '지역화폐+현금영수증', '상품권'];
+const REVENUE_CHART_WIDTH = 320;
+const REVENUE_CHART_HEIGHT = 160;
 
 function buildRevenueLinePath(values: number[], width: number, height: number): {linePath: string; areaPath: string} {
     if (values.length === 0) return {linePath: '', areaPath: ''};
@@ -112,6 +115,8 @@ const EMPTY_FORM = {name: '', category: '', durationMinutes: '', price: ''};
 interface RevenueSectionProps {
     reservationMap: ReservationMap;
     designers: Designer[];
+    customerMap: CustomerMap;
+    serviceColorMap: Record<string, string>;
     onSelectReservation: (reservation: Reservation) => void;
     designerKey: RevenueDesignerKey;
     setDesignerKey: (v: RevenueDesignerKey) => void;
@@ -128,6 +133,8 @@ interface RevenueSectionProps {
 const RevenueSection = ({
     reservationMap,
     designers,
+    customerMap,
+    serviceColorMap,
     onSelectReservation,
     designerKey,
     setDesignerKey,
@@ -142,6 +149,7 @@ const RevenueSection = ({
 }: RevenueSectionProps) => {
     const [detailDateKey, setDetailDateKey] = useState<string | null>(null);
     const [revenueViewTab, setRevenueViewTab] = useState<RevenueViewTab>('all');
+    const [hoveredRevenueDateKey, setHoveredRevenueDateKey] = useState<string | null>(null);
     const selectedDesignerId = designerKey === 'all' ? null : Number(designerKey);
     const designerMap = useMemo(
         () => Object.fromEntries(designers.map((designer) => [designer.id, designer])),
@@ -156,30 +164,80 @@ const RevenueSection = ({
         [reservationMap, fromDateKey, toDateKeyValue, selectedDesignerId]
     );
     const days = [...rangeRevenue.days].sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+    const dayReservationMap = useMemo(
+        () => Object.fromEntries(
+            days.map((day) => [
+                day.dateKey,
+                (reservationMap[day.dateKey] ?? [])
+                    .filter((reservation) => reservation.status !== 'cancelled'
+                        && reservation.status !== 'noshow'
+                        && (selectedDesignerId == null || reservation.designerId === selectedDesignerId))
+                    .sort((a, b) => a.startTime.localeCompare(b.startTime)),
+            ])
+        ),
+        [days, reservationMap, selectedDesignerId]
+    );
     const openedDateKey = detailDateKey && detailDateKey >= fromDateKey && detailDateKey <= toDateKeyValue
         ? detailDateKey
         : null;
     const layerDaily = openedDateKey ? getDailyRevenue(reservationMap, openedDateKey, selectedDesignerId) : null;
-    const paymentChartItems = revenueInsights.payments.map((entry, index) => ({
-        ...entry,
-        color: PAYMENT_METHOD_COLORS[index % PAYMENT_METHOD_COLORS.length],
-    }));
-    const designerChartItems = revenueInsights.designers.map((entry) => {
-        const matchedDesigner = entry.designerId != null ? designerMap[entry.designerId] : null;
+    const paymentRevenueMap = useMemo(
+        () => new Map(revenueInsights.payments.map((entry) => [entry.method, entry.total])),
+        [revenueInsights.payments]
+    );
+    const paymentChartItems = useMemo(
+        () => PAYMENT_METHOD_ORDER.map((method, index) => ({
+            method,
+            total: paymentRevenueMap.get(method) ?? 0,
+            color: PAYMENT_METHOD_COLORS[index % PAYMENT_METHOD_COLORS.length],
+        })),
+        [paymentRevenueMap]
+    );
+    const designerRevenueMap = useMemo(
+        () => new Map(revenueInsights.designers.map((entry) => [entry.designerId, entry])),
+        [revenueInsights.designers]
+    );
+    const designerChartItems = useMemo(() => {
+        const baseDesigners = selectedDesignerId == null
+            ? designers
+            : designers.filter((designer) => designer.id === selectedDesignerId);
 
-        return {
-            ...entry,
-            name: matchedDesigner?.name ?? '미지정',
-            color: getDesignerColor(matchedDesigner),
-        };
-    });
-    const chartPath = buildRevenueLinePath(revenueInsights.series.map((item) => item.total), 320, 120);
+        return baseDesigners.map((designer) => {
+            const matchedRevenue = designerRevenueMap.get(designer.id);
+
+            return {
+                designerId: designer.id,
+                total: matchedRevenue?.total ?? 0,
+                count: matchedRevenue?.count ?? 0,
+                name: designer.name,
+                color: getDesignerColor(designer),
+            };
+        });
+    }, [designers, designerRevenueMap, selectedDesignerId]);
+    const designerBarValueWidthCh = useMemo(
+        () => Math.max(...designerChartItems.map((item) => formatPrice(item.total).length), formatPrice(0).length),
+        [designerChartItems]
+    );
+    const chartPath = buildRevenueLinePath(revenueInsights.series.map((item) => item.total), REVENUE_CHART_WIDTH, REVENUE_CHART_HEIGHT);
     const linePeak = Math.max(...revenueInsights.series.map((item) => item.total), 0);
-    const lineLow = Math.min(...revenueInsights.series.map((item) => item.total), 0);
+    const lineMax = Math.max(...revenueInsights.series.map((item) => item.total), 1);
+    const chartPoints = useMemo(
+        () => revenueInsights.series.map((item, index) => ({
+            ...item,
+            x: revenueInsights.series.length > 1
+                ? (REVENUE_CHART_WIDTH / (revenueInsights.series.length - 1)) * index
+                : REVENUE_CHART_WIDTH / 2,
+            y: REVENUE_CHART_HEIGHT - (item.total / lineMax) * REVENUE_CHART_HEIGHT,
+            xRatio: revenueInsights.series.length > 1 ? index / (revenueInsights.series.length - 1) : 0.5,
+            yRatio: 1 - (item.total / lineMax),
+        })),
+        [revenueInsights.series, lineMax]
+    );
     const paymentDonutGradient = buildPaymentDonutGradient(
         paymentChartItems.map((item) => item.color),
         paymentChartItems.map((item) => item.total)
     );
+    const hoveredRevenuePoint = chartPoints.find((item) => item.dateKey === hoveredRevenueDateKey) ?? null;
 
     return (
         <>
@@ -275,7 +333,7 @@ const RevenueSection = ({
                             </StyledKpiCard>
                         </StyledKpiGrid>
                         <StyledChartGrid>
-                            <StyledChartCard>
+                            <StyledChartCard $hero>
                                 <StyledChartHeader>
                                     <strong>기간별 매출 추이</strong>
                                     <span>{fromDateKey} ~ {toDateKeyValue}</span>
@@ -285,12 +343,55 @@ const RevenueSection = ({
                                 ) : (
                                     <>
                                         <StyledLineChartBox>
-                                            <StyledChartMetaTop>{formatPrice(linePeak)}</StyledChartMetaTop>
-                                            <StyledLineChart viewBox="0 0 320 120" preserveAspectRatio="none">
-                                                <path d={chartPath.areaPath} fill="rgba(45, 127, 249, 0.14)" />
-                                                <path d={chartPath.linePath} fill="none" stroke="var(--blue-color)" strokeWidth="3" strokeLinecap="round" />
-                                            </StyledLineChart>
-                                            <StyledChartMetaBottom>{formatPrice(lineLow)}</StyledChartMetaBottom>
+                                            {hoveredRevenuePoint && (
+                                                <StyledChartTooltip
+                                                    $leftRatio={hoveredRevenuePoint.xRatio}
+                                                    $topRatio={hoveredRevenuePoint.yRatio}
+                                                >
+                                                    <strong>{hoveredRevenuePoint.dateKey}</strong>
+                                                    <span>{formatPrice(hoveredRevenuePoint.total)}</span>
+                                                </StyledChartTooltip>
+                                            )}
+                                            <StyledLineChartFrame>
+                                                <StyledYAxis>
+                                                    <span className="top">{formatPrice(lineMax)}</span>
+                                                    <span className="middle">{formatPrice(Math.round(lineMax / 2))}</span>
+                                                    <span className="bottom">{formatPrice(0)}</span>
+                                                </StyledYAxis>
+                                                <StyledLineChartStage>
+                                                    <StyledChartHorizontalGuide $topRatio={0} />
+                                                    <StyledChartHorizontalGuide $topRatio={0.5} />
+                                                    <StyledChartHorizontalGuide $topRatio={1} />
+                                                    <StyledLineChart viewBox={`0 0 ${REVENUE_CHART_WIDTH} ${REVENUE_CHART_HEIGHT}`} preserveAspectRatio="none">
+                                                        <path d={chartPath.areaPath} fill="rgba(45, 127, 249, 0.14)" />
+                                                        <path d={chartPath.linePath} fill="none" stroke="var(--blue-color)" strokeWidth="2.25" strokeLinecap="round" />
+                                                    </StyledLineChart>
+                                                    {chartPoints.map((item) => {
+                                                        const isActive = hoveredRevenueDateKey === item.dateKey;
+
+                                                        return (
+                                                            <Fragment key={item.dateKey}>
+                                                                {isActive && (
+                                                                    <>
+                                                                        <StyledChartGuide $leftRatio={item.xRatio} />
+                                                                        <StyledChartPointHalo $leftRatio={item.xRatio}
+                                                                                              $topRatio={item.yRatio} />
+                                                                    </>
+                                                                )}
+                                                                <StyledChartPointButton
+                                                                    type="button"
+                                                                    aria-label={`${item.dateKey} ${formatPrice(item.total)}`}
+                                                                    onMouseEnter={() => setHoveredRevenueDateKey(item.dateKey)}
+                                                                    onMouseLeave={() => setHoveredRevenueDateKey((current) => current === item.dateKey ? null : current)}
+                                                                    $active={isActive}
+                                                                    $leftRatio={item.xRatio}
+                                                                    $topRatio={item.yRatio}
+                                                                />
+                                                            </Fragment>
+                                                        );
+                                                    })}
+                                                </StyledLineChartStage>
+                                            </StyledLineChartFrame>
                                         </StyledLineChartBox>
                                         <StyledChartAxis>
                                             <span>{fromDateKey.slice(5)}</span>
@@ -299,7 +400,7 @@ const RevenueSection = ({
                                     </>
                                 )}
                             </StyledChartCard>
-                            <StyledChartCard>
+                            <StyledChartCard $autoHeight>
                                 <StyledChartHeader>
                                     <strong>디자이너별 매출</strong>
                                     <span>{designerKey === 'all' ? '전체 기준' : '선택 디자이너 기준'}</span>
@@ -312,7 +413,8 @@ const RevenueSection = ({
                                             const ratio = linePeak > 0 ? (item.total / Math.max(...designerChartItems.map((entry) => entry.total), 1)) * 100 : 0;
 
                                             return (
-                                                <StyledBarRow key={`${item.designerId ?? 'none'}-${item.name}`}>
+                                                <StyledBarRow key={`${item.designerId ?? 'none'}-${item.name}`}
+                                                              $valueWidthCh={designerBarValueWidthCh}>
                                                     <StyledBarLabel>
                                                         <StyledColorSwatch $color={item.color} />
                                                         <span>{item.name}</span>
@@ -327,7 +429,7 @@ const RevenueSection = ({
                                     </StyledBarChartList>
                                 )}
                             </StyledChartCard>
-                            <StyledChartCard>
+                            <StyledChartCard $autoHeight>
                                 <StyledChartHeader>
                                     <strong>결제수단 비중</strong>
                                     <span>결제완료 기준</span>
@@ -350,14 +452,12 @@ const RevenueSection = ({
 
                                                 return (
                                                     <StyledLegendItem key={item.method}>
-                                                        <StyledBarLabel>
+                                                        <StyledLegendInlineLabel>
                                                             <StyledColorSwatch $color={item.color} />
                                                             <span>{item.method}</span>
-                                                        </StyledBarLabel>
-                                                        <StyledLegendValue>
                                                             <strong>{formatPrice(item.total)}</strong>
                                                             <span>{percent}%</span>
-                                                        </StyledLegendValue>
+                                                        </StyledLegendInlineLabel>
                                                     </StyledLegendItem>
                                                 );
                                             })}
@@ -376,6 +476,7 @@ const RevenueSection = ({
                             <StyledList>
                                 {days.map((day) => {
                                     const dateParts = getShortDateParts(day.dateKey);
+                                    const reservations = dayReservationMap[day.dateKey] ?? [];
 
                                     return (
                                         <StyledClickableRow key={day.dateKey}
@@ -387,8 +488,31 @@ const RevenueSection = ({
                                                 <StyledDateMonthDay>{dateParts.monthDay}</StyledDateMonthDay>
                                                 <StyledDateYear>{dateParts.yearWeekday}</StyledDateYear>
                                             </StyledDate>
-                                            <StyledCount>{day.count}건</StyledCount>
-                                            <StyledPrice>{formatPrice(day.total)}</StyledPrice>
+                                            <StyledRevenueRowBody>
+                                                <StyledRevenueRowHead>
+                                                    <StyledCount>{day.count}건</StyledCount>
+                                                    <StyledPrice>{formatPrice(day.total)}</StyledPrice>
+                                                </StyledRevenueRowHead>
+                                                <StyledRevenueMetaList>
+                                                    {reservations.map((reservation) => (
+                                                        <StyledRevenueMetaItem key={reservation.id}>
+                                                            <StyledRevenueMetaLabel>
+                                                                <StyledColorSwatch $color={designerMap[reservation.designerId ?? -1]?.color ?? '#D1D5DB'} />
+                                                                <span>{designerMap[reservation.designerId ?? -1]?.name ?? '미지정'}</span>
+                                                            </StyledRevenueMetaLabel>
+                                                            <span>{customerMap[reservation.customerId]?.name ?? '고객 미지정'}</span>
+                                                            <StyledRevenueServiceName>
+                                                                {parseServiceString(reservation.service).map((service) => (
+                                                                    <StyledRevenueServiceChip key={`${reservation.id}-${service}`}>
+                                                                        <StyledColorDot $color={getServiceColor(service, serviceColorMap)} />
+                                                                        <strong>{service}</strong>
+                                                                    </StyledRevenueServiceChip>
+                                                                ))}
+                                                            </StyledRevenueServiceName>
+                                                        </StyledRevenueMetaItem>
+                                                    ))}
+                                                </StyledRevenueMetaList>
+                                            </StyledRevenueRowBody>
                                         </StyledClickableRow>
                                     );
                                 })}
@@ -414,15 +538,33 @@ const RevenueSection = ({
                             <StyledList>
                                 {layerDaily.items.map((item) => {
                                     const reservation = (reservationMap[openedDateKey] || []).find((r) => r.id === item.reservationId);
+
                                     return (
                                         <StyledClickableRow key={item.reservationId}
                                                             onClick={() => {
                                                                 if (!reservation) return;
                                                                 onSelectReservation(reservation);
-                                                                setDetailDateKey(null);
                                                             }}>
                                             <StyledTime>{item.startTime}</StyledTime>
-                                            <StyledService>{item.service}</StyledService>
+                                            <StyledRevenueRowBody>
+                                                <StyledRevenueMetaList>
+                                                    <StyledRevenueMetaItem>
+                                                        <StyledRevenueMetaLabel>
+                                                            <StyledColorSwatch $color={designerMap[reservation?.designerId ?? -1]?.color ?? '#D1D5DB'} />
+                                                            <span>{designerMap[reservation?.designerId ?? -1]?.name ?? '미지정'}</span>
+                                                        </StyledRevenueMetaLabel>
+                                                        <span>{customerMap[reservation?.customerId ?? -1]?.name ?? '고객 미지정'}</span>
+                                                        <StyledRevenueServiceName>
+                                                            {parseServiceString(item.service).map((service) => (
+                                                                <StyledRevenueServiceChip key={`${item.reservationId}-${service}`}>
+                                                                    <StyledColorDot $color={getServiceColor(service, serviceColorMap)} />
+                                                                    <strong>{service}</strong>
+                                                                </StyledRevenueServiceChip>
+                                                            ))}
+                                                        </StyledRevenueServiceName>
+                                                    </StyledRevenueMetaItem>
+                                                </StyledRevenueMetaList>
+                                            </StyledRevenueRowBody>
                                             <StyledPrice>{formatPrice(item.price)}</StyledPrice>
                                         </StyledClickableRow>
                                     );
@@ -1216,15 +1358,26 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
     const designers = useCalendarStore((s) => s.designers);
     const updateReservation = useCalendarStore((s) => s.updateReservation);
     const cancelReservation = useCalendarStore((s) => s.cancelReservation);
+    const selectedReservations = useCalendarStore((s) => s.selectedReservations);
+    const openReservationDetail = useCalendarStore((s) => s.openReservationDetail);
     const openReservationDetailFromCustomer = useCalendarStore((s) => s.openReservationDetailFromCustomer);
+    const closeReservationDetail = useCalendarStore((s) => s.closeReservationDetail);
     const openCustomerDetail = useCalendarStore((s) => s.openCustomerDetail);
+    const selectedCustomerId = useCalendarStore((s) => s.selectedCustomerId);
+    const setSelectedCustomerId = useCalendarStore((s) => s.setSelectedCustomerId);
     const storeReservationMap = useCalendarStore((s) => s.reservationMap);
     const storeHistory = useCalendarStore((s) => s.reservationHistory);
 
     const router = useRouter();
     const target = useCalendarStore((s) => s.target);
+    const serviceCatalog = useCalendarStore((s) => s.serviceCatalog);
+    const categoryBaseColorMap = useCalendarStore((s) => s.categoryBaseColorMap);
     const reservationMap = groupByDate(reservations);
     const customerMap: CustomerMap = toCustomerMap(customers);
+    const serviceColorMap = useMemo(
+        () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
+        [serviceCatalog, categoryBaseColorMap]
+    );
 
     const now = new Date();
     const todayKey = toDateKey(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1330,9 +1483,6 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
             date: todayKey,
         });
     };
-    const [selectedReservations, setSelectedReservations] = useState<Reservation[]>([]);
-    const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
-
     useEffect(() => {
         setCustomerMap(customerMap);
         setReservationMap(reservationMap);
@@ -1354,7 +1504,9 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
             <StyledContent>
                 {tab === 'revenue' && <RevenueSection reservationMap={reservationMap}
                                                       designers={designers}
-                                                      onSelectReservation={(reservation) => setSelectedReservations((prev) => [...prev, reservation])}
+                                                      customerMap={customerMap}
+                                                      serviceColorMap={serviceColorMap}
+                                                      onSelectReservation={openReservationDetail}
                                                       designerKey={revenueDesignerKey}
                                                       setDesignerKey={setRevenueDesigner}
                                                       startDateKey={startDateKey}
@@ -1375,16 +1527,10 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
                                    customerMap={customerMap}
                                    reservationMap={storeReservationMap}
                                    history={storeHistory}
-                                   onClose={() => setSelectedReservations((prev) => prev.filter((_, itemIndex) => itemIndex !== index))}
+                                   onClose={() => closeReservationDetail(index)}
                                    onCustomerClick={openCustomerDetail}
-                                   onUpdate={(prev, updated) => {
-                                       updateReservation(prev, updated);
-                                       setSelectedReservations((current) => current.map((item) => item.id === prev.id ? updated : item));
-                                   }}
-                                   onCancel={(targetReservation) => {
-                                       cancelReservation(targetReservation);
-                                       setSelectedReservations((prev) => prev.filter((item) => item.id !== targetReservation.id));
-                                   }}/>
+                                   onUpdate={updateReservation}
+                                   onCancel={cancelReservation}/>
             ))}
             {selectedCustomerId !== null && customerMap[selectedCustomerId] && (
                 <CustomerDetail customer={customerMap[selectedCustomerId]}
@@ -1518,16 +1664,25 @@ const StyledChartGrid = styled.div`
     }
 `;
 
-const StyledChartCard = styled.div`
+const StyledChartCard = styled.div<{ $hero?: boolean; $autoHeight?: boolean }>`
     display: flex;
     flex-direction: column;
     gap: 12px;
-    min-height: 250px;
+    min-height: ${(props) => props.$autoHeight ? 'auto' : props.$hero ? '320px' : '250px'};
+    align-self: ${(props) => props.$autoHeight ? 'start' : 'stretch'};
     padding: 16px;
     border: 1px solid var(--light-gray-color);
     border-radius: 16px;
     background: var(--white-color);
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+
+    ${(props) => props.$hero && `
+        grid-column: span 2;
+    `}
+
+    @media (max-width: 1080px) {
+        grid-column: span 1;
+    }
 `;
 
 const StyledChartHeader = styled.div`
@@ -1561,31 +1716,160 @@ const StyledChartEmpty = styled.div`
 
 const StyledLineChartBox = styled.div`
     position: relative;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    gap: 6px;
-    min-height: 180px;
-    padding: 12px;
-    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 236px;
+    padding: 14px 16px 4px;
+    border: 1px solid rgba(45, 127, 249, 0.08);
+    border-radius: 18px;
     background:
-        linear-gradient(to top, rgba(15, 23, 42, 0.05) 1px, transparent 1px) 0 0 / 100% 33.33%,
+        radial-gradient(circle at top right, rgba(45, 127, 249, 0.12), transparent 28%),
         linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
 `;
 
-const StyledChartMetaTop = styled.span`
-    font-size: 11px;
-    color: var(--dark-gray-color2);
+const StyledChartTooltip = styled.div<{ $leftRatio: number; $topRatio: number }>`
+    position: absolute;
+    left: ${(props) => `clamp(84px, calc(74px + (${props.$leftRatio} * (100% - 74px)) - 58px), calc(100% - 132px))`};
+    top: ${(props) => `max(10px, calc(14px + (${props.$topRatio} * 190px) - 58px))`};
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 116px;
+    padding: 9px 11px;
+    border: 1px solid rgba(45, 127, 249, 0.14);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(6px);
+    transform: translateZ(0);
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: -6px;
+        width: 10px;
+        height: 10px;
+        background: rgba(255, 255, 255, 0.96);
+        border-right: 1px solid rgba(45, 127, 249, 0.14);
+        border-bottom: 1px solid rgba(45, 127, 249, 0.14);
+        transform: translateX(-50%) rotate(45deg);
+    }
+
+    strong {
+        font-size: 11px;
+        color: var(--dark-gray-color2);
+        font-weight: 600;
+    }
+
+    span {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--blue-color);
+    }
 `;
 
-const StyledChartMetaBottom = styled.span`
-    font-size: 11px;
-    color: var(--dark-gray-color2);
+const StyledLineChartFrame = styled.div`
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 10px;
+    align-items: stretch;
+    flex: 1;
+    min-height: 0;
+`;
+
+const StyledYAxis = styled.div`
+    position: relative;
+    height: 190px;
+
+    span {
+        position: absolute;
+        left: 0;
+        font-size: 11px;
+        color: var(--dark-gray-color2);
+        line-height: 1;
+    }
+
+    .top {
+        top: 0;
+        transform: translateY(-50%);
+    }
+
+    .middle {
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .bottom {
+        top: 100%;
+        transform: translateY(-50%);
+    }
+`;
+
+const StyledLineChartStage = styled.div`
+    position: relative;
+    height: 190px;
+    border-radius: 14px;
+    overflow: hidden;
+    line-height: 0;
+`;
+
+const StyledChartHorizontalGuide = styled.div<{ $topRatio: number }>`
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: ${(props) => `${props.$topRatio * 100}%`};
+    height: 1px;
+    background: rgba(15, 23, 42, 0.06);
+    transform: translateY(-50%);
+    pointer-events: none;
 `;
 
 const StyledLineChart = styled.svg`
+    display: block;
     width: 100%;
-    height: 120px;
+    height: 190px;
     overflow: visible;
+`;
+
+const StyledChartGuide = styled.div<{ $leftRatio: number }>`
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: ${(props) => `${props.$leftRatio * 100}%`};
+    width: 1px;
+    border-left: 1px dashed rgba(45, 127, 249, 0.2);
+    transform: translateX(-50%);
+    pointer-events: none;
+`;
+
+const StyledChartPointHalo = styled.div<{ $leftRatio: number; $topRatio: number }>`
+    position: absolute;
+    left: ${(props) => `${props.$leftRatio * 100}%`};
+    top: ${(props) => `${props.$topRatio * 100}%`};
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(45, 127, 249, 0.14);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+`;
+
+const StyledChartPointButton = styled.button<{ $active: boolean; $leftRatio: number; $topRatio: number }>`
+    position: absolute;
+    left: ${(props) => `${props.$leftRatio * 100}%`};
+    top: ${(props) => `${props.$topRatio * 100}%`};
+    width: ${(props) => props.$active ? '10px' : '7px'};
+    height: ${(props) => props.$active ? '10px' : '7px'};
+    padding: 0;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: ${(props) => props.$active ? 'var(--orange-color)' : 'var(--blue-color)'};
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
+    transform: translate(-50%, -50%);
+    cursor: pointer;
 `;
 
 const StyledChartAxis = styled.div`
@@ -1593,6 +1877,8 @@ const StyledChartAxis = styled.div`
     justify-content: space-between;
     font-size: 11px;
     color: var(--dark-gray-color2);
+    margin-top: -2px;
+    padding-left: 74px;
 `;
 
 const StyledBarChartList = styled.div`
@@ -1601,9 +1887,9 @@ const StyledBarChartList = styled.div`
     gap: 10px;
 `;
 
-const StyledBarRow = styled.div`
+const StyledBarRow = styled.div<{ $valueWidthCh: number }>`
     display: grid;
-    grid-template-columns: minmax(0, 88px) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 88px) minmax(0, 1fr) minmax(${(props) => `${props.$valueWidthCh}ch`}, max-content);
     align-items: center;
     gap: 10px;
 `;
@@ -1653,15 +1939,10 @@ const StyledBarValue = styled.span`
 `;
 
 const StyledPaymentChartWrap = styled.div`
-    display: grid;
-    grid-template-columns: 150px minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 16px;
     align-items: center;
-
-    @media (max-width: 640px) {
-        grid-template-columns: 1fr;
-        justify-items: center;
-    }
 `;
 
 const StyledDonutChart = styled.div<{ $gradient: string }>`
@@ -1705,29 +1986,31 @@ const StyledDonutChart = styled.div<{ $gradient: string }>`
 
 const StyledLegendList = styled.div`
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 10px;
+    width: 100%;
 `;
 
 const StyledLegendItem = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    display: inline-flex;
 `;
 
-const StyledLegendValue = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
+const StyledLegendInlineLabel = styled.div`
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 999px;
+    background: var(--white-color);
 
     strong {
         font-size: 12px;
         color: var(--black-color);
     }
 
-    span {
+    > span {
         font-size: 11px;
         color: var(--dark-gray-color2);
     }
@@ -1859,7 +2142,7 @@ const StyledList = styled.div`
 
 const StyledClickableRow = styled.div`
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     padding: 8px 0;
     font-size: 13px;
@@ -1901,6 +2184,74 @@ const StyledDateYear = styled.span`
 const StyledCount = styled.span`
     font-size: 12px;
     color: var(--dark-gray-color2);
+`;
+
+const StyledRevenueRowBody = styled.div`
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+`;
+
+const StyledRevenueRowHead = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+`;
+
+const StyledRevenueMetaList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+`;
+
+const StyledRevenueMetaItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: 11px;
+    color: var(--dark-gray-color2);
+
+    span {
+        flex-shrink: 0;
+    }
+`;
+
+const StyledRevenueMetaLabel = styled.span`
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    color: var(--dark-gray-color2);
+`;
+
+const StyledRevenueServiceName = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex-wrap: wrap;
+`;
+
+const StyledRevenueServiceChip = styled.span`
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+
+    strong {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--dark-gray-color);
+    }
 `;
 
 const StyledService = styled.span`
