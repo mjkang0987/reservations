@@ -38,7 +38,7 @@ export const Year = () => {
             const [y, m] = key.split('-').map(Number);
             if (y === fullYear) {
                 grouped[m - 1].push(...list.filter((reservation) => (
-                    calendarDesignerId == null || reservation.designerId === calendarDesignerId
+                    calendarDesignerId == null || (calendarDesignerId === 0 ? !reservation.designerId : reservation.designerId === calendarDesignerId)
                 )));
             }
         }

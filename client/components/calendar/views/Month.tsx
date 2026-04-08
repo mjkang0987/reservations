@@ -44,7 +44,7 @@ export const Month = ({
         {monthDates.map((val, index) => {
             const dateKey = toDateKey(fullYear, currMonth, val);
             const dateReservations = (reservationMap[dateKey] || []).filter((reservation) => (
-                calendarDesignerId == null || reservation.designerId === calendarDesignerId
+                calendarDesignerId == null || (calendarDesignerId === 0 ? !reservation.designerId : reservation.designerId === calendarDesignerId)
             ));
             const hasReservations = dateReservations.length > 0;
 
