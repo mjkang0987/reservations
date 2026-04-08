@@ -9,6 +9,7 @@ import {CalendarDirection} from '../calendar/CalendarDirection';
 import {CalendarHeading} from '../calendar/CalendarHeading';
 import {Icon} from '../ui/Icons';
 import {ButtonText} from '../ui/ButtonText';
+import {formControlStyle} from '../ui/FormControls';
 
 
 export const Header = () => {
@@ -119,15 +120,9 @@ const StyledUserArea = styled.div`
 
 const StyledDesignerFilter = styled.select`
     min-width: 128px;
-    height: 30px;
     margin-left: 4px;
     padding: 0 10px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--white-color);
-    font-size: var(--small-font);
-    color: var(--dark-gray-color);
-    outline: none;
+    ${formControlStyle};
     cursor: pointer;
 
     option {

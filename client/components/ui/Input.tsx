@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import {Icon} from './Icons';
 import {ButtonText} from './ButtonText';
+import {formControlStyle} from './FormControls';
 
 interface Props {
     htmlFor?: string
@@ -19,26 +20,26 @@ interface StyledProps {
 const StyledInput = styled.label<StyledProps>`
     display: flex;
     position: relative;
+    align-items: center;
     box-sizing: border-box;
-    border: 1px solid var(--border-color);
-    background-color: var(--white-color);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    ${formControlStyle};
+    padding-right: 4px;
 
     &::placeholder {
         color: var(--gray-color);
     }
 
     input {
-        height: 25px;
+        height: 100%;
         flex: 1;
         border: none;
-        background-color: var(--white-color);
+        background-color: transparent;
         padding: 0 0 0 8px;
         border-radius: var(--radius-md);
         box-sizing: border-box;
-        font-size: var(--small-font);
+        font-size: 12px;
         outline: none;
+        box-shadow: none;
 
         &[type="search"]::-webkit-search-cancel-button {
             -webkit-appearance: none;
@@ -58,11 +59,14 @@ const StyledInput = styled.label<StyledProps>`
     ${props => props.$inputIcon === 'search' && `
     button {
       display: flex;
+      align-items: center;
+      justify-content: center;
       position: relative;
-      width: 20px;
+      width: 24px;
+      height: 24px;
       border: none;
-      background-color: var(--white-color);
-     border-radius: var(--radius-md);
+      background-color: transparent;
+      border-radius: var(--radius-md);
     }
   `};
 `;

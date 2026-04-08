@@ -21,6 +21,7 @@ import type {CustomerMap} from '../utils/customers';
 
 import {ReservationDetail} from '../components/calendar/overlays/ReservationDetail';
 import {CustomerDetail} from '../components/calendar/overlays/CustomerDetail';
+import {formControlStyle} from '../components/ui/FormControls';
 
 import customersData from './api/customers.json';
 
@@ -33,6 +34,7 @@ type SettingsProps = {
 type SettingsTab = 'revenue' | 'service' | 'designer' | 'store';
 type RevenueDesignerKey = 'all' | `${number}`;
 type RevenueQuickRange = 'month' | 'week' | 'today';
+type RevenueViewTab = 'all' | 'chart' | 'list';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -139,6 +141,7 @@ const RevenueSection = ({
     setQuickRange
 }: RevenueSectionProps) => {
     const [detailDateKey, setDetailDateKey] = useState<string | null>(null);
+    const [revenueViewTab, setRevenueViewTab] = useState<RevenueViewTab>('all');
     const selectedDesignerId = designerKey === 'all' ? null : Number(designerKey);
     const designerMap = useMemo(
         () => Object.fromEntries(designers.map((designer) => [designer.id, designer])),
@@ -232,148 +235,171 @@ const RevenueSection = ({
                         );
                     })}
                 </StyledDesignerTabs>
+                <StyledRevenueViewTabs>
+                    <StyledRevenueViewTab type="button"
+                                          $active={revenueViewTab === 'all'}
+                                          onClick={() => setRevenueViewTab('all')}>
+                        전체
+                    </StyledRevenueViewTab>
+                    <StyledRevenueViewTab type="button"
+                                          $active={revenueViewTab === 'chart'}
+                                          onClick={() => setRevenueViewTab('chart')}>
+                        그래프
+                    </StyledRevenueViewTab>
+                    <StyledRevenueViewTab type="button"
+                                          $active={revenueViewTab === 'list'}
+                                          onClick={() => setRevenueViewTab('list')}>
+                        일별목록
+                    </StyledRevenueViewTab>
+                </StyledRevenueViewTabs>
             </StyledRevenueStickyArea>
             <StyledCardBody>
-                <StyledRevenueDashboard>
-                    <StyledKpiGrid>
-                        <StyledKpiCard>
-                            <span>총 매출</span>
-                            <strong>{formatPrice(rangeRevenue.total)}</strong>
-                        </StyledKpiCard>
-                        <StyledKpiCard>
-                            <span>예약 건수</span>
-                            <strong>{rangeRevenue.count}건</strong>
-                        </StyledKpiCard>
-                        <StyledKpiCard>
-                            <span>객단가</span>
-                            <strong>{formatPrice(revenueInsights.averagePrice)}</strong>
-                        </StyledKpiCard>
-                        <StyledKpiCard>
-                            <span>결제완료</span>
-                            <strong>{formatPrice(revenueInsights.paidTotal)}</strong>
-                        </StyledKpiCard>
-                    </StyledKpiGrid>
-                    <StyledChartGrid>
-                        <StyledChartCard>
-                            <StyledChartHeader>
-                                <strong>기간별 매출 추이</strong>
-                                <span>{fromDateKey} ~ {toDateKeyValue}</span>
-                            </StyledChartHeader>
-                            {revenueInsights.series.length === 0 ? (
-                                <StyledChartEmpty>집계할 매출이 없습니다.</StyledChartEmpty>
-                            ) : (
-                                <>
-                                    <StyledLineChartBox>
-                                        <StyledChartMetaTop>{formatPrice(linePeak)}</StyledChartMetaTop>
-                                        <StyledLineChart viewBox="0 0 320 120" preserveAspectRatio="none">
-                                            <path d={chartPath.areaPath} fill="rgba(45, 127, 249, 0.14)" />
-                                            <path d={chartPath.linePath} fill="none" stroke="var(--blue-color)" strokeWidth="3" strokeLinecap="round" />
-                                        </StyledLineChart>
-                                        <StyledChartMetaBottom>{formatPrice(lineLow)}</StyledChartMetaBottom>
-                                    </StyledLineChartBox>
-                                    <StyledChartAxis>
-                                        <span>{fromDateKey.slice(5)}</span>
-                                        <span>{toDateKeyValue.slice(5)}</span>
-                                    </StyledChartAxis>
-                                </>
-                            )}
-                        </StyledChartCard>
-                        <StyledChartCard>
-                            <StyledChartHeader>
-                                <strong>디자이너별 매출</strong>
-                                <span>{designerKey === 'all' ? '전체 기준' : '선택 디자이너 기준'}</span>
-                            </StyledChartHeader>
-                            {designerChartItems.length === 0 ? (
-                                <StyledChartEmpty>디자이너 매출이 없습니다.</StyledChartEmpty>
-                            ) : (
-                                <StyledBarChartList>
-                                    {designerChartItems.map((item) => {
-                                        const ratio = linePeak > 0 ? (item.total / Math.max(...designerChartItems.map((entry) => entry.total), 1)) * 100 : 0;
-
-                                        return (
-                                            <StyledBarRow key={`${item.designerId ?? 'none'}-${item.name}`}>
-                                                <StyledBarLabel>
-                                                    <StyledColorSwatch $color={item.color} />
-                                                    <span>{item.name}</span>
-                                                </StyledBarLabel>
-                                                <StyledBarTrack>
-                                                    <StyledBarFill $color={item.color} $width={ratio} />
-                                                </StyledBarTrack>
-                                                <StyledBarValue>{formatPrice(item.total)}</StyledBarValue>
-                                            </StyledBarRow>
-                                        );
-                                    })}
-                                </StyledBarChartList>
-                            )}
-                        </StyledChartCard>
-                        <StyledChartCard>
-                            <StyledChartHeader>
-                                <strong>결제수단 비중</strong>
-                                <span>결제완료 기준</span>
-                            </StyledChartHeader>
-                            {paymentChartItems.length === 0 ? (
-                                <StyledChartEmpty>결제 데이터가 없습니다.</StyledChartEmpty>
-                            ) : (
-                                <StyledPaymentChartWrap>
-                                    <StyledDonutChart $gradient={paymentDonutGradient}>
-                                        <div>
-                                            <strong>{formatPrice(revenueInsights.paidTotal)}</strong>
-                                            <span>결제합계</span>
-                                        </div>
-                                    </StyledDonutChart>
-                                    <StyledLegendList>
-                                        {paymentChartItems.map((item) => {
-                                            const percent = revenueInsights.paidTotal > 0
-                                                ? Math.round((item.total / revenueInsights.paidTotal) * 100)
-                                                : 0;
+                {(revenueViewTab === 'all' || revenueViewTab === 'chart') && (
+                    <StyledRevenueDashboard>
+                        <StyledKpiGrid>
+                            <StyledKpiCard>
+                                <span>총 매출</span>
+                                <strong>{formatPrice(rangeRevenue.total)}</strong>
+                            </StyledKpiCard>
+                            <StyledKpiCard>
+                                <span>예약 건수</span>
+                                <strong>{rangeRevenue.count}건</strong>
+                            </StyledKpiCard>
+                            <StyledKpiCard>
+                                <span>객단가</span>
+                                <strong>{formatPrice(revenueInsights.averagePrice)}</strong>
+                            </StyledKpiCard>
+                            <StyledKpiCard>
+                                <span>결제완료</span>
+                                <strong>{formatPrice(revenueInsights.paidTotal)}</strong>
+                            </StyledKpiCard>
+                        </StyledKpiGrid>
+                        <StyledChartGrid>
+                            <StyledChartCard>
+                                <StyledChartHeader>
+                                    <strong>기간별 매출 추이</strong>
+                                    <span>{fromDateKey} ~ {toDateKeyValue}</span>
+                                </StyledChartHeader>
+                                {revenueInsights.series.length === 0 ? (
+                                    <StyledChartEmpty>집계할 매출이 없습니다.</StyledChartEmpty>
+                                ) : (
+                                    <>
+                                        <StyledLineChartBox>
+                                            <StyledChartMetaTop>{formatPrice(linePeak)}</StyledChartMetaTop>
+                                            <StyledLineChart viewBox="0 0 320 120" preserveAspectRatio="none">
+                                                <path d={chartPath.areaPath} fill="rgba(45, 127, 249, 0.14)" />
+                                                <path d={chartPath.linePath} fill="none" stroke="var(--blue-color)" strokeWidth="3" strokeLinecap="round" />
+                                            </StyledLineChart>
+                                            <StyledChartMetaBottom>{formatPrice(lineLow)}</StyledChartMetaBottom>
+                                        </StyledLineChartBox>
+                                        <StyledChartAxis>
+                                            <span>{fromDateKey.slice(5)}</span>
+                                            <span>{toDateKeyValue.slice(5)}</span>
+                                        </StyledChartAxis>
+                                    </>
+                                )}
+                            </StyledChartCard>
+                            <StyledChartCard>
+                                <StyledChartHeader>
+                                    <strong>디자이너별 매출</strong>
+                                    <span>{designerKey === 'all' ? '전체 기준' : '선택 디자이너 기준'}</span>
+                                </StyledChartHeader>
+                                {designerChartItems.length === 0 ? (
+                                    <StyledChartEmpty>디자이너 매출이 없습니다.</StyledChartEmpty>
+                                ) : (
+                                    <StyledBarChartList>
+                                        {designerChartItems.map((item) => {
+                                            const ratio = linePeak > 0 ? (item.total / Math.max(...designerChartItems.map((entry) => entry.total), 1)) * 100 : 0;
 
                                             return (
-                                                <StyledLegendItem key={item.method}>
+                                                <StyledBarRow key={`${item.designerId ?? 'none'}-${item.name}`}>
                                                     <StyledBarLabel>
                                                         <StyledColorSwatch $color={item.color} />
-                                                        <span>{item.method}</span>
+                                                        <span>{item.name}</span>
                                                     </StyledBarLabel>
-                                                    <StyledLegendValue>
-                                                        <strong>{formatPrice(item.total)}</strong>
-                                                        <span>{percent}%</span>
-                                                    </StyledLegendValue>
-                                                </StyledLegendItem>
+                                                    <StyledBarTrack>
+                                                        <StyledBarFill $color={item.color} $width={ratio} />
+                                                    </StyledBarTrack>
+                                                    <StyledBarValue>{formatPrice(item.total)}</StyledBarValue>
+                                                </StyledBarRow>
                                             );
                                         })}
-                                    </StyledLegendList>
-                                </StyledPaymentChartWrap>
-                            )}
-                        </StyledChartCard>
-                    </StyledChartGrid>
-                </StyledRevenueDashboard>
-                {days.length === 0 ? (
-                    <StyledEmpty>매출 없음</StyledEmpty>
-                ) : (
-                    <StyledList>
-                        {days.map((day) => {
-                            const dateParts = getShortDateParts(day.dateKey);
+                                    </StyledBarChartList>
+                                )}
+                            </StyledChartCard>
+                            <StyledChartCard>
+                                <StyledChartHeader>
+                                    <strong>결제수단 비중</strong>
+                                    <span>결제완료 기준</span>
+                                </StyledChartHeader>
+                                {paymentChartItems.length === 0 ? (
+                                    <StyledChartEmpty>결제 데이터가 없습니다.</StyledChartEmpty>
+                                ) : (
+                                    <StyledPaymentChartWrap>
+                                        <StyledDonutChart $gradient={paymentDonutGradient}>
+                                            <div>
+                                                <strong>{formatPrice(revenueInsights.paidTotal)}</strong>
+                                                <span>결제합계</span>
+                                            </div>
+                                        </StyledDonutChart>
+                                        <StyledLegendList>
+                                            {paymentChartItems.map((item) => {
+                                                const percent = revenueInsights.paidTotal > 0
+                                                    ? Math.round((item.total / revenueInsights.paidTotal) * 100)
+                                                    : 0;
 
-                            return (
-                                <StyledClickableRow key={day.dateKey}
-                                                    onClick={() => {
-                                                        setSelectedDateKey(day.dateKey);
-                                                        setDetailDateKey(day.dateKey);
-                                                    }}>
-                                    <StyledDate>
-                                        <StyledDateMonthDay>{dateParts.monthDay}</StyledDateMonthDay>
-                                        <StyledDateYear>{dateParts.yearWeekday}</StyledDateYear>
-                                    </StyledDate>
-                                    <StyledCount>{day.count}건</StyledCount>
-                                    <StyledPrice>{formatPrice(day.total)}</StyledPrice>
-                                </StyledClickableRow>
-                            );
-                        })}
-                    </StyledList>
+                                                return (
+                                                    <StyledLegendItem key={item.method}>
+                                                        <StyledBarLabel>
+                                                            <StyledColorSwatch $color={item.color} />
+                                                            <span>{item.method}</span>
+                                                        </StyledBarLabel>
+                                                        <StyledLegendValue>
+                                                            <strong>{formatPrice(item.total)}</strong>
+                                                            <span>{percent}%</span>
+                                                        </StyledLegendValue>
+                                                    </StyledLegendItem>
+                                                );
+                                            })}
+                                        </StyledLegendList>
+                                    </StyledPaymentChartWrap>
+                                )}
+                            </StyledChartCard>
+                        </StyledChartGrid>
+                    </StyledRevenueDashboard>
                 )}
-                <StyledRevenueSummary>
-                    <span>{rangeRevenue.count}건</span>
-                    <strong>{formatPrice(rangeRevenue.total)}</strong>
-                </StyledRevenueSummary>
+                {(revenueViewTab === 'all' || revenueViewTab === 'list') && (
+                    <>
+                        {days.length === 0 ? (
+                            <StyledEmpty>매출 없음</StyledEmpty>
+                        ) : (
+                            <StyledList>
+                                {days.map((day) => {
+                                    const dateParts = getShortDateParts(day.dateKey);
+
+                                    return (
+                                        <StyledClickableRow key={day.dateKey}
+                                                            onClick={() => {
+                                                                setSelectedDateKey(day.dateKey);
+                                                                setDetailDateKey(day.dateKey);
+                                                            }}>
+                                            <StyledDate>
+                                                <StyledDateMonthDay>{dateParts.monthDay}</StyledDateMonthDay>
+                                                <StyledDateYear>{dateParts.yearWeekday}</StyledDateYear>
+                                            </StyledDate>
+                                            <StyledCount>{day.count}건</StyledCount>
+                                            <StyledPrice>{formatPrice(day.total)}</StyledPrice>
+                                        </StyledClickableRow>
+                                    );
+                                })}
+                            </StyledList>
+                        )}
+                        <StyledRevenueSummary>
+                            <span>{rangeRevenue.count}건</span>
+                            <strong>{formatPrice(rangeRevenue.total)}</strong>
+                        </StyledRevenueSummary>
+                    </>
+                )}
             </StyledCardBody>
             {openedDateKey && layerDaily && (
                 <StyledLayerBackdrop onClick={() => setDetailDateKey(null)}>
@@ -1716,25 +1742,7 @@ const StyledRevenueStickyArea = styled.div`
 `;
 
 const compactInputStyle = css`
-    height: 30px;
-    border: 1px solid var(--light-gray-color);
-    border-radius: var(--radius-md);
-    background: var(--white-color);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    font-size: 12px;
-    box-sizing: border-box;
-    outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-
-    &:focus {
-        border-color: var(--blue-color);
-        box-shadow: 0 0 0 3px rgba(0, 169, 230, 0.14);
-    }
-
-    &:disabled {
-        background: var(--gray-color2);
-        color: var(--dark-gray-color2);
-    }
+    ${formControlStyle};
 `;
 
 const actionButtonStyle = css`
@@ -1786,22 +1794,8 @@ const StyledRangeInputWrap = styled.label`
 const StyledDateInput = styled.input`
     width: 100%;
     appearance: none;
-    height: 30px;
-    border: 1px solid var(--light-gray-color);
-    border-radius: var(--radius-md);
-    background: var(--white-color);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    font-size: 12px;
-    box-sizing: border-box;
-    outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    ${formControlStyle};
     padding: 0 8px;
-    color: var(--dark-gray-color);
-
-    &:focus {
-        border-color: var(--blue-color);
-        box-shadow: 0 0 0 3px rgba(0, 169, 230, 0.14);
-    }
 `;
 
 const StyledRangeDivider = styled.span`
@@ -1814,7 +1808,7 @@ const StyledRangeDivider = styled.span`
 const StyledQuickFilters = styled.div`
     display: flex;
     gap: 6px;
-    padding: 8px 16px 0;
+    padding: 8px 0 0;
 `;
 
 const StyledQuickFilterButton = styled.button<{ $active: boolean }>`
@@ -1829,7 +1823,7 @@ const StyledQuickFilterButton = styled.button<{ $active: boolean }>`
 const StyledDesignerTabs = styled.div`
     display: flex;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 8px 0;
     overflow-x: auto;
     overscroll-behavior: auto;
 `;
@@ -1842,6 +1836,20 @@ const StyledDesignerTab = styled.button<{ $active: boolean }>`
     border: 1px solid ${(p) => p.$active ? 'var(--blue-color)' : 'var(--light-gray-color)'};
     border-radius: 14px;
     background: ${(p) => p.$active ? 'var(--blue-color)' : 'var(--white-color)'};
+    color: ${(p) => p.$active ? '#fff' : 'var(--dark-gray-color)'};
+`;
+
+const StyledRevenueViewTabs = styled.div`
+    display: flex;
+    gap: 6px;
+    padding: 0 0 8px;
+`;
+
+const StyledRevenueViewTab = styled.button<{ $active: boolean }>`
+    ${actionButtonStyle};
+    ${mobileStretchButtonStyle};
+    border: 1px solid ${(p) => p.$active ? 'var(--black-color)' : 'var(--light-gray-color)'};
+    background: ${(p) => p.$active ? 'var(--black-color)' : 'var(--white-color)'};
     color: ${(p) => p.$active ? '#fff' : 'var(--dark-gray-color)'};
 `;
 

@@ -26,6 +26,7 @@ import {
     StyledHeader,
     StyledBody,
     StyledBodyInner,
+    StyledForm,
     StyledError,
     StyledFooter,
     StyledActionButton,
@@ -375,11 +376,7 @@ const StyledCreateOverlay = styled(StyledOverlay)`
   z-index: ${OVERLAY_Z_INDEX.base};
 `;
 
-const StyledCreateForm = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
+const StyledCreateForm = styled(StyledForm)``;
 
 const StyledCustomerModeTabs = styled.div`
   display: flex;

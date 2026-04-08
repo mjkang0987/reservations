@@ -7,6 +7,7 @@ import Link from 'next/link';
 
 import {useCalendarStore} from '../../store/calendarStore';
 import {scrollHintStyle, scrollContentStyle} from '../calendar/overlays/ModalStyles';
+import {formControlStyle} from '../ui/FormControls';
 
 import {Icon} from '../ui/Icons';
 import {ButtonText} from '../ui/ButtonText';
@@ -179,17 +180,8 @@ const StyledSearchHeader = styled.div`
 
 const StyledSearchInput = styled.input`
   flex: 1;
-  height: 24px;
+  ${formControlStyle};
   padding: 0 10px;
-  border: 1px solid var(--light-gray-color);
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-  box-sizing: border-box;
-
-  &:focus {
-    border-color: var(--blue-color);
-  }
 
   &[type="search"]::-webkit-search-cancel-button {
     -webkit-appearance: none;

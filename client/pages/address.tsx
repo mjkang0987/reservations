@@ -18,6 +18,7 @@ import {useCalendarStore} from '../store/calendarStore';
 
 import customersData from './api/customers.json';
 import {InputWrap} from "../components/ui/Input";
+import {formControlStyle} from "../components/ui/FormControls";
 
 type AddressProps = {
     customers: Customer[];
@@ -537,17 +538,8 @@ const StyledMemoCell = styled.div`
 const StyledMemoInput = styled.input`
     flex: 1;
     max-width: 200px;
-    height: 28px;
+    ${formControlStyle};
     padding: 0 8px;
-    border: 1px solid var(--light-gray-color);
-    border-radius: 4px;
-    font-size: var(--small-font);
-    box-sizing: border-box;
-    outline: none;
-
-    &:focus {
-        border-color: var(--blue-color);
-    }
 `;
 
 const StyledMemoText = styled.span<{ $isEmpty: boolean }>`

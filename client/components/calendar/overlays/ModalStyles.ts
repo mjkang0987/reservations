@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react';
 
 import styled, {css} from 'styled-components';
+import {formControlStyle} from '../../ui/FormControls';
 
 export const OVERLAY_Z_INDEX = {
     base: 100,
@@ -165,17 +166,9 @@ export const StyledForm = styled.div`
         }
 
         input, select {
-            height: 28px;
+            ${formControlStyle};
             padding: 0 8px;
-            border: 1px solid var(--light-gray-color);
-            border-radius: 4px;
             font-size: 13px;
-            box-sizing: border-box;
-            outline: none;
-
-            &:focus {
-                border-color: var(--blue-color);
-            }
         }
     }
 `;
