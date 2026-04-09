@@ -23,7 +23,6 @@ import {
     OVERLAY_Z_INDEX,
     StyledOverlay,
     StyledDetail,
-    StyledActionButton,
     useLayerInstanceId,
 } from './ModalStyles';
 import {
@@ -36,6 +35,7 @@ import {
     type ReservationDetailFormState,
 } from './ReservationDetailSections';
 import {ReservationDetailHeader} from './ReservationDetailHeader';
+import {ReservationDetailFooterActions} from './ReservationDetailFooterActions';
 import {ReservationDetailPaymentLayer} from './ReservationDetailPaymentLayer';
 
 type Mode = 'view' | 'editing' | 'confirming' | 'pastConfirm' | 'noChanges' | 'cancelling' | 'noshow' | 'payment';
@@ -60,6 +60,16 @@ function getPaymentEntries(reservation: Reservation): PaymentEntry[] {
 function formatPaymentEntries(entries: PaymentEntry[]): string[] {
     if (entries.length === 0) return ['미입력'];
     return entries.map((entry) => `${entry.method} · ${formatPrice(entry.amount)}`);
+}
+
+function getPaymentEntryDrafts(
+    reservation: Reservation,
+    fallbackAmount: number
+): Array<{ method: PaymentMethod | ''; amount: string }> {
+    const entries = getPaymentEntries(reservation);
+    return entries.length > 0
+        ? entries.map((entry) => ({method: entry.method, amount: String(entry.amount)}))
+        : [{method: '', amount: String(fallbackAmount)}];
 }
 
 const MODE_LABELS: Partial<Record<Mode, string>> = {
@@ -248,12 +258,7 @@ export const ReservationDetail = ({
     const [isPriceManual, setIsPriceManual] = useState(false);
     const displayPrice = reservation.price ?? sumPrice(parseServiceString(reservation.service));
     const [paymentEntries, setPaymentEntries] = useState<Array<{ method: PaymentMethod | ''; amount: string }>>(
-        () => {
-            const entries = getPaymentEntries(reservation);
-            return entries.length > 0
-                ? entries.map((entry) => ({method: entry.method, amount: String(entry.amount)}))
-                : [{method: '', amount: String(displayPrice)}];
-        }
+        () => getPaymentEntryDrafts(reservation, displayPrice)
     );
 
     const changedFields = getChangedFields(reservation, form, designerNameMap);
@@ -410,11 +415,7 @@ export const ReservationDetail = ({
         setIsEndTimeManual(false);
         setIsPriceManual(false);
         setIsHistoryOpen(false);
-        setPaymentEntries(
-            getPaymentEntries(reservation).length > 0
-                ? getPaymentEntries(reservation).map((entry) => ({method: entry.method, amount: String(entry.amount)}))
-                : [{method: '', amount: String(displayPrice)}]
-        );
+        setPaymentEntries(getPaymentEntryDrafts(reservation, displayPrice));
         setMode('view');
     };
 
@@ -438,100 +439,6 @@ export const ReservationDetail = ({
     const isInactive = isCancelled || isNoshow;
     const dialogLabel = MODE_LABELS[mode] ?? '예약 상세';
     const dialogTitle = MODE_LABELS[mode] ?? `${reservation.service} - ${customer?.name}`;
-    const footerActions = mode === 'view'
-        ? (!isInactive ? (
-            <>
-                <StyledActionButton type="button"
-                                    $danger
-                                    onClick={() => setMode('cancelling')}>예약취소</StyledActionButton>
-                <StyledActionButton type="button"
-                                    $warning
-                                    onClick={() => setMode('noshow')}>노쇼</StyledActionButton>
-                <StyledActionButton type="button"
-                                    $primary
-                                    onClick={() => {
-                                        setPaymentEntries(
-                                            getPaymentEntries(reservation).length > 0
-                                                ? getPaymentEntries(reservation).map((entry) => ({method: entry.method, amount: String(entry.amount)}))
-                                                : [{method: '', amount: String(displayPrice)}]
-                                        );
-                                        setError('');
-                                        setMode('payment');
-                                    }}>
-                    {paymentCompleted ? '결제수단 변경' : '결제완료'}
-                </StyledActionButton>
-                <StyledActionButton type="button"
-                                    $primary
-                                    onClick={() => setMode('editing')}>수정</StyledActionButton>
-            </>
-        ) : null)
-        : mode === 'editing'
-            ? (
-                <>
-                    <StyledActionButton type="button"
-                                        onClick={handleCancel}>취소</StyledActionButton>
-                    <StyledActionButton type="button"
-                                        $primary
-                                        onClick={handleConfirmRequest}>저장</StyledActionButton>
-                </>
-            )
-            : mode === 'confirming'
-                ? (
-                    <>
-                        <StyledActionButton type="button"
-                                            onClick={() => setMode('editing')}>돌아가기</StyledActionButton>
-                        <StyledActionButton type="button"
-                                            $primary
-                                            onClick={handleConfirmSave}>확인</StyledActionButton>
-                    </>
-                )
-                : mode === 'noChanges'
-                    ? (
-                        <StyledActionButton type="button"
-                                            $primary
-                                            onClick={() => setMode('editing')}>확인</StyledActionButton>
-                    )
-                    : mode === 'pastConfirm'
-                        ? (
-                            <>
-                                <StyledActionButton type="button"
-                                                    onClick={() => setMode('editing')}>아니오</StyledActionButton>
-                                <StyledActionButton type="button"
-                                                    $primary
-                                                    onClick={handleConfirmSave}>네</StyledActionButton>
-                            </>
-                        )
-                        : mode === 'cancelling'
-                            ? (
-                                <>
-                                    <StyledActionButton type="button"
-                                                        onClick={() => setMode('view')}>돌아가기</StyledActionButton>
-                                    <StyledActionButton type="button"
-                                                        $danger
-                                                        onClick={() => onCancel(reservation)}>예약취소</StyledActionButton>
-                                </>
-                            )
-                            : mode === 'noshow'
-                                ? (
-                                    <>
-                                        <StyledActionButton type="button"
-                                                            onClick={() => setMode('view')}>돌아가기</StyledActionButton>
-                                        <StyledActionButton type="button"
-                                                            $warning
-                                                            onClick={() => onCancel(reservation, 'noshow')}>노쇼 처리</StyledActionButton>
-                                    </>
-                                )
-                                : mode === 'payment'
-                                    ? (
-                                        <>
-                                            <StyledActionButton type="button"
-                                                                onClick={() => setMode('view')}>취소</StyledActionButton>
-                                            <StyledActionButton type="button"
-                                                                $primary
-                                                                onClick={handlePaymentSave}>결제 저장</StyledActionButton>
-                                        </>
-                                    )
-                                : null;
 
     if (!modalRoot) return null;
 
@@ -663,7 +570,31 @@ export const ReservationDetail = ({
                 />
             )}
 
-            <ReservationFooter actions={footerActions} />
+            <ReservationFooter
+                actions={(
+                    <ReservationDetailFooterActions
+                        mode={mode}
+                        isInactive={isInactive}
+                        paymentCompleted={paymentCompleted}
+                        onOpenCancelling={() => setMode('cancelling')}
+                        onOpenNoshow={() => setMode('noshow')}
+                        onOpenPayment={() => {
+                            setPaymentEntries(getPaymentEntryDrafts(reservation, displayPrice));
+                            setError('');
+                            setMode('payment');
+                        }}
+                        onOpenEditing={() => setMode('editing')}
+                        onCancelEdit={handleCancel}
+                        onConfirmRequest={handleConfirmRequest}
+                        onConfirmSave={handleConfirmSave}
+                        onCancelReservation={() => onCancel(reservation)}
+                        onNoshowReservation={() => onCancel(reservation, 'noshow')}
+                        onPaymentSave={handlePaymentSave}
+                        onBackToEditing={() => setMode('editing')}
+                        onBackToView={() => setMode('view')}
+                    />
+                )}
+            />
         </StyledDetail>
         <ReservationHistoryLayer
             history={thisHistory}
