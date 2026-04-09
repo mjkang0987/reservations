@@ -5,9 +5,15 @@ import type {Customer, CustomerMap} from '../utils/customers';
 import type {ServiceItem} from '../utils/services';
 import {CATEGORY_BASE_COLOR_MAP, SERVICE_CATALOG} from '../utils/services';
 import type {DaySchedule, Designer, DesignerStatus} from '../utils/designers';
-import {createDefaultSchedule, DEFAULT_DESIGNERS, getDesignerColor} from '../utils/designers';
+import {DEFAULT_DESIGNERS} from '../utils/designers';
 import type {StoreSettings} from '../utils/storeSettings';
 import {DEFAULT_STORE_SETTINGS} from '../utils/storeSettings';
+import {
+    buildAddedDesignerState,
+    buildDeletedDesignerState,
+    buildUpdatedDesignerDayState,
+    buildUpdatedDesignerState,
+} from './calendarStoreDesignerHelpers';
 import {
     groupCatalogByCategory,
     reorder,
@@ -322,24 +328,8 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
     addDesigner: (name, status = '재직', phone = '', note = '', color) =>
         set((state) => {
-            const cleanName = name.trim();
-            if (!cleanName) return state;
-            const designerId = Date.now();
-
-            const nextDesigner: Designer = {
-                id: designerId,
-                name: cleanName,
-                schedule: createDefaultSchedule(),
-                status,
-                phone,
-                note,
-                color: color || getDesignerColor({id: designerId}),
-            };
-
-            const nextDesigners = [
-                ...state.designers,
-                nextDesigner
-            ];
+            const nextDesigners = buildAddedDesignerState(state.designers, name, status, phone, note, color);
+            if (!nextDesigners) return state;
 
             syncDesignerSettings(nextDesigners);
             return {designers: nextDesigners};
@@ -347,44 +337,22 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
     updateDesigner: (designerId, patch) =>
         set((state) => {
-            const nextDesigners = state.designers.map((designer) =>
-                designer.id === designerId
-                    ? {
-                        ...designer,
-                        ...(patch.name !== undefined ? {name: patch.name} : {}),
-                        ...(patch.status ? {status: patch.status} : {}),
-                        ...(patch.phone !== undefined ? {phone: patch.phone} : {}),
-                        ...(patch.note !== undefined ? {note: patch.note} : {}),
-                        ...(patch.color !== undefined ? {color: patch.color} : {}),
-                    }
-                    : designer
-            );
-
+            const nextDesigners = buildUpdatedDesignerState(state.designers, designerId, patch);
             syncDesignerSettings(nextDesigners);
             return {designers: nextDesigners};
         }),
 
     updateDesignerDay: (designerId, dayIndex, patch) =>
         set((state) => {
-            if (dayIndex < 0 || dayIndex > 6) return state;
-
-            const nextDesigners = state.designers.map((designer) => {
-                if (designer.id !== designerId) return designer;
-
-                const nextSchedule = designer.schedule.map((day, index) =>
-                    index === dayIndex ? {...day, ...patch} : day
-                );
-
-                return {...designer, schedule: nextSchedule};
-            });
-
+            const nextDesigners = buildUpdatedDesignerDayState(state.designers, designerId, dayIndex, patch);
+            if (!nextDesigners) return state;
             syncDesignerSettings(nextDesigners);
             return {designers: nextDesigners};
         }),
 
     deleteDesigner: (designerId) =>
         set((state) => {
-            const nextDesigners = state.designers.filter((designer) => designer.id !== designerId);
+            const nextDesigners = buildDeletedDesignerState(state.designers, designerId);
             syncDesignerSettings(nextDesigners);
             return {designers: nextDesigners};
         }),
