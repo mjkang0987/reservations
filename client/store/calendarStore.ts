@@ -15,8 +15,6 @@ import {
     buildUpdatedDesignerState,
 } from './calendarStoreDesignerHelpers';
 import {
-    groupCatalogByCategory,
-    reorder,
     syncCustomerSettings,
     syncDesignerSettings,
     syncServiceSettings,
@@ -31,6 +29,14 @@ import {
     buildCancelledReservationState,
     buildUpdatedReservationState,
 } from './calendarStoreReservationHelpers';
+import {
+    buildAddedServiceState,
+    buildDeletedServiceState,
+    buildMovedCategoryState,
+    buildMovedServiceInCategoryState,
+    buildRenamedCategoryState,
+    buildUpdatedServiceState,
+} from './calendarStoreServiceHelpers';
 
 export type FullType = Date | null;
 
@@ -370,77 +376,47 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
     addService: (item) =>
         set((state) => {
-            const nextCatalog = [...state.serviceCatalog, item];
+            const nextCatalog = buildAddedServiceState(state.serviceCatalog, item);
             return withSyncedCatalog(state, nextCatalog);
         }),
 
     updateService: (name, updated) =>
         set((state) => {
-            const nextCatalog = state.serviceCatalog.map((s) => s.name === name ? updated : s);
+            const nextCatalog = buildUpdatedServiceState(state.serviceCatalog, name, updated);
             return withSyncedCatalog(state, nextCatalog);
         }),
 
     deleteService: (name) =>
         set((state) => {
-            const nextCatalog = state.serviceCatalog.filter((s) => s.name !== name);
+            const nextCatalog = buildDeletedServiceState(state.serviceCatalog, name);
             return withSyncedCatalog(state, nextCatalog);
         }),
 
     renameCategory: (prevCategory, nextCategory) =>
         set((state) => {
-            const trimmed = nextCategory.trim();
-            if (!trimmed || trimmed === prevCategory) return state;
-            if (state.serviceCatalog.some((item) => item.category === trimmed)) return state;
+            const nextState = buildRenamedCategoryState(
+                state.serviceCatalog,
+                state.categoryBaseColorMap,
+                prevCategory,
+                nextCategory
+            );
+            if (!nextState) return state;
 
-            const nextCatalog = state.serviceCatalog.map((item) => (
-                item.category === prevCategory ? {...item, category: trimmed} : item
-            ));
-
-            const nextCategoryBaseColorMap = {...state.categoryBaseColorMap};
-            if (prevCategory in nextCategoryBaseColorMap) {
-                nextCategoryBaseColorMap[trimmed] = nextCategoryBaseColorMap[prevCategory];
-                delete nextCategoryBaseColorMap[prevCategory];
-            }
-
-            syncServiceSettings(nextCatalog, nextCategoryBaseColorMap);
-            return {
-                serviceCatalog: nextCatalog,
-                categoryBaseColorMap: nextCategoryBaseColorMap,
-            };
+            syncServiceSettings(nextState.serviceCatalog, nextState.categoryBaseColorMap);
+            return nextState;
         }),
 
     moveCategory: (dragCategory, targetCategory) =>
         set((state) => {
-            if (dragCategory === targetCategory) return state;
-
-            const grouped = groupCatalogByCategory(state.serviceCatalog);
-
-            const categories = Array.from(grouped.keys());
-            const dragIndex = categories.indexOf(dragCategory);
-            const targetIndex = categories.indexOf(targetCategory);
-
-            if (dragIndex === -1 || targetIndex === -1) return state;
-
-            const nextCategories = reorder(categories, dragIndex, targetIndex);
-            const nextCatalog = nextCategories.flatMap((category) => grouped.get(category) || []);
+            const nextCatalog = buildMovedCategoryState(state.serviceCatalog, dragCategory, targetCategory);
+            if (!nextCatalog) return state;
             return withSyncedCatalog(state, nextCatalog);
         }),
 
     moveServiceInCategory: (dragName, targetName) =>
         set((state) => {
-            if (dragName === targetName) return state;
-
-            const dragIndex = state.serviceCatalog.findIndex((s) => s.name === dragName);
-            const targetIndex = state.serviceCatalog.findIndex((s) => s.name === targetName);
-
-            if (dragIndex === -1 || targetIndex === -1) return state;
-
-            const targetItem = state.serviceCatalog[targetIndex];
-            const nextCatalog = [...state.serviceCatalog];
-            const [moved] = nextCatalog.splice(dragIndex, 1);
-            const movedWithCategory: ServiceItem = {...moved, category: targetItem.category};
-            const insertIndex = dragIndex < targetIndex ? targetIndex - 1 : targetIndex;
-            nextCatalog.splice(insertIndex, 0, movedWithCategory);
+            const nextCatalog = buildMovedServiceInCategoryState(state.serviceCatalog, dragName, targetName);
+            if (!nextCatalog) return state;
             return withSyncedCatalog(state, nextCatalog);
         }),
 
