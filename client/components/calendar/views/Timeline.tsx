@@ -12,19 +12,16 @@ import {
 } from '../../../utils/constants';
 
 import {getDesignerColor} from '../../../utils/designers';
-import {buildServiceColorMap, calcEndTime, getServiceColor, parseServiceString} from '../../../utils/services';
+import {buildServiceColorMap} from '../../../utils/services';
 
-import {findOverlap, toDateKey, type Reservation} from '../../../utils/reservations';
-import {pad} from '../../../utils/timeRound';
-import {type DragPreview, type DragState, type PendingMove} from './timelineDrag';
+import {toDateKey} from '../../../utils/reservations';
 import {TimelineCluster} from './TimelineCluster';
 import {
     buildCreateReservationFromPointer,
-    buildMouseDragState,
-    buildTouchDragState,
 } from './timelineInteractions';
 import {TimelineDragGhost, TimelineReservationCard} from './TimelineReservationCard';
 import {buildTimelineEntries, type TimelineEntry} from './timelineEntries';
+import {useTimelineDrag} from './useTimelineDrag';
 
 export const Timeline = ({
                              fullYear,
@@ -81,182 +78,26 @@ export const Timeline = ({
     const top = ((hour - start) * 80) + (minutes * 4 / 3);
     const full = (end - start) * 80;
     const timelineRef = useRef<HTMLDivElement | null>(null);
-    const dragStateRef = useRef<DragState | null>(null);
-    const dragPreviewRef = useRef<DragPreview | null>(null);
-    const suppressCreateClickRef = useRef(false);
-    const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
-    const [pendingMove, setPendingMove] = useState<PendingMove | null>(null);
     const [openClusterId, setOpenClusterId] = useState<string | null>(null);
-
-    const pxPerMinute = 4 / 3;
-
-    // store refs for use inside event handlers without stale closures
-    const reservationMapRef = useRef(reservationMap);
-    const updateReservationRef = useRef(updateReservation);
-    const setSelectedReservationRef = useRef(openReservationDetail);
-    useEffect(() => {
-        reservationMapRef.current = reservationMap;
-    }, [reservationMap]);
-    useEffect(() => {
-        updateReservationRef.current = updateReservation;
-    }, [updateReservation]);
-    useEffect(() => {
-        setSelectedReservationRef.current = openReservationDetail;
-    }, [openReservationDetail]);
-
-    const startRef = useRef(start);
-    const endRef = useRef(end);
-    const typeRef = useRef(type);
-    const blockOffsetRef = useRef(blockOffset);
-    useEffect(() => {
-        startRef.current = start;
-    }, [start]);
-    useEffect(() => {
-        endRef.current = end;
-    }, [end]);
-    useEffect(() => {
-        typeRef.current = type;
-    }, [type]);
-    useEffect(() => {
-        blockOffsetRef.current = blockOffset;
-    }, [blockOffset]);
-
-    const getStartTimeFromTop = (topValue: number, durationMinutes: number, startHour: number, endHour: number, offset: number) => {
-        const maxStartMinutes = Math.max(0, ((endHour - startHour) * 60) - durationMinutes);
-        const rawMinutes = (topValue - offset) / pxPerMinute;
-        const boundedMinutes = Math.min(Math.max(rawMinutes, 0), maxStartMinutes);
-        const snappedMinutes = Math.round(boundedMinutes / 30) * 30;
-        const h = startHour + Math.floor(snappedMinutes / 60);
-        const minute = snappedMinutes % 60;
-
-        return `${pad(h)}:${pad(minute)}`;
-    };
-
-    const getTimelineTarget = (clientX: number, clientY: number) => {
-        const pointedElement = document.elementFromPoint(clientX, clientY);
-        const timelineElement = pointedElement?.closest('[data-timeline-date]');
-
-        if (!(timelineElement instanceof HTMLDivElement)) return null;
-
-        const targetDate = timelineElement.dataset.timelineDate;
-        if (!targetDate) return null;
-
-        return {element: timelineElement, date: targetDate};
-    };
-
-    const handlePointerMove = (clientX: number, clientY: number) => {
-        const dragState = dragStateRef.current;
-        if (!dragState) return;
-
-        const targetTimeline = getTimelineTarget(clientX, clientY);
-        const timeline = targetTimeline?.element ?? timelineRef.current;
-        const targetDate = targetTimeline?.date ?? dateKey;
-        if (!timeline) return;
-
-        const rect = timeline.getBoundingClientRect();
-        const paddingTop = typeRef.current === ViewType.Day ? TIMELINE_DAY_TOP : TIMELINE_TOP;
-        const rawTop = clientY - rect.top - paddingTop - dragState.pointerOffsetY;
-        const nextStartTime = getStartTimeFromTop(rawTop, dragState.durationMinutes, startRef.current, endRef.current, blockOffsetRef.current);
-        const [nextHour, nextMinute] = nextStartTime.split(':').map(Number);
-        const nextTop = (nextHour - startRef.current) * 80 + nextMinute * pxPerMinute + blockOffsetRef.current;
-        const movedPx = Math.abs(nextTop - dragState.originTop);
-        const nextHeight = dragState.durationMinutes * pxPerMinute;
-
-        if (movedPx > 3) {
-            dragState.didDrag = true;
-        }
-
-        const preview: DragPreview = {
-            reservationId: dragState.reservation.id,
-            top: nextTop,
-            date: targetDate,
-            startTime: nextStartTime,
-            endTime: calcEndTime(nextStartTime, dragState.durationMinutes),
-            ghostLeft: rect.left + 5,
-            ghostTop: rect.top + nextTop,
-            ghostWidth: Math.max(rect.width - 10, 0),
-            ghostHeight: nextHeight,
-        };
-        dragPreviewRef.current = preview;
-        setDragPreview(preview);
-    };
-
-    const handlePointerUp = () => {
-        const dragState = dragStateRef.current;
-        if (!dragState) return;
-
-        const preview = dragPreviewRef.current;
-        dragStateRef.current = null;
-        dragPreviewRef.current = null;
-
-        if (!dragState.didDrag || !preview) {
-            setSelectedReservationRef.current(dragState.reservation);
-            setDragPreview(null);
-            return;
-        }
-
-        suppressCreateClickRef.current = true;
-        window.setTimeout(() => {
-            suppressCreateClickRef.current = false;
-        }, 0);
-
-        if (
-            preview.date !== dragState.reservation.date ||
-            preview.startTime !== dragState.reservation.startTime ||
-            preview.endTime !== dragState.reservation.endTime
-        ) {
-            const overlap = findOverlap(reservationMapRef.current, preview.date, preview.startTime, preview.endTime, dragState.reservation.id);
-
-            if (!overlap) {
-                const nextReservation = {
-                    ...dragState.reservation,
-                    date: preview.date,
-                    startTime: preview.startTime,
-                    endTime: preview.endTime,
-                };
-                setPendingMove({
-                    prev: dragState.reservation,
-                    next: nextReservation,
-                    customerName: customerMap[dragState.reservation.customerId]?.name,
-                });
-            }
-        }
-
-        setDragPreview(null);
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (event: MouseEvent) => {
-            handlePointerMove(event.clientX, event.clientY);
-        };
-
-        const handleMouseUp = () => {
-            handlePointerUp();
-        };
-
-        const handleTouchMove = (event: TouchEvent) => {
-            if (!dragStateRef.current) return;
-            event.preventDefault();
-            const touch = event.touches[0];
-            handlePointerMove(touch.clientX, touch.clientY);
-        };
-
-        const handleTouchEnd = () => {
-            handlePointerUp();
-        };
-
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
-        window.addEventListener('touchmove', handleTouchMove, {passive: false});
-        window.addEventListener('touchend', handleTouchEnd);
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-            window.removeEventListener('touchmove', handleTouchMove);
-            window.removeEventListener('touchend', handleTouchEnd);
-        };
-    }, [fullYear, month, date]);
+    const {
+        dragPreview,
+        pendingMove,
+        setPendingMove,
+        suppressCreateClickRef,
+        draggingReservation,
+        startMouseDrag,
+        startTouchDrag,
+    } = useTimelineDrag({
+        timelineRef,
+        dateKey,
+        type,
+        start,
+        end,
+        blockOffset,
+        reservationMap,
+        customerMap,
+        onOpenReservationDetail: openReservationDetail,
+    });
 
     useEffect(() => {
         setOpenClusterId(null);
@@ -285,7 +126,7 @@ export const Timeline = ({
             setOpenClusterId(null);
             return;
         }
-        if (dragStateRef.current) return;
+        if (draggingReservation) return;
         if (suppressCreateClickRef.current) return;
         setCreateReservationInitial(buildCreateReservationFromPointer({
             container: e.currentTarget,
@@ -299,36 +140,9 @@ export const Timeline = ({
         }));
     };
 
-    const draggingReservation = dragStateRef.current?.reservation ?? null;
     const isDateChanging = !!(dragPreview && draggingReservation && dragPreview.date !== draggingReservation.date);
     const showDragGhost = isDateChanging && !!dragPreview && !!draggingReservation;
     const draggingCustomer = draggingReservation ? customerMap[draggingReservation.customerId] : null;
-
-    const startMouseDrag = (event: React.MouseEvent<HTMLElement>, reservation: Reservation, durationMinutes: number, blockTop: number, blockHeight: number) => {
-        event.stopPropagation();
-        const nextDrag = buildMouseDragState(event, reservation, durationMinutes, blockTop, blockHeight);
-        if (!nextDrag) {
-            dragStateRef.current = null;
-            return;
-        }
-
-        dragStateRef.current = nextDrag.dragState;
-        dragPreviewRef.current = nextDrag.preview;
-        setDragPreview(nextDrag.preview);
-    };
-
-    const startTouchDrag = (event: React.TouchEvent<HTMLElement>, reservation: Reservation, durationMinutes: number, blockTop: number, blockHeight: number) => {
-        event.stopPropagation();
-        const nextDrag = buildTouchDragState(event, reservation, durationMinutes, blockTop, blockHeight);
-        if (!nextDrag) {
-            dragStateRef.current = null;
-            return;
-        }
-
-        dragStateRef.current = nextDrag.dragState;
-        dragPreviewRef.current = nextDrag.preview;
-        setDragPreview(nextDrag.preview);
-    };
 
     return (<StyledTimelineWrap ref={timelineRef}
                                 data-timeline-date={dateKey}
@@ -411,7 +225,7 @@ export const Timeline = ({
                                                      customerName={pendingMove.customerName}
                                                      onClose={() => setPendingMove(null)}
                                                      onConfirm={() => {
-                                                         updateReservationRef.current(pendingMove.prev, pendingMove.next);
+                                                         updateReservation(pendingMove.prev, pendingMove.next);
                                                          setPendingMove(null);
                                                      }} />}
     </StyledTimelineWrap>);
