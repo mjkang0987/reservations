@@ -17,16 +17,12 @@ import {
     formatPrice,
     calcEndTime,
     buildServiceColorMap,
-    getServiceColor,
 } from '../../../utils/services';
 
 import {
     OVERLAY_Z_INDEX,
     StyledOverlay,
     StyledDetail,
-    StyledHeader,
-    StyledBody,
-    StyledBodyInner,
     StyledActionButton,
     useLayerInstanceId,
 } from './ModalStyles';
@@ -39,6 +35,8 @@ import {
     ReservationViewSection,
     type ReservationDetailFormState,
 } from './ReservationDetailSections';
+import {ReservationDetailHeader} from './ReservationDetailHeader';
+import {ReservationDetailPaymentLayer} from './ReservationDetailPaymentLayer';
 
 type Mode = 'view' | 'editing' | 'confirming' | 'pastConfirm' | 'noChanges' | 'cancelling' | 'noshow' | 'payment';
 
@@ -546,22 +544,12 @@ export const ReservationDetail = ({
                                                   $stacked={selectedCustomerId !== null}>
         <StyledDetail onClick={(e) => e.stopPropagation()}
                       $width={400}>
-            <StyledReservationHeader>
-                <StyledReservationTitleGroup>
-                    <StyledServiceBadgeList>
-                        {parseServiceString(reservation.service).map((serviceName) => (
-                            <StyledServiceDotBadge key={serviceName}
-                                                   $color={getServiceColor(serviceName, serviceColorMap)}
-                                                   aria-label={serviceName}
-                                                   title={serviceName} />
-                        ))}
-                    </StyledServiceBadgeList>
-                    <h3>{dialogTitle}</h3>
-                </StyledReservationTitleGroup>
-                <button type="button"
-                        onClick={handleBack}
-                        aria-label="닫기">닫기</button>
-            </StyledReservationHeader>
+            <ReservationDetailHeader
+                title={dialogTitle}
+                service={reservation.service}
+                serviceColorMap={serviceColorMap}
+                onClose={handleBack}
+            />
 
             {mode === 'view' && (
                 <ReservationViewSection
@@ -637,61 +625,29 @@ export const ReservationDetail = ({
             )}
 
             {mode === 'payment' && (
-                <StyledBody><StyledBodyInner>
-                    <StyledPaymentLayer>
-                        <StyledPaymentMessage>결제 종류와 금액을 입력해 주세요.</StyledPaymentMessage>
-                        <StyledPaymentEntryList>
-                            {paymentEntries.map((entry, index) => (
-                                <StyledPaymentEntryRow key={`payment-entry-${index}`}>
-                                    <select
-                                        value={entry.method}
-                                        onChange={(e) => {
-                                            const value = e.target.value as PaymentMethod | '';
-                                            setPaymentEntries((prev) => prev.map((item, itemIndex) => (
-                                                itemIndex === index ? {...item, method: value} : item
-                                            )));
-                                            setError('');
-                                        }}
-                                    >
-                                        <option value="">결제종류</option>
-                                        {PAYMENT_METHOD_OPTIONS.map((option) => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        value={entry.amount}
-                                        placeholder="금액"
-                                        onChange={(e) => {
-                                            const value = e.target.value.replace(/[^0-9]/g, '');
-                                            setPaymentEntries((prev) => prev.map((item, itemIndex) => (
-                                                itemIndex === index ? {...item, amount: value} : item
-                                            )));
-                                            setError('');
-                                        }}
-                                    />
-                                    <StyledPaymentRemoveButton
-                                        type="button"
-                                        onClick={() => {
-                                            setPaymentEntries((prev) => prev.length > 1 ? prev.filter((_, itemIndex) => itemIndex !== index) : [{method: '', amount: ''}]);
-                                            setError('');
-                                        }}
-                                    >
-                                        삭제
-                                    </StyledPaymentRemoveButton>
-                                </StyledPaymentEntryRow>
-                            ))}
-                        </StyledPaymentEntryList>
-                        <StyledPaymentAddButton
-                            type="button"
-                            onClick={() => setPaymentEntries((prev) => [...prev, {method: '', amount: ''}])}
-                        >
-                            결제수단 추가
-                        </StyledPaymentAddButton>
-                        {error && <StyledPaymentError>{error}</StyledPaymentError>}
-                    </StyledPaymentLayer>
-                </StyledBodyInner></StyledBody>
+                <ReservationDetailPaymentLayer
+                    paymentEntries={paymentEntries}
+                    error={error}
+                    paymentMethodOptions={PAYMENT_METHOD_OPTIONS}
+                    onChangeEntryMethod={(index, value) => {
+                        setPaymentEntries((prev) => prev.map((item, itemIndex) => (
+                            itemIndex === index ? {...item, method: value} : item
+                        )));
+                        setError('');
+                    }}
+                    onChangeEntryAmount={(index, value) => {
+                        const normalizedValue = value.replace(/[^0-9]/g, '');
+                        setPaymentEntries((prev) => prev.map((item, itemIndex) => (
+                            itemIndex === index ? {...item, amount: normalizedValue} : item
+                        )));
+                        setError('');
+                    }}
+                    onRemoveEntry={(index) => {
+                        setPaymentEntries((prev) => prev.length > 1 ? prev.filter((_, itemIndex) => itemIndex !== index) : [{method: '', amount: ''}]);
+                        setError('');
+                    }}
+                    onAddEntry={() => setPaymentEntries((prev) => [...prev, {method: '', amount: ''}])}
+                />
             )}
 
             {mode === 'noshow' && (
@@ -722,121 +678,4 @@ export const ReservationDetail = ({
 
 const StyledReservationOverlay = styled(StyledOverlay)<{ $stacked: boolean }>`
     z-index: ${(props) => props.$stacked ? OVERLAY_Z_INDEX.confirm : OVERLAY_Z_INDEX.detail};
-`;
-
-const StyledReservationHeader = styled(StyledHeader)``;
-
-const StyledReservationTitleGroup = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 0;
-
-    h3 {
-        margin: 0;
-    }
-`;
-
-const StyledServiceBadgeList = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-`;
-
-const StyledServiceDotBadge = styled.span<{ $color: string }>`
-    display: inline-flex;
-    align-items: center;
-    width: 12px;
-    height: 12px;
-    border-radius: 999px;
-    background-color: ${(props) => props.$color};
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
-`;
-
-const StyledPaymentLayer = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-`;
-
-const StyledPaymentMessage = styled.p`
-    margin: 0;
-    font-size: 13px;
-    color: var(--dark-gray-color);
-`;
-
-const StyledPaymentOptionGrid = styled.div`
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-`;
-
-const StyledPaymentEntryList = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-`;
-
-const StyledPaymentEntryRow = styled.div`
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
-    gap: 8px;
-
-    select,
-    input {
-        height: 30px;
-        padding: 0 10px;
-        border: 1px solid var(--light-gray-color);
-        border-radius: 8px;
-        background: var(--white-color);
-        font-size: 12px;
-        color: var(--dark-gray-color);
-        box-sizing: border-box;
-    }
-
-    @media (max-width: 640px) {
-        grid-template-columns: 1fr;
-    }
-`;
-
-const StyledPaymentOptionButton = styled.button<{ $active: boolean }>`
-    min-height: 40px;
-    padding: 8px 10px;
-    border: 1px solid ${(props) => props.$active ? 'var(--blue-color)' : 'var(--light-gray-color)'};
-    border-radius: 8px;
-    background: ${(props) => props.$active ? 'rgba(45, 127, 249, 0.12)' : 'var(--white-color)'};
-    color: var(--dark-gray-color);
-    font-size: 12px;
-    font-weight: ${(props) => props.$active ? 600 : 500};
-    cursor: pointer;
-    text-align: center;
-`;
-
-const StyledPaymentAddButton = styled.button`
-    height: 30px;
-    border: 1px dashed var(--light-gray-color);
-    border-radius: 8px;
-    background: none;
-    color: var(--dark-gray-color);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-`;
-
-const StyledPaymentRemoveButton = styled.button`
-    min-width: 52px;
-    height: 30px;
-    padding: 0 10px;
-    border: 1px solid var(--danger-border);
-    border-radius: 8px;
-    background: var(--danger-bg);
-    color: var(--danger-color);
-    font-size: 12px;
-    cursor: pointer;
-`;
-
-const StyledPaymentError = styled.p`
-    margin: 0;
-    font-size: 12px;
-    color: var(--danger-color);
 `;
