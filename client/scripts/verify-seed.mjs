@@ -43,6 +43,17 @@ async function main() {
         },
     });
 
+    const paidReservationWithEntries = await prisma.reservation.findFirst({
+        where: {
+            storeId: DEFAULT_STORE_KEY,
+            paymentCompleted: true,
+            paymentEntries: {
+                some: {},
+            },
+        },
+        select: {id: true},
+    });
+
     if (!store) {
         throw new Error('Default store not found. Run the seed first.');
     }
@@ -70,6 +81,13 @@ async function main() {
     if (ownerMembershipCount < 1) {
         hasMismatch = true;
         console.log('[verify-seed] owner membership check failed');
+    }
+
+    if (!paidReservationWithEntries) {
+        hasMismatch = true;
+        console.log('[verify-seed] paid reservation payment entry check failed');
+    } else {
+        console.log(`[verify-seed] paid reservation with entries: ${paidReservationWithEntries.id}`);
     }
 
     if (hasMismatch) {
