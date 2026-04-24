@@ -9,6 +9,7 @@
         "start": "next start",
         "lint": "eslint .",
         "prisma:generate": "prisma generate",
+        "prisma:validate": "prisma validate",
         "prisma:db:push": "prisma db push",
         "prisma:migrate:dev": "prisma migrate dev",
         "prisma:migrate:deploy": "prisma migrate deploy",
