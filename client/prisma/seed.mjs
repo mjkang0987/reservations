@@ -69,6 +69,19 @@ async function readJson(relativePath) {
     return JSON.parse(raw);
 }
 
+async function getDefaultStoreIdOrThrow(message) {
+    const store = await prisma.store.findUnique({
+        where: {id: DEFAULT_STORE_KEY},
+        select: {id: true},
+    });
+
+    if (!store) {
+        throw new Error(message);
+    }
+
+    return store.id;
+}
+
 async function seedDefaultStore() {
     const storeData = await readJson('pages/api/store.json');
 
@@ -143,14 +156,7 @@ async function seedOwnerMembership() {
         return;
     }
 
-    const store = await prisma.store.findUnique({
-        where: {id: DEFAULT_STORE_KEY},
-        select: {id: true},
-    });
-
-    if (!store) {
-        throw new Error('Default store must exist before seeding owner membership.');
-    }
+    const storeId = await getDefaultStoreIdOrThrow('Default store must exist before seeding owner membership.');
 
     const user = await prisma.user.upsert({
         where: {email: SEED_OWNER_EMAIL},
@@ -167,7 +173,7 @@ async function seedOwnerMembership() {
         where: {
             userId_storeId: {
                 userId: user.id,
-                storeId: store.id,
+                storeId,
             },
         },
         update: {
@@ -175,7 +181,7 @@ async function seedOwnerMembership() {
         },
         create: {
             userId: user.id,
-            storeId: store.id,
+            storeId,
             role: 'owner',
         },
     });
@@ -186,20 +192,13 @@ async function seedOwnerMembership() {
 async function seedDesigners() {
     const designerData = await readJson('pages/api/designers.json');
 
-    const store = await prisma.store.findUnique({
-        where: {id: DEFAULT_STORE_KEY},
-        select: {id: true},
-    });
-
-    if (!store) {
-        throw new Error('Default store must exist before seeding designers.');
-    }
+    const storeId = await getDefaultStoreIdOrThrow('Default store must exist before seeding designers.');
 
     for (const designer of designerData.designers ?? []) {
         const savedDesigner = await prisma.designer.upsert({
             where: {
                 storeId_legacyId: {
-                    storeId: store.id,
+                    storeId,
                     legacyId: designer.id,
                 },
             },
@@ -211,7 +210,7 @@ async function seedDesigners() {
                 color: designer.color ?? null,
             },
             create: {
-                storeId: store.id,
+                storeId,
                 legacyId: designer.id,
                 name: designer.name,
                 status: mapDesignerStatus(designer.status),
@@ -251,20 +250,13 @@ async function seedDesigners() {
 async function seedCustomers() {
     const customerData = await readJson('pages/api/customers.json');
 
-    const store = await prisma.store.findUnique({
-        where: {id: DEFAULT_STORE_KEY},
-        select: {id: true},
-    });
-
-    if (!store) {
-        throw new Error('Default store must exist before seeding customers.');
-    }
+    const storeId = await getDefaultStoreIdOrThrow('Default store must exist before seeding customers.');
 
     for (const customer of customerData.customers ?? []) {
         const savedCustomer = await prisma.customer.upsert({
             where: {
                 storeId_legacyId: {
-                    storeId: store.id,
+                    storeId,
                     legacyId: customer.id,
                 },
             },
@@ -278,7 +270,7 @@ async function seedCustomers() {
                 preferenceNote: customer.preferenceNote ?? null,
             },
             create: {
-                storeId: store.id,
+                storeId,
                 legacyId: customer.id,
                 name: customer.name,
                 tel: customer.tel,
@@ -329,20 +321,13 @@ async function seedCustomers() {
 async function seedServices() {
     const serviceData = await readJson('pages/api/services.json');
 
-    const store = await prisma.store.findUnique({
-        where: {id: DEFAULT_STORE_KEY},
-        select: {id: true},
-    });
-
-    if (!store) {
-        throw new Error('Default store must exist before seeding services.');
-    }
+    const storeId = await getDefaultStoreIdOrThrow('Default store must exist before seeding services.');
 
     for (const service of serviceData.services ?? []) {
         await prisma.service.upsert({
             where: {
                 storeId_name: {
-                    storeId: store.id,
+                    storeId,
                     name: service.name,
                 },
             },
@@ -353,7 +338,7 @@ async function seedServices() {
                 price: Number(service.price ?? 0),
             },
             create: {
-                storeId: store.id,
+                storeId,
                 legacyName: service.name,
                 name: service.name,
                 category: service.category,
@@ -369,20 +354,13 @@ async function seedServices() {
 async function seedReservations() {
     const reservationData = await readJson('pages/api/reservations.json');
 
-    const store = await prisma.store.findUnique({
-        where: {id: DEFAULT_STORE_KEY},
-        select: {id: true},
-    });
-
-    if (!store) {
-        throw new Error('Default store must exist before seeding reservations.');
-    }
+    const storeId = await getDefaultStoreIdOrThrow('Default store must exist before seeding reservations.');
 
     for (const reservation of reservationData.reservations ?? []) {
         const customer = await prisma.customer.findUnique({
             where: {
                 storeId_legacyId: {
-                    storeId: store.id,
+                    storeId,
                     legacyId: reservation.customerId,
                 },
             },
@@ -397,7 +375,7 @@ async function seedReservations() {
             ? await prisma.designer.findUnique({
                 where: {
                     storeId_legacyId: {
-                        storeId: store.id,
+                        storeId,
                         legacyId: reservation.designerId,
                     },
                 },
@@ -408,7 +386,7 @@ async function seedReservations() {
         const savedReservation = await prisma.reservation.upsert({
             where: {
                 storeId_legacyId: {
-                    storeId: store.id,
+                    storeId,
                     legacyId: reservation.id,
                 },
             },
@@ -426,7 +404,7 @@ async function seedReservations() {
                 pointEarned: Number(reservation.pointEarned ?? 0),
             },
             create: {
-                storeId: store.id,
+                storeId,
                 legacyId: reservation.id,
                 customerId: customer.id,
                 designerId: designer?.id ?? null,
@@ -460,14 +438,14 @@ async function seedReservations() {
     }
 
     await prisma.reservationHistory.deleteMany({
-        where: {storeId: store.id},
+        where: {storeId},
     });
 
     for (const history of reservationData.history ?? []) {
         const reservation = await prisma.reservation.findUnique({
             where: {
                 storeId_legacyId: {
-                    storeId: store.id,
+                    storeId,
                     legacyId: history.reservationId,
                 },
             },
@@ -480,7 +458,7 @@ async function seedReservations() {
 
         await prisma.reservationHistory.create({
             data: {
-                storeId: store.id,
+                storeId,
                 reservationId: reservation.id,
                 beforeJson: history.before ?? {},
                 afterJson: history.after ?? {},
