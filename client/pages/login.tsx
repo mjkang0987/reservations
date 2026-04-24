@@ -43,20 +43,26 @@ export default function LoginPage({providerIds}: {providerIds: string[]}) {
             <StyledCard>
                 <StyledTitle>Chairtime</StyledTitle>
                 <StyledSubtitle>SNS 계정으로 로그인</StyledSubtitle>
-                <StyledButtonGroup>
-                    {providers.map((p) => (
-                        <StyledButton
-                            key={p.id}
-                            type="button"
-                            $bg={p.bg}
-                            $color={p.color}
-                            $border={p.border}
-                            onClick={() => signIn(p.id, {callbackUrl: '/'})}
-                        >
-                            {p.label}
-                        </StyledButton>
-                    ))}
-                </StyledButtonGroup>
+                {providers.length > 0 ? (
+                    <StyledButtonGroup>
+                        {providers.map((p) => (
+                            <StyledButton
+                                key={p.id}
+                                type="button"
+                                $bg={p.bg}
+                                $color={p.color}
+                                $border={p.border}
+                                onClick={() => signIn(p.id, {callbackUrl: '/'})}
+                            >
+                                {p.label}
+                            </StyledButton>
+                        ))}
+                    </StyledButtonGroup>
+                ) : (
+                    <StyledEmptyState>
+                        로그인 제공자가 설정되지 않았습니다. `AUTH_*` 환경변수를 확인해 주세요.
+                    </StyledEmptyState>
+                )}
             </StyledCard>
         </StyledWrapper>
     );
@@ -117,6 +123,20 @@ const StyledButtonGroup = styled.div`
     flex-direction: column;
     gap: 12px;
     width: 100%;
+`;
+
+const StyledEmptyState = styled.p`
+    width: 100%;
+    margin: 0;
+    padding: 14px 16px;
+    box-sizing: border-box;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 10px;
+    background: #f8fafc;
+    color: var(--dark-gray-color2);
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: center;
 `;
 
 const StyledButton = styled.button<{ $bg: string; $color: string; $border: string }>`
