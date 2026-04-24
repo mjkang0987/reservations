@@ -5,6 +5,12 @@ import path from 'path';
 const prisma = new PrismaClient();
 const DEFAULT_STORE_KEY = 'default-store';
 
+function mapDesignerStatus(status) {
+    if (status === '휴직') return 'on_leave';
+    if (status === '퇴직') return 'resigned';
+    return 'active';
+}
+
 async function readJson(relativePath) {
     const absolutePath = path.join(process.cwd(), relativePath);
     const raw = await fs.readFile(absolutePath, 'utf-8');
@@ -79,8 +85,74 @@ async function seedDefaultStore() {
     console.log(`[seed] Default store seeded: ${store.id}`);
 }
 
+async function seedDesigners() {
+    const designerData = await readJson('pages/api/designers.json');
+
+    const store = await prisma.store.findUnique({
+        where: {id: DEFAULT_STORE_KEY},
+        select: {id: true},
+    });
+
+    if (!store) {
+        throw new Error('Default store must exist before seeding designers.');
+    }
+
+    for (const designer of designerData.designers ?? []) {
+        const savedDesigner = await prisma.designer.upsert({
+            where: {
+                storeId_legacyId: {
+                    storeId: store.id,
+                    legacyId: designer.id,
+                },
+            },
+            update: {
+                name: designer.name,
+                status: mapDesignerStatus(designer.status),
+                phone: designer.phone ?? null,
+                note: designer.note ?? null,
+                color: designer.color ?? null,
+            },
+            create: {
+                storeId: store.id,
+                legacyId: designer.id,
+                name: designer.name,
+                status: mapDesignerStatus(designer.status),
+                phone: designer.phone ?? null,
+                note: designer.note ?? null,
+                color: designer.color ?? null,
+            },
+        });
+
+        for (const [dayIndex, schedule] of (designer.schedule ?? []).entries()) {
+            await prisma.designerSchedule.upsert({
+                where: {
+                    designerId_dayIndex: {
+                        designerId: savedDesigner.id,
+                        dayIndex,
+                    },
+                },
+                update: {
+                    enabled: !!schedule.enabled,
+                    startTime: schedule.start,
+                    endTime: schedule.end,
+                },
+                create: {
+                    designerId: savedDesigner.id,
+                    dayIndex,
+                    enabled: !!schedule.enabled,
+                    startTime: schedule.start,
+                    endTime: schedule.end,
+                },
+            });
+        }
+    }
+
+    console.log(`[seed] Designers seeded: ${(designerData.designers ?? []).length}`);
+}
+
 async function main() {
     await seedDefaultStore();
+    await seedDesigners();
 }
 
 main()
