@@ -4,6 +4,8 @@ import path from 'path';
 
 const prisma = new PrismaClient();
 const DEFAULT_STORE_KEY = 'default-store';
+const SEED_OWNER_EMAIL = process.env.SEED_OWNER_EMAIL;
+const SEED_OWNER_NAME = process.env.SEED_OWNER_NAME ?? 'Owner';
 
 function mapDesignerStatus(status) {
     if (status === '휴직') return 'on_leave';
@@ -112,6 +114,52 @@ async function seedDefaultStore() {
     });
 
     console.log(`[seed] Default store seeded: ${store.id}`);
+}
+
+async function seedOwnerMembership() {
+    if (!SEED_OWNER_EMAIL) {
+        console.log('[seed] Skipped owner membership seed: SEED_OWNER_EMAIL is not set.');
+        return;
+    }
+
+    const store = await prisma.store.findUnique({
+        where: {id: DEFAULT_STORE_KEY},
+        select: {id: true},
+    });
+
+    if (!store) {
+        throw new Error('Default store must exist before seeding owner membership.');
+    }
+
+    const user = await prisma.user.upsert({
+        where: {email: SEED_OWNER_EMAIL},
+        update: {
+            name: SEED_OWNER_NAME,
+        },
+        create: {
+            email: SEED_OWNER_EMAIL,
+            name: SEED_OWNER_NAME,
+        },
+    });
+
+    await prisma.membership.upsert({
+        where: {
+            userId_storeId: {
+                userId: user.id,
+                storeId: store.id,
+            },
+        },
+        update: {
+            role: 'owner',
+        },
+        create: {
+            userId: user.id,
+            storeId: store.id,
+            role: 'owner',
+        },
+    });
+
+    console.log(`[seed] Owner membership seeded: ${SEED_OWNER_EMAIL}`);
 }
 
 async function seedDesigners() {
@@ -423,6 +471,7 @@ async function seedReservations() {
 
 async function main() {
     await seedDefaultStore();
+    await seedOwnerMembership();
     await seedDesigners();
     await seedCustomers();
     await seedServices();
