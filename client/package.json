@@ -11,6 +11,7 @@
         "prisma:format": "prisma format",
         "prisma:generate": "prisma generate",
         "prisma:validate": "prisma validate",
+        "prisma:prepare": "pnpm prisma:format && pnpm prisma:validate && pnpm prisma:generate",
         "prisma:db:push": "prisma db push",
         "prisma:migrate:dev": "prisma migrate dev",
         "prisma:migrate:deploy": "prisma migrate deploy",
