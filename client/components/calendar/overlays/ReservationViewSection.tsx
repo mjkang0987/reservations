@@ -2,6 +2,7 @@ import React from 'react';
 
 import styled from 'styled-components';
 
+import {NewCustomerBadge} from '../../ui/NewCustomerBadge';
 import type {CustomerMap} from '../../../utils/customers';
 import type {Reservation} from '../../../utils/reservations';
 import {formatPrice} from '../../../utils/services';
@@ -13,6 +14,7 @@ interface ReservationViewSectionProps {
     displayPrice: number;
     displayDesignerName: string;
     displayDesignerColor: string;
+    isNewCustomer: boolean;
     paymentCompleted: boolean;
     paymentLines: string[];
     historyCount: number;
@@ -26,6 +28,7 @@ export function ReservationViewSection({
     displayPrice,
     displayDesignerName,
     displayDesignerColor,
+    isNewCustomer,
     paymentCompleted,
     paymentLines,
     historyCount,
@@ -34,7 +37,9 @@ export function ReservationViewSection({
 }: ReservationViewSectionProps) {
     const customer = customerMap[reservation.customerId];
     const isCancelled = reservation.status === 'cancelled';
+    const isCompleted = reservation.status === 'completed';
     const isNoshow = reservation.status === 'noshow';
+    const customerMemoTags = customer?.memoTags ?? [];
 
     return (
         <StyledDetailBody>
@@ -50,6 +55,12 @@ export function ReservationViewSection({
                         <>
                             <dt>상태</dt>
                             <dd><StyledStatusBadge $variant="warning">노쇼</StyledStatusBadge></dd>
+                        </>
+                    )}
+                    {isCompleted && (
+                        <>
+                            <dt>상태</dt>
+                            <dd><StyledStatusBadge $variant="success">완료</StyledStatusBadge></dd>
                         </>
                     )}
                     <dt>날짜</dt>
@@ -72,11 +83,32 @@ export function ReservationViewSection({
                     <dt>고객명</dt>
                     <dd>
                         <StyledCustomerButton type="button" onClick={() => onCustomerClick(reservation.customerId)}>
+                            {isNewCustomer && <NewCustomerBadge>N</NewCustomerBadge>}
                             {customer?.name ?? '-'}
                         </StyledCustomerButton>
                     </dd>
                     <dt>연락처</dt>
                     <dd>{customer?.tel ?? '-'}</dd>
+                    {customerMemoTags.length > 0 && (
+                        <>
+                            <dt>고객 메모</dt>
+                            <dd>
+                                <StyledMemoTagList>
+                                    {customerMemoTags.map((tag) => (
+                                        <StyledMemoTag key={`${reservation.id}-${tag.text}`} $color={tag.color}>
+                                            {tag.text}
+                                        </StyledMemoTag>
+                                    ))}
+                                </StyledMemoTagList>
+                            </dd>
+                        </>
+                    )}
+                    {reservation.memo?.trim() && (
+                        <>
+                            <dt>요청사항</dt>
+                            <dd>{reservation.memo.trim()}</dd>
+                        </>
+                    )}
                     <dt>적립금</dt>
                     <dd>{formatPrice(customer?.points ?? 0)}</dd>
                     <dt>디자이너</dt>
@@ -122,6 +154,9 @@ const StyledDetailBodyInner = styled(StyledBodyInner)`
 `;
 
 const StyledCustomerButton = styled.button`
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     border: none;
     background: none;
     padding: 0;
@@ -170,6 +205,24 @@ const StyledPaymentBadge = styled.span<{ $completed: boolean }>`
     background-color: ${(props) => props.$completed ? '#E6F4EA' : 'var(--black-color-10)'};
     color: ${(props) => props.$completed ? '#137333' : 'var(--dark-gray-color2)'};
     font-size: var(--small-font);
+    font-weight: 600;
+`;
+
+const StyledMemoTagList = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+`;
+
+const StyledMemoTag = styled.span<{ $color: string }>`
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: ${(props) => props.$color};
+    color: #fff;
+    font-size: 11px;
     font-weight: 600;
 `;
 

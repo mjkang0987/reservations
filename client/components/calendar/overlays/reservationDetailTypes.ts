@@ -5,7 +5,7 @@ export type ReservationDetailMode =
     | 'editing'
     | 'confirming'
     | 'pastConfirm'
-    | 'noChanges'
+    | 'completing'
     | 'cancelling'
     | 'noshow'
     | 'payment';

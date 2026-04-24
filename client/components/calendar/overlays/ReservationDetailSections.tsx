@@ -3,6 +3,8 @@ import type {ReactNode} from 'react';
 
 import type {Reservation, ReservationHistoryEntry} from '../../../utils/reservations';
 import type {Designer} from '../../../utils/designers';
+import {getDesignerStatus, isDesignerBookable} from '../../../utils/designers';
+import type {CustomerMemoTag} from '../../../utils/customers';
 
 import {
     OVERLAY_Z_INDEX,
@@ -40,10 +42,10 @@ export interface ReservationDetailFormState {
 interface ReservationFormFieldsProps {
     idPrefix: string;
     form: ReservationDetailFormState;
-    selectableDesigners: Designer[];
     activeDesigners: Designer[];
     onLeaveDesigners: Designer[];
     resignedDesigners: Designer[];
+    currentDesigner?: Designer | null;
     selectedServices: string[];
     totalDuration: number;
     totalPrice: number;
@@ -59,10 +61,10 @@ interface ReservationFormFieldsProps {
 export const ReservationFormFields = ({
     idPrefix,
     form,
-    selectableDesigners,
     activeDesigners,
     onLeaveDesigners,
     resignedDesigners,
+    currentDesigner,
     selectedServices,
     totalDuration,
     totalPrice,
@@ -98,7 +100,7 @@ export const ReservationFormFields = ({
                 <StyledPriceUnit>원</StyledPriceUnit>
             </StyledPriceRow>
         </label>
-        {selectableDesigners.length > 0 && (
+        {(activeDesigners.length > 0 || currentDesigner) && (
             <label htmlFor={`${idPrefix}-designer`}>
                 <strong>디자이너</strong>
                 <select
@@ -106,24 +108,23 @@ export const ReservationFormFields = ({
                     value={form.designerId}
                     onChange={(e) => onDesignerChange(Number(e.target.value))}
                 >
+                    {currentDesigner && !isDesignerBookable(currentDesigner) && (
+                        <option value={currentDesigner.id}>
+                            {currentDesigner.name} ({getDesignerStatus(currentDesigner)} · 신규 선택 불가)
+                        </option>
+                    )}
                     {activeDesigners.map((designer) => (
                         <option key={designer.id} value={designer.id}>{designer.name}</option>
                     ))}
-                    {onLeaveDesigners.length > 0 && (
-                        <optgroup label="휴직자">
-                            {onLeaveDesigners.map((designer) => (
-                                <option key={designer.id} value={designer.id}>{designer.name}</option>
-                            ))}
-                        </optgroup>
-                    )}
-                    {resignedDesigners.length > 0 && (
-                        <optgroup label="퇴직자">
-                            {resignedDesigners.map((designer) => (
-                                <option key={designer.id} value={designer.id}>{designer.name}</option>
-                            ))}
-                        </optgroup>
-                    )}
                 </select>
+                {(onLeaveDesigners.length > 0 || resignedDesigners.length > 0 || (currentDesigner && !isDesignerBookable(currentDesigner))) && (
+                    <StyledDesignerPolicyNotice>
+                        예약 화면에서는 재직 디자이너만 새로 선택할 수 있습니다.
+                        {currentDesigner && !isDesignerBookable(currentDesigner)
+                            ? ` 현재 담당자는 ${getDesignerStatus(currentDesigner)} 상태라 유지 가능하지만, 변경 후에는 다시 선택할 수 없습니다.`
+                            : ''}
+                    </StyledDesignerPolicyNotice>
+                )}
             </label>
         )}
         <label htmlFor={`${idPrefix}-date`}>
@@ -156,13 +157,13 @@ export const ReservationFormFields = ({
             </label>
         </StyledTimeRow>
         <label htmlFor={`${idPrefix}-memo`}>
-            <strong>메모</strong>
+            <strong>요청사항</strong>
             <input
                 id={`${idPrefix}-memo`}
                 type="text"
                 value={form.memo}
                 onChange={(e) => onFieldChange('memo', e.target.value)}
-                placeholder="특이사항, 요청사항 등"
+                placeholder="예약 관련 요청사항"
             />
         </label>
         {children}
@@ -172,10 +173,11 @@ export const ReservationFormFields = ({
 interface ReservationEditSectionProps {
     form: ReservationDetailFormState;
     error: string;
-    selectableDesigners: Designer[];
+    customerMemoTags: CustomerMemoTag[];
     activeDesigners: Designer[];
     onLeaveDesigners: Designer[];
     resignedDesigners: Designer[];
+    currentDesigner?: Designer | null;
     selectedServices: string[];
     totalDuration: number;
     totalPrice: number;
@@ -190,10 +192,11 @@ interface ReservationEditSectionProps {
 export const ReservationEditSection = ({
     form,
     error,
-    selectableDesigners,
+    customerMemoTags,
     activeDesigners,
     onLeaveDesigners,
     resignedDesigners,
+    currentDesigner,
     selectedServices,
     totalDuration,
     totalPrice,
@@ -205,13 +208,25 @@ export const ReservationEditSection = ({
     onEndTimeChange,
 }: ReservationEditSectionProps) => (
     <StyledBody><StyledBodyInner>
+        {customerMemoTags.length > 0 && (
+            <StyledMemoSection>
+                <strong>고객 메모</strong>
+                <StyledMemoTagList>
+                    {customerMemoTags.map((tag) => (
+                        <StyledMemoTag key={`${tag.color}-${tag.text}`} $color={tag.color}>
+                            {tag.text}
+                        </StyledMemoTag>
+                    ))}
+                </StyledMemoTagList>
+            </StyledMemoSection>
+        )}
         <ReservationFormFields
             idPrefix="edit"
             form={form}
-            selectableDesigners={selectableDesigners}
             activeDesigners={activeDesigners}
             onLeaveDesigners={onLeaveDesigners}
             resignedDesigners={resignedDesigners}
+            currentDesigner={currentDesigner}
             selectedServices={selectedServices}
             totalDuration={totalDuration}
             totalPrice={totalPrice}
@@ -287,6 +302,47 @@ const StyledDiffList = styled.div`
     padding: 12px;
     background-color: var(--black-color-10);
     border-radius: var(--radius-md);
+`;
+
+const StyledMemoSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 10px;
+    background: #fafbff;
+
+    > strong {
+        font-size: 12px;
+        color: var(--dark-gray-color);
+    }
+`;
+
+const StyledMemoTagList = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+`;
+
+const StyledMemoTag = styled.span<{ $color: string }>`
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: ${(props) => props.$color};
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+`;
+
+const StyledDesignerPolicyNotice = styled.p`
+    margin: 6px 0 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #8a5a00;
 `;
 
 const StyledTimeRow = styled.div`

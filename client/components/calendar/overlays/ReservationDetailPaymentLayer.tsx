@@ -3,12 +3,14 @@ import React from 'react';
 import styled from 'styled-components';
 
 import type {PaymentMethod} from '../../../utils/reservations';
+import {formatPrice} from '../../../utils/services';
 import {StyledBody, StyledBodyInner} from './ModalStyles';
 import type {PaymentEntryDraft, PointAwardDraft} from './reservationDetailTypes';
 
 type ReservationDetailPaymentLayerProps = {
     paymentEntries: PaymentEntryDraft[];
     pointAward: PointAwardDraft;
+    customerPoints: number;
     showPointAward: boolean;
     error: string;
     paymentMethodOptions: PaymentMethod[];
@@ -23,6 +25,7 @@ type ReservationDetailPaymentLayerProps = {
 export function ReservationDetailPaymentLayer({
     paymentEntries,
     pointAward,
+    customerPoints,
     showPointAward,
     error,
     paymentMethodOptions,
@@ -37,7 +40,10 @@ export function ReservationDetailPaymentLayer({
         <StyledBody>
             <StyledBodyInner>
                 <StyledPaymentLayer>
-                    <StyledPaymentMessage>결제 종류와 금액을 입력해 주세요.</StyledPaymentMessage>
+                    <StyledPaymentSummary>
+                        <StyledPaymentMessage>결제 종류와 금액을 입력해 주세요.</StyledPaymentMessage>
+                        <StyledPointBalance>보유 적립금 {formatPrice(customerPoints)}</StyledPointBalance>
+                    </StyledPaymentSummary>
                     <StyledPaymentEntryList>
                         {paymentEntries.map((entry, index) => (
                             <StyledPaymentEntryRow key={`payment-entry-${index}`}>
@@ -106,6 +112,26 @@ const StyledPaymentMessage = styled.p`
     margin: 0;
     font-size: 13px;
     color: var(--dark-gray-color);
+`;
+
+const StyledPaymentSummary = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+`;
+
+const StyledPointBalance = styled.span`
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #f5efe3;
+    color: #8a5a00;
+    font-size: 12px;
+    font-weight: 700;
 `;
 
 const StyledPaymentEntryList = styled.div`

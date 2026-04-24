@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
 
 import type {CreateReservationInitial} from '../../../store/calendarStore';
 import type {Reservation} from '../../../utils/reservations';
@@ -8,7 +8,6 @@ import type {Designer} from '../../../utils/designers';
 import {getDesignerAvailabilityError, splitDesignersByStatus} from '../../../utils/designers';
 import {calcEndTime, joinServiceNames, sumDurationMinutes, sumPrice} from '../../../utils/services';
 import type {ReservationDetailFormState} from './ReservationDetailSections';
-
 type CustomerMode = 'existing' | 'new';
 
 type UseReservationCreateFormParams = {
@@ -29,7 +28,7 @@ export function useReservationCreateForm({
     onSave,
 }: UseReservationCreateFormParams) {
     const {active: activeDesigners, onLeave: onLeaveDesigners, resigned: resignedDesigners} = splitDesignersByStatus(designers);
-    const selectableDesigners = [...activeDesigners, ...onLeaveDesigners, ...resignedDesigners];
+    const defaultDesignerId = activeDesigners[0]?.id ?? 0;
     const customers = Object.values(customerMap);
 
     const [customerId, setCustomerId] = useState<number>(0);
@@ -39,15 +38,14 @@ export function useReservationCreateForm({
     const [customerMode, setCustomerMode] = useState<CustomerMode>('existing');
     const [newCustomerName, setNewCustomerName] = useState('');
     const [newCustomerTel, setNewCustomerTel] = useState('');
-    const [designerId, setDesignerId] = useState<number>(selectableDesigners[0]?.id ?? 0);
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [isPriceManual, setIsPriceManual] = useState(false);
-    const [form, setForm] = useState<ReservationDetailFormState>({
+    const [form, setForm] = useState({
         date: initial.date,
         startTime: initial.startTime,
         endTime: calcEndTime(initial.startTime, 30),
         service: '',
-        designerId: selectableDesigners[0]?.id ?? 0,
+        designerId: defaultDesignerId,
         price: 0,
         memo: '',
     });
@@ -57,13 +55,6 @@ export function useReservationCreateForm({
     const filteredCustomers = customerQuery.trim()
         ? customers.filter((customer) => customer.name.includes(customerQuery) || customer.tel.includes(customerQuery))
         : customers;
-
-    useEffect(() => {
-        if (designerId === 0 && selectableDesigners.length > 0) {
-            setDesignerId(selectableDesigners[0].id);
-            setForm((prev) => ({...prev, designerId: selectableDesigners[0].id}));
-        }
-    }, [designerId, selectableDesigners]);
 
     const totalDuration = sumDurationMinutes(selectedServices);
     const totalPrice = sumPrice(selectedServices);
@@ -144,7 +135,7 @@ export function useReservationCreateForm({
     };
 
     const validate = (): string => {
-        if (selectableDesigners.length > 0 && !designerId) return '디자이너를 선택해주세요.';
+        if (activeDesigners.length > 0 && !form.designerId) return '디자이너를 선택해주세요.';
         if (customerMode === 'existing' && !customerId) return '고객을 선택해주세요.';
         if (customerMode === 'new' && !newCustomerName.trim()) return '신규 고객명을 입력해주세요.';
         if (customerMode === 'new' && !newCustomerTel.trim()) return '신규 고객 연락처를 입력해주세요.';
@@ -156,7 +147,7 @@ export function useReservationCreateForm({
 
         const availabilityError = getDesignerAvailabilityError(
             designers,
-            designerId,
+            form.designerId,
             form.date,
             form.startTime,
             form.endTime
@@ -187,6 +178,7 @@ export function useReservationCreateForm({
                 name: newCustomerName.trim(),
                 tel: newCustomerTel.trim(),
                 points: 0,
+                pointHistories: [],
             };
 
             addCustomer(nextCustomer);
@@ -200,7 +192,7 @@ export function useReservationCreateForm({
             endTime: form.endTime,
             service: form.service,
             customerId: nextCustomerId,
-            ...(designerId ? {designerId} : {}),
+            ...(form.designerId ? {designerId: form.designerId} : {}),
             status: 'active',
             price: form.price,
             ...(form.memo.trim() && {memo: form.memo.trim()}),
@@ -213,14 +205,13 @@ export function useReservationCreateForm({
         activeDesigners,
         onLeaveDesigners,
         resignedDesigners,
-        selectableDesigners,
         customerId,
         customerQuery,
         showSuggestions,
         customerMode,
         newCustomerName,
         newCustomerTel,
-        designerId,
+        designerId: form.designerId,
         selectedServices,
         form,
         error,
@@ -254,7 +245,6 @@ export function useReservationCreateForm({
             setError('');
         },
         handleDesignerChange: (nextDesignerId: number) => {
-            setDesignerId(nextDesignerId);
             setForm((prev) => ({...prev, designerId: nextDesignerId}));
             setError('');
         },

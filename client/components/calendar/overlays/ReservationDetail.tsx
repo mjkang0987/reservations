@@ -6,7 +6,8 @@ import styled from 'styled-components';
 import {useCalendarStore} from '../../../store/calendarStore';
 
 import type {PaymentEntry, PaymentMethod, Reservation, ReservationHistoryEntry, ReservationMap, ReservationStatus} from '../../../utils/reservations';
-import {findOverlap} from '../../../utils/reservations';
+import {findOverlap, hasCompletedPayment} from '../../../utils/reservations';
+import {isNewCustomerVisit} from '../../../utils/customers';
 import type {CustomerMap} from '../../../utils/customers';
 import {getDesignerAvailabilityError, getDesignerColor, splitDesignersByStatus} from '../../../utils/designers';
 import {
@@ -14,7 +15,6 @@ import {
     joinServiceNames,
     sumDurationMinutes,
     sumPrice,
-    formatPrice,
     calcEndTime,
     buildServiceColorMap,
 } from '../../../utils/services';
@@ -55,7 +55,7 @@ const MODE_LABELS: Partial<Record<ReservationDetailMode, string>> = {
     editing: '예약 수정',
     confirming: '변경 확인',
     pastConfirm: '변경 확인',
-    noChanges: '알림',
+    completing: '예약 완료',
     cancelling: '예약 취소',
     noshow: '노쇼 처리',
     payment: '결제 처리',
@@ -94,7 +94,9 @@ export const ReservationDetail = ({
         onLeave: onLeaveDesigners,
         resigned: resignedDesigners
     } = splitDesignersByStatus(designers);
-    const selectableDesigners = [...activeDesigners, ...onLeaveDesigners, ...resignedDesigners];
+    const currentDesigner = reservation.designerId
+        ? designers.find((designer) => designer.id === reservation.designerId) ?? null
+        : null;
     const designerNameMap = designers.reduce<Record<number, string>>((acc, designer) => {
         acc[designer.id] = designer.name;
         return acc;
@@ -107,7 +109,7 @@ export const ReservationDetail = ({
     const [mode, setMode] = useState<ReservationDetailMode>('view');
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const initialPrice = reservation.price ?? sumPrice(parseServiceString(reservation.service));
-    const initialDesignerId = reservation.designerId ?? (selectableDesigners[0]?.id ?? 0);
+    const initialDesignerId = reservation.designerId ?? (activeDesigners[0]?.id ?? 0);
     const [form, setForm] = useState<ReservationDetailFormState>({
         date: reservation.date,
         startTime: reservation.startTime,
@@ -142,7 +144,7 @@ export const ReservationDetail = ({
         ? getDesignerColor(designers.find((designer) => designer.id === reservation.designerId))
         : '#8E8E93';
     const normalizedPaymentEntries = getPaymentEntries(reservation);
-    const paymentCompleted = normalizedPaymentEntries.length > 0 || reservation.paymentCompleted === true;
+    const paymentCompleted = hasCompletedPayment(reservation);
     const paymentLines = formatPaymentEntries(normalizedPaymentEntries);
     const showPointAward = storeSettings.pointSettings.enableServiceRate;
 
@@ -205,7 +207,7 @@ export const ReservationDetail = ({
     };
 
     const validateForm = (): string => {
-        if (selectableDesigners.length > 0 && !form.designerId) return '디자이너를 선택해주세요.';
+        if (activeDesigners.length > 0 && !form.designerId) return '디자이너를 선택해주세요.';
         if (!form.service.trim()) return '시술을 선택해주세요.';
         if (!form.date) return '날짜를 선택해주세요.';
         if (!form.startTime) return '시작 시간을 입력해주세요.';
@@ -244,7 +246,8 @@ export const ReservationDetail = ({
             return;
         }
         if (changedFields.length === 0) {
-            setMode('noChanges');
+            setError('');
+            setMode('view');
             return;
         }
         setError('');
@@ -256,6 +259,16 @@ export const ReservationDetail = ({
     };
 
     const handleConfirmSave = () => {
+        if (mode === 'completing') {
+            if (!hasCompletedPayment(reservation)) {
+                setError('결제 완료된 예약만 완료 처리할 수 있습니다.');
+                setMode('view');
+                return;
+            }
+            onUpdate(reservation, {...reservation, status: 'completed'});
+            setMode('view');
+            return;
+        }
         onUpdate(reservation, {...reservation, ...form});
         setMode('view');
     };
@@ -302,8 +315,9 @@ export const ReservationDetail = ({
             : 0;
         const previousPointEarned = reservation.pointEarned ?? 0;
         const pointEarnDiff = nextPointEarned - previousPointEarned;
+        const currentCustomerPoints = customer?.points ?? 0;
 
-        if ((customer?.points ?? 0) - pointUsageDiff + pointEarnDiff < 0) {
+        if (currentCustomerPoints - pointUsageDiff < 0) {
             setError('고객 적립금이 부족합니다.');
             return;
         }
@@ -317,9 +331,30 @@ export const ReservationDetail = ({
         });
 
         if (customer && (pointUsageDiff !== 0 || pointEarnDiff !== 0)) {
+            const nextPointBalance = Math.max(currentCustomerPoints - pointUsageDiff + pointEarnDiff, 0);
+            const pointHistories = [];
+
+            if (pointUsageDiff !== 0) {
+                pointHistories.push({
+                    type: 'payment_use' as const,
+                    delta: -pointUsageDiff,
+                    description: '예약 결제 적립금 사용',
+                    relatedReservationId: reservation.id,
+                });
+            }
+
+            if (pointEarnDiff !== 0) {
+                pointHistories.push({
+                    type: pointEarnDiff > 0 ? 'payment_earn' as const : 'payment_adjust' as const,
+                    delta: pointEarnDiff,
+                    description: pointEarnDiff > 0 ? '예약 결제 적립' : '예약 결제 적립 조정',
+                    relatedReservationId: reservation.id,
+                });
+            }
+
             updateCustomer(customer.id, {
-                points: Math.max((customer.points ?? 0) - pointUsageDiff + pointEarnDiff, 0),
-            });
+                points: nextPointBalance,
+            }, pointHistories);
         }
 
         setError('');
@@ -355,7 +390,7 @@ export const ReservationDetail = ({
             return;
         }
 
-        if (mode === 'confirming' || mode === 'pastConfirm' || mode === 'noChanges') {
+        if (mode === 'confirming' || mode === 'pastConfirm') {
             setMode('editing');
         } else if (mode === 'editing' || mode === 'cancelling' || mode === 'noshow' || mode === 'payment') {
             handleCancel();
@@ -365,8 +400,9 @@ export const ReservationDetail = ({
     };
 
     const isCancelled = reservation.status === 'cancelled';
+    const isCompleted = reservation.status === 'completed';
     const isNoshow = reservation.status === 'noshow';
-    const isInactive = isCancelled || isNoshow;
+    const isInactive = isCancelled || isNoshow || isCompleted;
     const dialogLabel = MODE_LABELS[mode] ?? '예약 상세';
     const dialogTitle = MODE_LABELS[mode] ?? `${reservation.service} - ${customer?.name}`;
     const dialogRef = useDialogAccessibility<HTMLDivElement>(handleBack);
@@ -398,6 +434,7 @@ export const ReservationDetail = ({
                     displayPrice={displayPrice}
                     displayDesignerName={displayDesignerName}
                     displayDesignerColor={displayDesignerColor}
+                    isNewCustomer={isNewCustomerVisit(customer?.firstVisitDate, reservation.date)}
                     paymentCompleted={paymentCompleted}
                     paymentLines={paymentLines}
                     historyCount={thisHistory.length}
@@ -410,10 +447,11 @@ export const ReservationDetail = ({
                 <ReservationEditSection
                     form={form}
                     error={error}
-                    selectableDesigners={selectableDesigners}
+                    customerMemoTags={customer?.memoTags ?? []}
                     activeDesigners={activeDesigners}
                     onLeaveDesigners={onLeaveDesigners}
                     resignedDesigners={resignedDesigners}
+                    currentDesigner={currentDesigner}
                     selectedServices={selectedServices}
                     totalDuration={totalDuration}
                     totalPrice={totalPrice}
@@ -439,10 +477,6 @@ export const ReservationDetail = ({
                 <ReservationDiffSection message="수정하시겠습니까?" diffs={changedFields} />
             )}
 
-            {mode === 'noChanges' && (
-                <ReservationDiffSection message="변경내역이 없습니다." diffs={[]} />
-            )}
-
             {mode === 'pastConfirm' && (
                 <ReservationDiffSection
                     message="현재 시간보다 과거입니다. 변경하시겠습니까?"
@@ -464,10 +498,24 @@ export const ReservationDetail = ({
                 />
             )}
 
+            {mode === 'completing' && (
+                <ReservationStaticDiffSection
+                    message="이 예약을 완료 처리하시겠습니까?"
+                    color="var(--blue-color)"
+                    items={[
+                        {label: '시술', value: reservation.service},
+                        {label: '날짜', value: reservation.date},
+                        {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
+                        {label: '고객명', value: customer?.name ?? '-'},
+                    ]}
+                />
+            )}
+
             {mode === 'payment' && (
                 <ReservationDetailPaymentLayer
                     paymentEntries={paymentEntries}
                     pointAward={pointAward}
+                    customerPoints={customer?.points ?? 0}
                     showPointAward={showPointAward}
                     error={error}
                     paymentMethodOptions={PAYMENT_METHOD_OPTIONS}
@@ -526,7 +574,16 @@ export const ReservationDetail = ({
                     <ReservationDetailFooterActions
                         mode={mode}
                         isInactive={isInactive}
+                        isCompleted={isCompleted}
                         paymentCompleted={paymentCompleted}
+                        onOpenCompleting={() => {
+                            if (!hasCompletedPayment(reservation)) {
+                                setError('결제 완료된 예약만 완료 처리할 수 있습니다.');
+                                return;
+                            }
+                            setError('');
+                            setMode('completing');
+                        }}
                         onOpenCancelling={() => setMode('cancelling')}
                         onOpenNoshow={() => setMode('noshow')}
                         onOpenPayment={() => {

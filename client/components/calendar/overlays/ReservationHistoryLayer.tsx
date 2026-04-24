@@ -58,14 +58,15 @@ export function ReservationHistoryLayer({
                                 const diffs = getHistoryDiffs(entry, designerNameMap);
                                 const isCancelEntry = entry.after.status === 'cancelled' && entry.before.status !== 'cancelled';
                                 const isNoshowEntry = entry.after.status === 'noshow' && entry.before.status !== 'noshow';
-                                const entryType = isCancelEntry ? 'cancelled' : isNoshowEntry ? 'noshow' : 'edit';
+                                const isCompleteEntry = entry.after.status === 'completed' && entry.before.status !== 'completed';
+                                const entryType = isCancelEntry ? 'cancelled' : isNoshowEntry ? 'noshow' : isCompleteEntry ? 'completed' : 'edit';
 
                                 return (
                                     <StyledHistoryDetailItem key={index} $type={entryType}>
                                         <StyledHistoryDetailHeader>
                                             <time dateTime={entry.timestamp}>{formatTimestamp(entry.timestamp)}</time>
                                             <StyledHistoryTypeBadge $type={entryType}>
-                                                {isCancelEntry ? '예약취소' : isNoshowEntry ? '노쇼' : '변경'}
+                                                {isCancelEntry ? '예약취소' : isNoshowEntry ? '노쇼' : isCompleteEntry ? '예약완료' : '변경'}
                                             </StyledHistoryTypeBadge>
                                         </StyledHistoryDetailHeader>
                                         <StyledHistoryDetailDiffs>
@@ -106,6 +107,7 @@ const StyledHistoryDetailList = styled.div`
 const HISTORY_ITEM_STYLES: Record<string, { bg: string; border: string }> = {
     cancelled: {bg: 'var(--danger-bg)', border: 'var(--danger-border)'},
     noshow: {bg: 'var(--warning-bg)', border: 'var(--warning-border)'},
+    completed: {bg: '#E6F4EA', border: '#CDEAD6'},
 };
 
 const StyledHistoryDetailItem = styled.div<{ $type: string }>`

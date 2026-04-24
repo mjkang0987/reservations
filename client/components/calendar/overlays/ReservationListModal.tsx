@@ -6,6 +6,8 @@ import styled from 'styled-components';
 
 import {useCalendarStore} from '../../../store/calendarStore';
 
+import {NewCustomerBadge} from '../../ui/NewCustomerBadge';
+import {isNewCustomerVisit} from '../../../utils/customers';
 import {getDesignerColor} from '../../../utils/designers';
 import {buildServiceColorMap, getServiceColor, parseServiceString} from '../../../utils/services';
 
@@ -126,6 +128,7 @@ export const ReservationListModal = () => {
     const getStatusType = (r: Reservation) => {
         if (r.status === 'cancelled') return 'cancelled';
         if (r.status === 'noshow') return 'noshow';
+        if (r.status === 'completed') return 'completed';
         if (r.date < today) return 'completed';
         return 'booked';
     };
@@ -189,7 +192,11 @@ export const ReservationListModal = () => {
                                             </StyledItemTop>
                                             <StyledMetaLine>
                                                 <StyledDesigner>디자이너: {designerName}</StyledDesigner>
-                                                <StyledCustomer>고객: {customer?.name ?? '-'}</StyledCustomer>
+                                                <StyledCustomer>
+                                                    <span>고객:</span>
+                                                    {isNewCustomerVisit(customer?.firstVisitDate, r.date) && <NewCustomerBadge>N</NewCustomerBadge>}
+                                                    <span>{customer?.name ?? '-'}</span>
+                                                </StyledCustomer>
                                             </StyledMetaLine>
                                         </StyledItem>
                                     );
@@ -306,6 +313,9 @@ const StyledServiceDot = styled.span<{ $color: string }>`
 `;
 
 const StyledCustomer = styled.span`
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     color: var(--dark-gray-color);
 `;
 

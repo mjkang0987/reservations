@@ -6,7 +6,9 @@ import type {ReservationDetailMode} from './reservationDetailTypes';
 type ReservationDetailFooterActionsProps = {
     mode: ReservationDetailMode;
     isInactive: boolean;
+    isCompleted: boolean;
     paymentCompleted: boolean;
+    onOpenCompleting: () => void;
     onOpenCancelling: () => void;
     onOpenNoshow: () => void;
     onOpenPayment: () => void;
@@ -24,7 +26,9 @@ type ReservationDetailFooterActionsProps = {
 export function ReservationDetailFooterActions({
     mode,
     isInactive,
+    isCompleted,
     paymentCompleted,
+    onOpenCompleting,
     onOpenCancelling,
     onOpenNoshow,
     onOpenPayment,
@@ -43,11 +47,14 @@ export function ReservationDetailFooterActions({
 
         return (
             <>
-                <StyledActionButton type="button" $danger onClick={onOpenCancelling}>예약취소</StyledActionButton>
-                <StyledActionButton type="button" $warning onClick={onOpenNoshow}>노쇼</StyledActionButton>
                 <StyledActionButton type="button" $primary onClick={onOpenPayment}>
                     {paymentCompleted ? '결제수단 변경' : '결제완료'}
                 </StyledActionButton>
+                {!isCompleted && paymentCompleted && (
+                    <StyledActionButton type="button" $primary onClick={onOpenCompleting}>예약완료</StyledActionButton>
+                )}
+                <StyledActionButton type="button" $danger onClick={onOpenCancelling}>예약취소</StyledActionButton>
+                <StyledActionButton type="button" $warning onClick={onOpenNoshow}>노쇼</StyledActionButton>
                 <StyledActionButton type="button" $primary onClick={onOpenEditing}>수정</StyledActionButton>
             </>
         );
@@ -71,10 +78,6 @@ export function ReservationDetailFooterActions({
         );
     }
 
-    if (mode === 'noChanges') {
-        return <StyledActionButton type="button" $primary onClick={onBackToEditing}>확인</StyledActionButton>;
-    }
-
     if (mode === 'pastConfirm') {
         return (
             <>
@@ -89,6 +92,15 @@ export function ReservationDetailFooterActions({
             <>
                 <StyledActionButton type="button" onClick={onBackToView}>돌아가기</StyledActionButton>
                 <StyledActionButton type="button" $danger onClick={onCancelReservation}>예약취소</StyledActionButton>
+            </>
+        );
+    }
+
+    if (mode === 'completing') {
+        return (
+            <>
+                <StyledActionButton type="button" onClick={onBackToView}>돌아가기</StyledActionButton>
+                <StyledActionButton type="button" $primary onClick={onConfirmSave}>완료 처리</StyledActionButton>
             </>
         );
     }

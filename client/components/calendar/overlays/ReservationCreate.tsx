@@ -44,7 +44,6 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
         activeDesigners,
         onLeaveDesigners,
         resignedDesigners,
-        selectableDesigners,
         customerId,
         customerQuery,
         showSuggestions,
@@ -116,10 +115,10 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
                     <ReservationFormFields
                         idPrefix="create"
                         form={{...form, designerId}}
-                        selectableDesigners={selectableDesigners}
                         activeDesigners={activeDesigners}
                         onLeaveDesigners={onLeaveDesigners}
                         resignedDesigners={resignedDesigners}
+                        currentDesigner={null}
                         selectedServices={selectedServices}
                         totalDuration={totalDuration}
                         totalPrice={totalPrice}

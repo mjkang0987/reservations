@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import type {Reservation, ReservationHistoryEntry, ReservationStatus} from '../../utils/reservations';
+import {hasCompletedPayment} from '../../utils/reservations';
 
 interface ReservationData {
     reservations: Reservation[];
@@ -40,6 +41,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'PUT') {
         const {prev, updated} = req.body as { prev: Reservation; updated: Reservation };
         const data = readData();
+
+        if (updated.status === 'completed' && !hasCompletedPayment(updated)) {
+            return res.status(400).json({error: 'Only paid reservations can be completed'});
+        }
 
         const idx = data.reservations.findIndex((r) => r.id === prev.id);
 

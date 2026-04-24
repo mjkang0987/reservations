@@ -10,7 +10,7 @@ const FIELD_LABELS: Record<keyof ReservationDetailFormState, string> = {
     startTime: '시작시간',
     endTime: '종료시간',
     price: '가격',
-    memo: '메모'
+    memo: '요청사항'
 };
 
 export function getPaymentEntries(reservation: Reservation): PaymentEntry[] {
@@ -97,6 +97,11 @@ export function getHistoryDiffs(entry: ReservationHistoryEntry, designerNameMap:
 
     if (entry.after.status === 'noshow' && entry.before.status !== 'noshow') {
         diffs.push({label: '상태', before: '활성', after: '노쇼'});
+        return diffs;
+    }
+
+    if (entry.after.status === 'completed' && entry.before.status !== 'completed') {
+        diffs.push({label: '상태', before: '활성', after: '완료'});
         return diffs;
     }
 

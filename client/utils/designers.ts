@@ -6,6 +6,13 @@ export interface DaySchedule {
 
 export type DesignerStatus = '재직' | '휴직' | '퇴직';
 
+export type DesignerStatusMeta = {
+    label: DesignerStatus;
+    accent: string;
+    tint: string;
+    border: string;
+};
+
 const DEFAULT_DESIGNER_COLORS = [
     '#2D7FF9',
     '#E85D75',
@@ -46,6 +53,37 @@ export function createDefaultSchedule(): DaySchedule[] {
 
 export function getDesignerStatus(designer: Designer): DesignerStatus {
     return designer.status ?? '재직';
+}
+
+export function getDesignerStatusMeta(status: DesignerStatus): DesignerStatusMeta {
+    if (status === '휴직') {
+        return {
+            label: status,
+            accent: '#D97706',
+            tint: '#FFF7ED',
+            border: '#F5D0A5',
+        };
+    }
+
+    if (status === '퇴직') {
+        return {
+            label: status,
+            accent: '#6B7280',
+            tint: '#F3F4F6',
+            border: '#D1D5DB',
+        };
+    }
+
+    return {
+        label: status,
+        accent: '#137333',
+        tint: '#EAF7EE',
+        border: '#B7E1C2',
+    };
+}
+
+export function isDesignerBookable(designer: Designer | null | undefined): boolean {
+    return !!designer && getDesignerStatus(designer) === '재직';
 }
 
 export function splitDesignersByStatus(designers: Designer[]) {
