@@ -55,7 +55,7 @@ If migrations are introduced before first deploy, replace `prisma db push` insid
 Production deploys should use:
 
 ```bash
-pnpm prisma:migrate:status
+pnpm prisma:deploy:check
 pnpm prisma:migrate:deploy
 ```
 
