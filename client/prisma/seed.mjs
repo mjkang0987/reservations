@@ -32,14 +32,35 @@ function mapReservationStatus(status) {
 
 function mapPaymentMethod(method) {
     if (method === '현금') return 'cash';
+    if (method === '현금+현금영수증') return 'cash_receipt';
     if (method === '현금영수증') return 'cash_receipt';
     if (method === '카드') return 'card';
     if (method === '네이버페이') return 'naver_pay';
     if (method === '지역화폐') return 'local_currency';
+    if (method === '지역화폐+현금영수증') return 'local_currency_receipt';
     if (method === '지역화폐(현금영수증)') return 'local_currency_receipt';
     if (method === '이용권') return 'voucher';
+    if (method === '상품권') return 'voucher';
     if (method === '적립금') return 'points';
     return 'cash';
+}
+
+function buildPaymentEntries(reservation) {
+    if (Array.isArray(reservation.paymentEntries) && reservation.paymentEntries.length > 0) {
+        return reservation.paymentEntries.map((entry) => ({
+            method: mapPaymentMethod(entry.method),
+            amount: Number(entry.amount ?? 0),
+        }));
+    }
+
+    if (reservation.paymentMethod && Number(reservation.price ?? 0) > 0) {
+        return [{
+            method: mapPaymentMethod(reservation.paymentMethod),
+            amount: Number(reservation.price ?? 0),
+        }];
+    }
+
+    return [];
 }
 
 async function readJson(relativePath) {
@@ -425,12 +446,14 @@ async function seedReservations() {
             where: {reservationId: savedReservation.id},
         });
 
-        if (Array.isArray(reservation.paymentEntries) && reservation.paymentEntries.length > 0) {
+        const paymentEntries = buildPaymentEntries(reservation);
+
+        if (paymentEntries.length > 0) {
             await prisma.reservationPaymentEntry.createMany({
-                data: reservation.paymentEntries.map((entry) => ({
+                data: paymentEntries.map((entry) => ({
                     reservationId: savedReservation.id,
-                    method: mapPaymentMethod(entry.method),
-                    amount: Number(entry.amount ?? 0),
+                    method: entry.method,
+                    amount: entry.amount,
                 })),
             });
         }
