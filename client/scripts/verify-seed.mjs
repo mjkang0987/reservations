@@ -23,6 +23,10 @@ function createCheck(label, actual, expected) {
     return [label, actual, expected];
 }
 
+function getCheckStatus(actual, expected) {
+    return actual === expected ? 'OK' : 'MISMATCH';
+}
+
 async function main() {
     const [customers, designers, services, reservations] = await Promise.all([
         readJson('pages/api/customers.json'),
@@ -82,7 +86,7 @@ async function main() {
     let hasMismatch = false;
 
     for (const [label, actual, expected] of checks) {
-        const status = actual === expected ? 'OK' : 'MISMATCH';
+        const status = getCheckStatus(actual, expected);
         if (status !== 'OK') hasMismatch = true;
         console.log(`[verify-seed] ${label}: ${actual}/${expected} ${status}`);
     }
