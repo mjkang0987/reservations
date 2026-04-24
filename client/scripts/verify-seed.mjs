@@ -30,6 +30,7 @@ async function main() {
                     reservations: true,
                     reservationEvents: true,
                     memberships: true,
+                    pointHistories: true,
                 },
             },
         },
@@ -52,6 +53,7 @@ async function main() {
         ['services', store._count.services, (services.services ?? []).length],
         ['reservations', store._count.reservations, (reservations.reservations ?? []).length],
         ['reservation history', store._count.reservationEvents, (reservations.history ?? []).length],
+        ['customer point history', store._count.pointHistories, (customers.customers ?? []).flatMap((customer) => customer.pointHistories ?? []).length],
     ];
 
     let hasMismatch = false;
