@@ -257,6 +257,46 @@ async function seedCustomers() {
     console.log(`[seed] Customers seeded: ${(customerData.customers ?? []).length}`);
 }
 
+async function seedServices() {
+    const serviceData = await readJson('pages/api/services.json');
+
+    const store = await prisma.store.findUnique({
+        where: {id: DEFAULT_STORE_KEY},
+        select: {id: true},
+    });
+
+    if (!store) {
+        throw new Error('Default store must exist before seeding services.');
+    }
+
+    for (const service of serviceData.services ?? []) {
+        await prisma.service.upsert({
+            where: {
+                storeId_name: {
+                    storeId: store.id,
+                    name: service.name,
+                },
+            },
+            update: {
+                legacyName: service.name,
+                category: service.category,
+                duration: Number(service.durationMinutes ?? 0),
+                price: Number(service.price ?? 0),
+            },
+            create: {
+                storeId: store.id,
+                legacyName: service.name,
+                name: service.name,
+                category: service.category,
+                duration: Number(service.durationMinutes ?? 0),
+                price: Number(service.price ?? 0),
+            },
+        });
+    }
+
+    console.log(`[seed] Services seeded: ${(serviceData.services ?? []).length}`);
+}
+
 async function seedReservations() {
     const reservationData = await readJson('pages/api/reservations.json');
 
@@ -385,6 +425,7 @@ async function main() {
     await seedDefaultStore();
     await seedDesigners();
     await seedCustomers();
+    await seedServices();
     await seedReservations();
 }
 
