@@ -4,6 +4,7 @@ import Google from 'next-auth/providers/google';
 import Kakao from 'next-auth/providers/kakao';
 import Naver from 'next-auth/providers/naver';
 
+import {resolveUserMembership} from './lib/resolve-user-membership';
 import {syncAuthUser} from './lib/sync-auth-user';
 
 const providers: Provider[] = [];
@@ -39,6 +40,11 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
                 token.provider = account.provider;
                 token.userId = await syncAuthUser({account, user}) ?? token.userId;
             }
+
+            const membership = await resolveUserMembership((token.userId as string) ?? null);
+            token.role = membership?.role;
+            token.storeId = membership?.storeId;
+
             return token;
         },
         session({session, token}) {
