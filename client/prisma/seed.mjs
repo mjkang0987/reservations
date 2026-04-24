@@ -21,6 +21,25 @@ function mapPointHistoryType(type) {
     return 'manual_add';
 }
 
+function mapReservationStatus(status) {
+    if (status === 'completed') return 'completed';
+    if (status === 'cancelled') return 'cancelled';
+    if (status === 'noshow') return 'noshow';
+    return 'active';
+}
+
+function mapPaymentMethod(method) {
+    if (method === '현금') return 'cash';
+    if (method === '현금영수증') return 'cash_receipt';
+    if (method === '카드') return 'card';
+    if (method === '네이버페이') return 'naver_pay';
+    if (method === '지역화폐') return 'local_currency';
+    if (method === '지역화폐(현금영수증)') return 'local_currency_receipt';
+    if (method === '이용권') return 'voucher';
+    if (method === '적립금') return 'points';
+    return 'cash';
+}
+
 async function readJson(relativePath) {
     const absolutePath = path.join(process.cwd(), relativePath);
     const raw = await fs.readFile(absolutePath, 'utf-8');
@@ -238,10 +257,135 @@ async function seedCustomers() {
     console.log(`[seed] Customers seeded: ${(customerData.customers ?? []).length}`);
 }
 
+async function seedReservations() {
+    const reservationData = await readJson('pages/api/reservations.json');
+
+    const store = await prisma.store.findUnique({
+        where: {id: DEFAULT_STORE_KEY},
+        select: {id: true},
+    });
+
+    if (!store) {
+        throw new Error('Default store must exist before seeding reservations.');
+    }
+
+    for (const reservation of reservationData.reservations ?? []) {
+        const customer = await prisma.customer.findUnique({
+            where: {
+                storeId_legacyId: {
+                    storeId: store.id,
+                    legacyId: reservation.customerId,
+                },
+            },
+            select: {id: true},
+        });
+
+        if (!customer) {
+            throw new Error(`Customer not found for reservation legacyId=${reservation.id}`);
+        }
+
+        const designer = reservation.designerId
+            ? await prisma.designer.findUnique({
+                where: {
+                    storeId_legacyId: {
+                        storeId: store.id,
+                        legacyId: reservation.designerId,
+                    },
+                },
+                select: {id: true},
+            })
+            : null;
+
+        const savedReservation = await prisma.reservation.upsert({
+            where: {
+                storeId_legacyId: {
+                    storeId: store.id,
+                    legacyId: reservation.id,
+                },
+            },
+            update: {
+                customerId: customer.id,
+                designerId: designer?.id ?? null,
+                date: new Date(`${reservation.date}T00:00:00`),
+                startTime: reservation.startTime,
+                endTime: reservation.endTime,
+                serviceSummary: reservation.service,
+                status: mapReservationStatus(reservation.status),
+                price: Number(reservation.price ?? 0),
+                memo: reservation.memo ?? null,
+                paymentCompleted: !!reservation.paymentCompleted,
+                pointEarned: Number(reservation.pointEarned ?? 0),
+            },
+            create: {
+                storeId: store.id,
+                legacyId: reservation.id,
+                customerId: customer.id,
+                designerId: designer?.id ?? null,
+                date: new Date(`${reservation.date}T00:00:00`),
+                startTime: reservation.startTime,
+                endTime: reservation.endTime,
+                serviceSummary: reservation.service,
+                status: mapReservationStatus(reservation.status),
+                price: Number(reservation.price ?? 0),
+                memo: reservation.memo ?? null,
+                paymentCompleted: !!reservation.paymentCompleted,
+                pointEarned: Number(reservation.pointEarned ?? 0),
+            },
+        });
+
+        await prisma.reservationPaymentEntry.deleteMany({
+            where: {reservationId: savedReservation.id},
+        });
+
+        if (Array.isArray(reservation.paymentEntries) && reservation.paymentEntries.length > 0) {
+            await prisma.reservationPaymentEntry.createMany({
+                data: reservation.paymentEntries.map((entry) => ({
+                    reservationId: savedReservation.id,
+                    method: mapPaymentMethod(entry.method),
+                    amount: Number(entry.amount ?? 0),
+                })),
+            });
+        }
+    }
+
+    await prisma.reservationHistory.deleteMany({
+        where: {storeId: store.id},
+    });
+
+    for (const history of reservationData.history ?? []) {
+        const reservation = await prisma.reservation.findUnique({
+            where: {
+                storeId_legacyId: {
+                    storeId: store.id,
+                    legacyId: history.reservationId,
+                },
+            },
+            select: {id: true},
+        });
+
+        if (!reservation) {
+            continue;
+        }
+
+        await prisma.reservationHistory.create({
+            data: {
+                storeId: store.id,
+                reservationId: reservation.id,
+                beforeJson: history.before ?? {},
+                afterJson: history.after ?? {},
+                createdAt: history.timestamp ? new Date(history.timestamp) : new Date(),
+            },
+        });
+    }
+
+    console.log(`[seed] Reservations seeded: ${(reservationData.reservations ?? []).length}`);
+}
+
 async function main() {
     await seedDefaultStore();
     await seedDesigners();
     await seedCustomers();
+    await seedReservations();
 }
 
 main()
