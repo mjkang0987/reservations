@@ -30,6 +30,7 @@ type HomeProps = {
     reservations: Reservation[];
     customers: Customer[];
     history: ReservationHistoryEntry[];
+    storageMode: 'remote' | 'local';
 };
 
 const Home: NextPage<HomeProps> = (props) => {
@@ -57,10 +58,14 @@ const Home: NextPage<HomeProps> = (props) => {
     const selectedCustomer = selectedCustomerId !== null ? customerMap[selectedCustomerId] : null;
 
     useEffect(() => {
+        if (props.storageMode === 'local') {
+            return;
+        }
+
         setReservationMap(groupByDate(props.reservations));
         setCustomerMap(toCustomerMap(props.customers));
         setReservationHistory(props.history);
-    }, [props.reservations, props.customers, props.history, setReservationMap, setCustomerMap, setReservationHistory]);
+    }, [props.storageMode, props.reservations, props.customers, props.history, setReservationMap, setCustomerMap, setReservationHistory]);
 
     useEffect(() => {
         if (selectedReservations.length > 0) {
@@ -70,7 +75,7 @@ const Home: NextPage<HomeProps> = (props) => {
 
     return (<>
             <Head>
-                <title>Chairtime</title>
+                <title>takeaseat</title>
             </Head>
             <StyledSection $isVisible={aside.isVisible}>
                 {curr && <Calendar/>}
@@ -109,7 +114,14 @@ const StyledSection = styled.section <{ $isVisible: boolean }>`
 export const getServerSideProps: GetServerSideProps<HomeProps> = async (ctx) => {
     const session = await getPageSession(ctx);
     if (!session) {
-        return {redirect: {destination: '/login', permanent: false}};
+        return {
+            props: {
+                reservations: [],
+                customers: [],
+                history: [],
+                storageMode: 'local',
+            }
+        };
     }
 
     const data = await loadPageData(session.storeId);
@@ -119,6 +131,7 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async (ctx) => 
             reservations: data.reservations,
             customers: data.customers,
             history: data.history,
+            storageMode: 'remote',
         }
     };
 };

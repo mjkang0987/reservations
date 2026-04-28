@@ -7,23 +7,44 @@ import type {
     AppProps
 } from 'next/app';
 
-import {SessionProvider} from 'next-auth/react';
+import {SessionProvider, useSession} from 'next-auth/react';
 
 import {GlobalStyle} from '../styles/globalStyle';
 import {useCalendarStore} from '../store/calendarStore';
 import type {ServiceItem} from '../utils/services';
 import type {Designer} from '../utils/designers';
 import type {StoreSettings} from '../utils/storeSettings';
+import {groupByDate} from '../utils/reservations';
+import {toCustomerMap} from '../utils/customers';
+import {loadLocalDbSnapshot} from '../lib/local-db';
 
 import LayoutComponent from '../components/layout/LayoutComponent';
 
-function App({Component, pageProps: {session, ...pageProps}}: AppProps) {
+type AppContentProps = Pick<AppProps, 'Component' | 'pageProps'>;
+
+function AppContent({Component, pageProps}: AppContentProps) {
+    const {data: session, status} = useSession();
     const setServiceCatalog = useCalendarStore((s) => s.setServiceCatalog);
     const setCategoryBaseColorMap = useCalendarStore((s) => s.setCategoryBaseColorMap);
     const setDesigners = useCalendarStore((s) => s.setDesigners);
     const setStoreSettings = useCalendarStore((s) => s.setStoreSettings);
+    const setReservationMap = useCalendarStore((s) => s.setReservationMap);
+    const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
+    const setReservationHistory = useCalendarStore((s) => s.setReservationHistory);
+    const hasApiAccess = status === 'authenticated' && !!session?.user?.role && !!session.user?.storeId;
 
     useEffect(() => {
+        if (status === 'unauthenticated' || (status === 'authenticated' && !hasApiAccess)) {
+            const localDb = loadLocalDbSnapshot();
+            setServiceCatalog(localDb.services);
+            setCategoryBaseColorMap(localDb.categoryBaseColors);
+            return;
+        }
+
+        if (!hasApiAccess) {
+            return;
+        }
+
         fetch('/api/services')
             .then((res) => {
                 if (!res.ok) throw new Error('Failed to load services');
@@ -41,9 +62,19 @@ function App({Component, pageProps: {session, ...pageProps}}: AppProps) {
             .catch(() => {
                 // Keep default SERVICE_CATALOG if loading fails.
             });
-    }, [setServiceCatalog, setCategoryBaseColorMap]);
+    }, [hasApiAccess, status, setServiceCatalog, setCategoryBaseColorMap]);
 
     useEffect(() => {
+        if (status === 'unauthenticated' || (status === 'authenticated' && !hasApiAccess)) {
+            const localDb = loadLocalDbSnapshot();
+            setDesigners(localDb.designers);
+            return;
+        }
+
+        if (!hasApiAccess) {
+            return;
+        }
+
         fetch('/api/designers')
             .then((res) => {
                 if (!res.ok) throw new Error('Failed to load designers');
@@ -57,9 +88,22 @@ function App({Component, pageProps: {session, ...pageProps}}: AppProps) {
             .catch(() => {
                 // Keep default designers if loading fails.
             });
-    }, [setDesigners]);
+    }, [hasApiAccess, status, setDesigners]);
 
     useEffect(() => {
+        if (status === 'unauthenticated' || (status === 'authenticated' && !hasApiAccess)) {
+            const localDb = loadLocalDbSnapshot();
+            setStoreSettings(localDb.storeSettings);
+            setReservationMap(groupByDate(localDb.reservations));
+            setCustomerMap(toCustomerMap(localDb.customers));
+            setReservationHistory(localDb.history);
+            return;
+        }
+
+        if (!hasApiAccess) {
+            return;
+        }
+
         fetch('/api/store')
             .then((res) => {
                 if (!res.ok) throw new Error('Failed to load store settings');
@@ -95,17 +139,25 @@ function App({Component, pageProps: {session, ...pageProps}}: AppProps) {
             .catch(() => {
                 // Keep default store settings if loading fails.
             });
-    }, [setStoreSettings]);
+    }, [hasApiAccess, status, setStoreSettings, setReservationMap, setCustomerMap, setReservationHistory]);
 
     return (
-        <SessionProvider session={session}>
+        <>
             <Head>
-                <title>Chairtime</title>
+                <title>takeaseat</title>
             </Head>
             <GlobalStyle/>
             <LayoutComponent>
                 <Component {...pageProps} />
             </LayoutComponent>
+        </>
+    );
+}
+
+function App({Component, pageProps: {session, ...pageProps}}: AppProps) {
+    return (
+        <SessionProvider session={session}>
+            <AppContent Component={Component} pageProps={pageProps}/>
         </SessionProvider>
     );
 }

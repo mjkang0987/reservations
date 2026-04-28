@@ -1,4 +1,4 @@
-import {useEffect, useMemo} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 
 import type {GetServerSideProps, NextPage} from 'next';
 
@@ -9,7 +9,7 @@ import styled from 'styled-components';
 
 import {useCalendarStore} from '../store/calendarStore';
 import {buildServiceColorMap} from '../utils/services';
-import type {Reservation, ReservationMap, ReservationHistoryEntry} from '../utils/reservations';
+import type {Reservation, ReservationHistoryEntry} from '../utils/reservations';
 import {groupByDate, toDateKey} from '../utils/reservations';
 import type {Customer} from '../utils/customers';
 import {toCustomerMap} from '../utils/customers';
@@ -23,12 +23,14 @@ import {RevenueSection, type RevenueDesignerKey, type RevenueQuickRange} from '.
 import {ServiceManageSection} from '../components/settings/ServiceManageSection';
 import {StoreManageSection} from '../components/settings/StoreManageSection';
 
+import {loadLocalDbSnapshot, subscribeLocalDb, type LocalDbSnapshot} from '../lib/local-db';
 import {getPageSession, loadPageData} from '../lib/page-data';
 
 type SettingsProps = {
     reservations: Reservation[];
     customers: Customer[];
     history: ReservationHistoryEntry[];
+    storageMode: 'remote' | 'local';
 };
 
 type SettingsTab = 'revenue' | 'point' | 'service' | 'designer' | 'store';
@@ -56,7 +58,7 @@ function shiftDateKey(baseDate: Date, days: number): string {
 
 /* ── Settings Page ── */
 
-const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) => {
+const Settings: NextPage<SettingsProps> = ({reservations, customers, history, storageMode}) => {
     const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
     const storeCustomerMap = useCalendarStore((s) => s.customerMap);
     const setReservationMap = useCalendarStore((s) => s.setReservationMap);
@@ -75,10 +77,18 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
     const storeHistory = useCalendarStore((s) => s.reservationHistory);
 
     const router = useRouter();
-    const target = useCalendarStore((s) => s.target);
     const serviceCatalog = useCalendarStore((s) => s.serviceCatalog);
     const categoryBaseColorMap = useCalendarStore((s) => s.categoryBaseColorMap);
-    const reservationMap = useMemo(() => groupByDate(reservations), [reservations]);
+    const [localSnapshot, setLocalSnapshot] = useState<LocalDbSnapshot | null>(() => (
+        storageMode === 'local' ? loadLocalDbSnapshot() : null
+    ));
+    const effectiveReservations = storageMode === 'local'
+        ? (localSnapshot?.reservations ?? Object.values(storeReservationMap).flat())
+        : reservations;
+    const reservationMap = useMemo(
+        () => storageMode === 'local' ? storeReservationMap : groupByDate(effectiveReservations),
+        [storageMode, storeReservationMap, effectiveReservations]
+    );
     const initialCustomerMap: CustomerMap = useMemo(() => toCustomerMap(customers), [customers]);
     const serviceColorMap = useMemo(
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
@@ -200,16 +210,29 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history}) =
             date: todayKey,
         });
     };
+
     useEffect(() => {
+        if (storageMode !== 'local') {
+            return;
+        }
+
+        return subscribeLocalDb(setLocalSnapshot);
+    }, [storageMode]);
+
+    useEffect(() => {
+        if (storageMode === 'local') {
+            return;
+        }
+
         setCustomerMap(initialCustomerMap);
         setReservationMap(reservationMap);
         setReservationHistory(history);
-    }, [initialCustomerMap, reservationMap, history]);
+    }, [storageMode, initialCustomerMap, reservationMap, history, setCustomerMap, setReservationMap, setReservationHistory]);
 
     return (
         <StyledSection>
             <Head>
-                <title>Chairtime - 설정</title>
+                <title>takeaseat - 설정</title>
             </Head>
             <StyledHeading>설정</StyledHeading>
             <StyledPageTabs>
@@ -268,7 +291,14 @@ export default Settings;
 export const getServerSideProps: GetServerSideProps<SettingsProps> = async (ctx) => {
     const session = await getPageSession(ctx);
     if (!session) {
-        return {redirect: {destination: '/login', permanent: false}};
+        return {
+            props: {
+                reservations: [],
+                customers: [],
+                history: [],
+                storageMode: 'local',
+            }
+        };
     }
 
     const data = await loadPageData(session.storeId);
@@ -278,6 +308,7 @@ export const getServerSideProps: GetServerSideProps<SettingsProps> = async (ctx)
             reservations: data.reservations,
             customers: data.customers,
             history: data.history,
+            storageMode: 'remote',
         }
     };
 };

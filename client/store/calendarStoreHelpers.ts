@@ -2,8 +2,23 @@ import type {Customer} from '../utils/customers';
 import type {Designer} from '../utils/designers';
 import type {ServiceItem} from '../utils/services';
 import type {StoreSettings} from '../utils/storeSettings';
+import type {ReservationHistoryEntry, ReservationMap} from '../utils/reservations';
+import {
+    flattenReservationMap,
+    shouldUseLocalDb,
+    updateLocalDbSnapshot,
+} from '../lib/local-db';
 
 export function syncServiceSettings(services: ServiceItem[], categoryBaseColors: Record<string, string>): void {
+    if (shouldUseLocalDb()) {
+        updateLocalDbSnapshot((current) => ({
+            ...current,
+            services,
+            categoryBaseColors,
+        }));
+        return;
+    }
+
     fetch('/api/services', {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
@@ -14,6 +29,14 @@ export function syncServiceSettings(services: ServiceItem[], categoryBaseColors:
 }
 
 export function syncDesignerSettings(designers: Designer[]): void {
+    if (shouldUseLocalDb()) {
+        updateLocalDbSnapshot((current) => ({
+            ...current,
+            designers,
+        }));
+        return;
+    }
+
     fetch('/api/designers', {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
@@ -24,6 +47,14 @@ export function syncDesignerSettings(designers: Designer[]): void {
 }
 
 export function syncCustomerSettings(customers: Customer[]): void {
+    if (shouldUseLocalDb()) {
+        updateLocalDbSnapshot((current) => ({
+            ...current,
+            customers,
+        }));
+        return;
+    }
+
     fetch('/api/customers', {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
@@ -34,6 +65,14 @@ export function syncCustomerSettings(customers: Customer[]): void {
 }
 
 export function syncStoreSettings(storeSettings: StoreSettings): void {
+    if (shouldUseLocalDb()) {
+        updateLocalDbSnapshot((current) => ({
+            ...current,
+            storeSettings,
+        }));
+        return;
+    }
+
     fetch('/api/store', {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
@@ -41,6 +80,18 @@ export function syncStoreSettings(storeSettings: StoreSettings): void {
     }).catch(() => {
         // Preserve local UX even if sync fails; server data can be retried later.
     });
+}
+
+export function syncReservationState(reservationMap: ReservationMap, history: ReservationHistoryEntry[]): void {
+    if (!shouldUseLocalDb()) {
+        return;
+    }
+
+    updateLocalDbSnapshot((current) => ({
+        ...current,
+        reservations: flattenReservationMap(reservationMap),
+        history,
+    }));
 }
 
 export function groupCatalogByCategory(serviceCatalog: ServiceItem[]): Map<string, ServiceItem[]> {

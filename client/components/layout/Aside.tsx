@@ -73,6 +73,14 @@ export const Aside = () => {
                            onClick={() => setAside({...aside, isVisible: false})}>
                 설정
             </StyledNavLink>
+            <StyledNavLink href="/mypage"
+                           onClick={() => setAside({...aside, isVisible: false})}>
+                마이페이지
+            </StyledNavLink>
+            <StyledNavLink href="/logout"
+                           onClick={() => setAside({...aside, isVisible: false})}>
+                로그아웃
+            </StyledNavLink>
         </StyledAside>
     );
 };

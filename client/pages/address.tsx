@@ -19,12 +19,14 @@ import {AddressContent} from '../components/address/AddressContent';
 
 import {useCalendarStore} from '../store/calendarStore';
 
+import {loadLocalDbSnapshot, subscribeLocalDb, type LocalDbSnapshot} from '../lib/local-db';
 import {getPageSession, loadPageData} from '../lib/page-data';
 
 type AddressProps = {
     customers: Customer[];
     reservations: Reservation[];
     history: ReservationHistoryEntry[];
+    storageMode: 'remote' | 'local';
 };
 
 const TAG_COLORS = [
@@ -38,9 +40,10 @@ const TAG_COLORS = [
     '#E91E8C',
 ];
 
-const Address: NextPage<AddressProps> = ({customers, reservations, history}) => {
+const Address: NextPage<AddressProps> = ({customers, reservations, history, storageMode}) => {
     const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
     const storeCustomerMap = useCalendarStore((s) => s.customerMap);
+    const storeReservationMap = useCalendarStore((s) => s.reservationMap);
     const selectedCustomerId = useCalendarStore((s) => s.selectedCustomerId);
     const setSelectedCustomerId = useCalendarStore((s) => s.setSelectedCustomerId);
     const openReservationDetailFromCustomer = useCalendarStore((s) => s.openReservationDetailFromCustomer);
@@ -57,8 +60,19 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history}) => 
 
     const [searchInput, setSearchInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [localSnapshot, setLocalSnapshot] = useState<LocalDbSnapshot | null>(() => (
+        storageMode === 'local' ? loadLocalDbSnapshot() : null
+    ));
     const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const latestInput = useRef('');
+
+    useEffect(() => {
+        if (storageMode !== 'local') {
+            return;
+        }
+
+        return subscribeLocalDb(setLocalSnapshot);
+    }, [storageMode]);
 
     useEffect(() => {
         return () => {
@@ -79,12 +93,24 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history}) => 
         }
     }, []);
 
-    const customerMap = useMemo(() => toCustomerMap(customers), [customers]);
+    const effectiveCustomers = storageMode === 'local'
+        ? (localSnapshot?.customers ?? Object.values(storeCustomerMap))
+        : customers;
+    const effectiveReservations = storageMode === 'local'
+        ? (localSnapshot?.reservations ?? Object.values(storeReservationMap).flat())
+        : reservations;
+    const effectiveHistory = storageMode === 'local'
+        ? (localSnapshot?.history ?? history)
+        : history;
+
+    const customerMap = useMemo(() => toCustomerMap(effectiveCustomers), [effectiveCustomers]);
     const customerList = useMemo(
-        () => customers.map((customer) => storeCustomerMap[customer.id] ?? customer),
-        [customers, storeCustomerMap]
+        () => storageMode === 'local'
+            ? Object.values(storeCustomerMap)
+            : effectiveCustomers.map((customer) => storeCustomerMap[customer.id] ?? customer),
+        [storageMode, effectiveCustomers, storeCustomerMap]
     );
-    const reservationMap = useMemo(() => groupByDate(reservations), [reservations]);
+    const reservationMap = useMemo(() => groupByDate(effectiveReservations), [effectiveReservations]);
     const serviceColorMap = useMemo(
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
         [serviceCatalog, categoryBaseColorMap]
@@ -107,13 +133,13 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history}) => 
     const reservationsByCustomer = useMemo(() => {
         const map: Record<number, Reservation[]> = {};
 
-        for (const r of reservations) {
+        for (const r of effectiveReservations) {
             if (!map[r.customerId]) map[r.customerId] = [];
             map[r.customerId].push(r);
         }
 
         return map;
-    }, [reservations]);
+    }, [effectiveReservations]);
 
     const today = useMemo(() => {
         const d = new Date();
@@ -171,8 +197,12 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history}) => 
     }, [customerList, searchTerm]);
 
     useEffect(() => {
+        if (storageMode === 'local') {
+            return;
+        }
+
         setCustomerMap(customerMap);
-    }, [customerMap, setCustomerMap]);
+    }, [storageMode, customerMap, setCustomerMap]);
 
     const addTag = (id: number) => {
         const value = tagInput.trim();
@@ -238,7 +268,7 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history}) => 
                                    reservation={reservation}
                                    customerMap={storeCustomerMap}
                                    reservationMap={reservationMap}
-                                   history={history}
+                                   history={effectiveHistory}
                                    onClose={() => setSelectedReservations((prev) => prev.filter((_, itemIndex) => itemIndex !== index))}
                                    onCustomerClick={openCustomerDetail}
                                    onUpdate={(prev, updated) => {
@@ -263,7 +293,14 @@ export default Address;
 export const getServerSideProps: GetServerSideProps<AddressProps> = async (ctx) => {
     const session = await getPageSession(ctx);
     if (!session) {
-        return {redirect: {destination: '/login', permanent: false}};
+        return {
+            props: {
+                customers: [],
+                reservations: [],
+                history: [],
+                storageMode: 'local',
+            }
+        };
     }
 
     const data = await loadPageData(session.storeId);
@@ -273,6 +310,7 @@ export const getServerSideProps: GetServerSideProps<AddressProps> = async (ctx) 
             customers: data.customers,
             reservations: data.reservations,
             history: data.history,
+            storageMode: 'remote',
         }
     };
 };

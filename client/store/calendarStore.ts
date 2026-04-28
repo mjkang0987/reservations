@@ -20,6 +20,7 @@ import {
 import {
     syncCustomerSettings,
     syncDesignerSettings,
+    syncReservationState,
     syncServiceSettings,
     syncStoreSettings,
 } from './calendarStoreHelpers';
@@ -47,6 +48,7 @@ import {
     buildUpdatedStoreClosedDatesState,
     buildUpdatedStorePointSettingsState,
 } from './calendarStoreStoreSettingsHelpers';
+import {shouldUseLocalDb} from '../lib/local-db';
 
 export type FullType = Date | null;
 
@@ -471,14 +473,25 @@ export const useCalendarStore = create<CalendarState>((set) => ({
         }),
 
     addReservation: (reservation) => {
+        let nextReservationMap: ReservationMap | null = null;
+
         set((state) => {
             const nextMap = buildAddedReservationMap(state.reservationMap, reservation);
             const nextCustomerMap = syncCustomerFirstVisitDates(state.customerMap, nextMap);
+            nextReservationMap = nextMap;
             if (Object.keys(nextCustomerMap).length > 0) {
                 syncCustomerSettings(Object.values(nextCustomerMap));
             }
             return {reservationMap: nextMap, customerMap: nextCustomerMap, createReservationInitial: null};
         });
+
+        if (nextReservationMap) {
+            syncReservationState(nextReservationMap, useCalendarStore.getState().reservationHistory);
+        }
+
+        if (shouldUseLocalDb()) {
+            return;
+        }
 
         fetch('/api/reservations', {
             method: 'POST',
@@ -492,14 +505,27 @@ export const useCalendarStore = create<CalendarState>((set) => ({
             return;
         }
 
+        let nextReservationMap: ReservationMap | null = null;
+        let nextHistory: ReservationHistoryEntry[] = [];
+
         set((state) => {
             const nextState = buildUpdatedReservationState(state, prev, updated);
             const nextCustomerMap = syncCustomerFirstVisitDates(state.customerMap, nextState.reservationMap);
+            nextReservationMap = nextState.reservationMap;
+            nextHistory = nextState.reservationHistory;
             if (Object.keys(nextCustomerMap).length > 0) {
                 syncCustomerSettings(Object.values(nextCustomerMap));
             }
             return {...nextState, customerMap: nextCustomerMap};
         });
+
+        if (nextReservationMap) {
+            syncReservationState(nextReservationMap, nextHistory);
+        }
+
+        if (shouldUseLocalDb()) {
+            return;
+        }
 
         fetch('/api/reservations', {
             method: 'PUT',
@@ -511,14 +537,27 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     cancelReservation: (reservation, status = 'cancelled') => {
         const updated: Reservation = {...reservation, status};
 
+        let nextReservationMap: ReservationMap | null = null;
+        let nextHistory: ReservationHistoryEntry[] = [];
+
         set((state) => {
             const nextState = buildCancelledReservationState(state, reservation, updated);
             const nextCustomerMap = syncCustomerFirstVisitDates(state.customerMap, nextState.reservationMap);
+            nextReservationMap = nextState.reservationMap;
+            nextHistory = nextState.reservationHistory;
             if (Object.keys(nextCustomerMap).length > 0) {
                 syncCustomerSettings(Object.values(nextCustomerMap));
             }
             return {...nextState, customerMap: nextCustomerMap};
         });
+
+        if (nextReservationMap) {
+            syncReservationState(nextReservationMap, nextHistory);
+        }
+
+        if (shouldUseLocalDb()) {
+            return;
+        }
 
         fetch('/api/reservations', {
             method: 'PATCH',
