@@ -115,6 +115,15 @@ export function TimelineClusterLayer({
                                                         {serviceName}
                                                     </span>
                                                 ))}
+                                                {reservation.status === 'cancelled' && (
+                                                    <StyledStatusText $variant="cancelled">취소</StyledStatusText>
+                                                )}
+                                                {reservation.status === 'noshow' && (
+                                                    <StyledStatusText $variant="noshow">노쇼</StyledStatusText>
+                                                )}
+                                                {reservation.status === 'completed' && (
+                                                    <StyledStatusText $variant="completed">완료</StyledStatusText>
+                                                )}
                                             </StyledClusterService>
                                             {customer && (
                                                 <span className="detail">
@@ -255,4 +264,19 @@ const StyledClusterService = styled.div`
     .service-token {
         padding: 2px 0;
     }
+`;
+
+const StyledStatusText = styled.span<{ $variant: 'cancelled' | 'noshow' | 'completed' }>`
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: ${({$variant}) => (
+        $variant === 'cancelled' ? '#FDE8E6' : $variant === 'noshow' ? '#FFF7DB' : '#EFF6FF'
+    )};
+    color: ${({$variant}) => (
+        $variant === 'cancelled' ? '#B42318' : $variant === 'noshow' ? '#9A6700' : '#1D4ED8'
+    )};
 `;

@@ -370,15 +370,6 @@ const mobileStretchButtonStyle = css`
     }
 `;
 
-const StyledEmpty = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    font-size: 13px;
-    color: var(--dark-gray-color2);
-`;
-
 const StyledServiceBody = styled.div`
     overflow-y: auto;
     overscroll-behavior: auto;

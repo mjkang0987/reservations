@@ -10,7 +10,6 @@ import type {CustomerMap} from '../../../utils/customers';
 
 import {
     OVERLAY_Z_INDEX,
-    StyledOverlay,
     StyledDetail,
     StyledHeader,
     StyledBody,
@@ -19,10 +18,11 @@ import {
     StyledError,
     StyledFooter,
     StyledActionButton,
+    StyledOverlay,
     useDialogAccessibility,
     useLayerInstanceId,
 } from './ModalStyles';
-import {ReservationFormFields, type ReservationDetailFormState} from './ReservationDetailSections';
+import {ReservationFormFields} from './ReservationDetailSections';
 import {ReservationCreateCustomerFields} from './ReservationCreateCustomerFields';
 import {useReservationCreateForm} from './useReservationCreateForm';
 
@@ -79,6 +79,13 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
         addCustomer,
         onSave,
     });
+    const customerErrorMessage = (
+        error === '고객을 선택해주세요.'
+        || error === '신규 고객명을 입력해주세요.'
+        || error === '신규 고객 연락처를 입력해주세요.'
+        || error === '신규 고객 연락처 형식을 확인해주세요.'
+    ) ? error : '';
+    const serviceErrorMessage = error === '시술을 선택해주세요.' ? error : '';
 
     if (!modalRoot) return null;
 
@@ -104,6 +111,7 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
                         filteredCustomers={filteredCustomers}
                         newCustomerName={newCustomerName}
                         newCustomerTel={newCustomerTel}
+                        customerErrorMessage={customerErrorMessage}
                         onChangeCustomerMode={setCustomerMode}
                         onChangeCustomerQuery={handleCustomerInputChange}
                         onFocusCustomerQuery={handleCustomerFocus}
@@ -128,9 +136,10 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
                         onFieldChange={handleFieldChange}
                         onStartTimeChange={handleStartTimeChange}
                         onEndTimeChange={handleEndTimeChange}
+                        serviceErrorMessage={serviceErrorMessage}
                     />
                 </StyledCreateForm>
-                {error && <StyledError>{error}</StyledError>}
+                {error && !customerErrorMessage && !serviceErrorMessage && <StyledError>{error}</StyledError>}
             </StyledBodyInner></StyledBody>
 
             <StyledFooter>

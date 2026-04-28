@@ -32,5 +32,5 @@ export const useRouteChangeSync = ({
         return () => {
             router.events.off('routeChangeComplete', getRouterState);
         };
-    }, []);
+    }, [router.events, setRouterSlice]);
 };

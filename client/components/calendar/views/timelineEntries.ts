@@ -30,9 +30,7 @@ export function buildTimelineEntries(reservations: Reservation[]): TimelineEntry
     const flush = () => {
         if (current.length === 0) return;
 
-        const designerKeys = new Set(current.map((reservation) => reservation.designerId ?? 0));
-
-        if (current.length > 1 && designerKeys.size > 1) {
+        if (current.length > 1) {
             entries.push({
                 kind: 'cluster',
                 cluster: {

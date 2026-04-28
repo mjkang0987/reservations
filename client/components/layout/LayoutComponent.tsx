@@ -1,5 +1,6 @@
 import React, {
     useEffect,
+    useMemo,
     useState
 } from 'react';
 
@@ -46,8 +47,8 @@ export default function LayoutComponent({children}: NodeType) {
     const addReservation = useCalendarStore((s) => s.addReservation);
 
     const isomorphicEffect = useIsomorphicEffect();
-
-    const initDate: Date = new Date();
+    const [initDate] = useState(() => new Date());
+    const [initializedPath, setInitializedPath] = useState<string | null>(null);
 
     const handleCreateReservation = () => {
         const now = new Date();
@@ -74,17 +75,26 @@ export default function LayoutComponent({children}: NodeType) {
         })
     };
 
-    const array = router.asPath.split('/');
-    const isRootPath = array.join('').length === 0;
-    const isCalendarPath = isCalendar(array);
-
-    const currDate = !isCalendarPath || isRootPath ? initDate : new Date(Number(array[2]), Number(array[3]) - 1 || 1, Number(array[4]) || 1);
+    const array = useMemo(() => router.asPath.split('/'), [router.asPath]);
+    const isRootPath = useMemo(() => array.join('').length === 0, [array]);
+    const isCalendarPath = useMemo(() => isCalendar(array), [array]);
+    const currDate = useMemo(
+        () => !isCalendarPath || isRootPath
+            ? initDate
+            : new Date(Number(array[2]), Number(array[3]) - 1 || 1, Number(array[4]) || 1),
+        [array, initDate, isCalendarPath, isRootPath]
+    );
 
     useRouteChangeSync({
         setRouterSlice
     });
 
     isomorphicEffect(() => {
+        if (initializedPath === router.asPath) {
+            return;
+        }
+
+        setInitializedPath(router.asPath);
         setLoading(true);
         setToday(initDate);
         setCurr(currDate);
@@ -92,7 +102,7 @@ export default function LayoutComponent({children}: NodeType) {
         setView({
             type: isRootPath || !isCalendarPath ? ViewType.Week : array[1]
         });
-    }, []);
+    }, [array, currDate, initDate, initializedPath, isCalendarPath, isRootPath, router.asPath, setCurr, setToday, setView]);
 
     useEffect(() => {
         const handlePopState = () => {
@@ -113,7 +123,7 @@ export default function LayoutComponent({children}: NodeType) {
 
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
-    }, []);
+    }, [setCurr, setView]);
 
     useEffect(() => {
         if (currValue.full === null) {
@@ -147,7 +157,7 @@ export default function LayoutComponent({children}: NodeType) {
             date : currValue.date,
             router
         });
-    }, [currValue, view]);
+    }, [currValue, isCalendarPath, isRootPath, router, setRouterSlice, view]);
 
     if (isLoginPage) {
         return <>{children}</>;

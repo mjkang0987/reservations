@@ -3,7 +3,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 import type {Customer} from '../../../utils/customers';
-import {scrollContentStyle, scrollHintStyle} from './ModalStyles';
+import {scrollContentStyle, scrollHintStyle, StyledInlineError} from './ModalStyles';
 
 type CustomerMode = 'existing' | 'new';
 
@@ -15,6 +15,7 @@ interface ReservationCreateCustomerFieldsProps {
     filteredCustomers: Customer[];
     newCustomerName: string;
     newCustomerTel: string;
+    customerErrorMessage?: string;
     onChangeCustomerMode: (mode: CustomerMode) => void;
     onChangeCustomerQuery: (value: string) => void;
     onFocusCustomerQuery: () => void;
@@ -32,6 +33,7 @@ export function ReservationCreateCustomerFields({
     filteredCustomers,
     newCustomerName,
     newCustomerTel,
+    customerErrorMessage,
     onChangeCustomerMode,
     onChangeCustomerQuery,
     onFocusCustomerQuery,
@@ -97,6 +99,7 @@ export function ReservationCreateCustomerFields({
                             </StyledSuggestionList>
                         </StyledSuggestionWrap>
                     )}
+                    {customerErrorMessage && <StyledInlineError>{customerErrorMessage}</StyledInlineError>}
                 </StyledAutocomplete>
             ) : (
                 <StyledNewCustomerFields>
@@ -120,6 +123,7 @@ export function ReservationCreateCustomerFields({
                             onChange={(e) => onChangeNewCustomerTel(e.target.value)}
                         />
                     </label>
+                    {customerErrorMessage && <StyledInlineError>{customerErrorMessage}</StyledInlineError>}
                 </StyledNewCustomerFields>
             )}
         </>

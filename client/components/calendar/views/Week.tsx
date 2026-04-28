@@ -30,21 +30,35 @@ export const Week = ({
     const setView = useCalendarStore((s) => s.setView);
 
     const fullYear = curr!.fullYear;
+    const currentMonth = curr!.month;
 
     return (<>
-            {weekDates.map((w: number) => <StyledWeek key={`week_${w}`}>
-                <StyledNumWrap>
-                    <Num onClick={() => {
-                        setCurr(new Date(fullYear, currMonth, w));
-                        setView({type: ViewType.Day});
-                    }}
-                         isToday={isTodayValue(today, fullYear, currMonth, +w)}>{w}</Num>
-                </StyledNumWrap>
-                <Timeline fullYear={fullYear}
-                          month={currMonth}
-                          date={+w}
-                          isToday={isTodayValue(today, fullYear, currMonth, +w)} />
-            </StyledWeek>)}
+            {weekDates.map((w: number) => {
+                const normalizedDate = new Date(fullYear, currMonth, w);
+                const isAdjacentMonth = normalizedDate.getMonth() !== currentMonth;
+                const isTodayDate = isTodayValue(
+                    today,
+                    normalizedDate.getFullYear(),
+                    normalizedDate.getMonth(),
+                    normalizedDate.getDate()
+                );
+                const dateLabel = isAdjacentMonth ? `${normalizedDate.getMonth() + 1}/${w}` : String(w);
+
+                return <StyledWeek key={`week_${w}`}>
+                    <StyledNumWrap>
+                        <Num onClick={() => {
+                            setCurr(new Date(fullYear, currMonth, w));
+                            setView({type: ViewType.Day});
+                        }}
+                             isToday={isTodayDate}
+                             compact={isAdjacentMonth}>{dateLabel}</Num>
+                    </StyledNumWrap>
+                    <Timeline fullYear={fullYear}
+                              month={currMonth}
+                              date={+w}
+                              isToday={isTodayDate} />
+                </StyledWeek>;
+            })}
         </>
     );
 };

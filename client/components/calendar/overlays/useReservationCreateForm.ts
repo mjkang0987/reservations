@@ -10,6 +10,8 @@ import {calcEndTime, joinServiceNames, sumDurationMinutes, sumPrice} from '../..
 import type {ReservationDetailFormState} from './ReservationDetailSections';
 type CustomerMode = 'existing' | 'new';
 
+const KOREAN_MOBILE_PHONE_PATTERN = /^01[016789]\d{7,8}$/;
+
 type UseReservationCreateFormParams = {
     initial: CreateReservationInitial;
     customerMap: CustomerMap;
@@ -135,10 +137,15 @@ export function useReservationCreateForm({
     };
 
     const validate = (): string => {
+        const normalizedNewCustomerTel = newCustomerTel.replace(/\D/g, '');
+
         if (activeDesigners.length > 0 && !form.designerId) return '디자이너를 선택해주세요.';
         if (customerMode === 'existing' && !customerId) return '고객을 선택해주세요.';
         if (customerMode === 'new' && !newCustomerName.trim()) return '신규 고객명을 입력해주세요.';
         if (customerMode === 'new' && !newCustomerTel.trim()) return '신규 고객 연락처를 입력해주세요.';
+        if (customerMode === 'new' && !KOREAN_MOBILE_PHONE_PATTERN.test(normalizedNewCustomerTel)) {
+            return '신규 고객 연락처 형식을 확인해주세요.';
+        }
         if (selectedServices.length === 0) return '시술을 선택해주세요.';
         if (!form.date) return '날짜를 선택해주세요.';
         if (!form.startTime) return '시작 시간을 입력해주세요.';

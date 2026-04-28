@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useEffectEvent, useRef, useState} from 'react';
 
 import {TIMELINE_DAY_TOP, TIMELINE_TOP, ViewType} from '../../../utils/constants';
 import {findOverlap, type Reservation, type ReservationMap} from '../../../utils/reservations';
@@ -99,7 +99,7 @@ export function useTimelineDrag({
         blockOffsetRef.current = blockOffset;
     }, [blockOffset]);
 
-    const handlePointerMove = (clientX: number, clientY: number) => {
+    const handlePointerMove = useEffectEvent((clientX: number, clientY: number) => {
         const dragState = dragStateRef.current;
         if (!dragState) return;
 
@@ -135,9 +135,9 @@ export function useTimelineDrag({
 
         dragPreviewRef.current = preview;
         setDragPreview(preview);
-    };
+    });
 
-    const handlePointerUp = () => {
+    const handlePointerUp = useEffectEvent(() => {
         const dragState = dragStateRef.current;
         if (!dragState) return;
 
@@ -203,7 +203,7 @@ export function useTimelineDrag({
 
         setDragPreview(null);
         setDraggingReservation(null);
-    };
+    });
 
     useEffect(() => {
         const handleMouseMove = (event: MouseEvent) => {

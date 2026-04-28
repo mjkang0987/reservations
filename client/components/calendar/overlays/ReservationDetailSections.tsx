@@ -1,28 +1,22 @@
 import styled from 'styled-components';
 import type {ReactNode} from 'react';
 
-import type {Reservation, ReservationHistoryEntry} from '../../../utils/reservations';
 import type {Designer} from '../../../utils/designers';
 import {getDesignerStatus, isDesignerBookable} from '../../../utils/designers';
 import type {CustomerMemoTag} from '../../../utils/customers';
 
 import {
-    OVERLAY_Z_INDEX,
     StyledBody,
     StyledBodyInner,
-    scrollContentStyle,
-    StyledDetail,
     StyledDiffGrid,
     StyledError,
     StyledFieldRow,
     StyledFooter,
     StyledForm,
-    StyledHeader,
+    StyledInlineError,
     StyledModalMessage,
-    StyledOverlay,
     StyledPriceRow,
     StyledPriceUnit,
-    scrollHintStyle,
 } from './ModalStyles';
 import {ServiceFields} from '../service/ServiceFields';
 export {ReservationHistoryLayer} from './ReservationHistoryLayer';
@@ -55,6 +49,7 @@ interface ReservationFormFieldsProps {
     onFieldChange: (field: keyof ReservationDetailFormState, value: string) => void;
     onStartTimeChange: (value: string) => void;
     onEndTimeChange: (value: string) => void;
+    serviceErrorMessage?: string;
     children?: ReactNode;
 }
 
@@ -74,6 +69,7 @@ export const ReservationFormFields = ({
     onFieldChange,
     onStartTimeChange,
     onEndTimeChange,
+    serviceErrorMessage,
     children,
 }: ReservationFormFieldsProps) => (
     <StyledForm>
@@ -86,6 +82,7 @@ export const ReservationFormFields = ({
                 totalDuration={totalDuration}
                 totalPrice={totalPrice}
             />
+            {serviceErrorMessage && <StyledInlineError>{serviceErrorMessage}</StyledInlineError>}
         </StyledFieldRow>
         <label htmlFor={`${idPrefix}-price`}>
             <strong>가격</strong>

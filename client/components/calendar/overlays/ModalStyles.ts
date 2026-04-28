@@ -249,14 +249,23 @@ export const StyledFieldRow = styled.div`
     }
 `;
 
-export const StyledError = styled.p`
-    margin: 10px 0 0;
+const errorMessageStyle = css`
+    width: 100%;
     padding: var(--gap-md) var(--gap-lg);
     background-color: var(--danger-bg);
     border: 1px solid var(--danger-border);
     border-radius: var(--radius-sm);
     font-size: var(--small-font);
     color: var(--danger-color);
+`;
+
+export const StyledError = styled.p`
+    margin: 10px 0 0;
+    ${errorMessageStyle};
+`;
+
+export const StyledInlineError = styled(StyledError)`
+    margin-top: 8px;
 `;
 
 export const StyledPriceRow = styled.div`

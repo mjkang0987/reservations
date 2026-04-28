@@ -144,7 +144,6 @@ export const RevenueSection = ({
     endDateKey,
     setEndDateKey,
     setDateRange,
-    selectedDateKey,
     setSelectedDateKey,
     quickRange,
     setQuickRange,

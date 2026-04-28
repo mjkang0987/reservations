@@ -42,11 +42,20 @@ export const Month = ({
 
     return (<>
         {monthDates.map((val, index) => {
+            const normalizedDate = new Date(fullYear, currMonth, val);
             const dateKey = toDateKey(fullYear, currMonth, val);
             const dateReservations = (reservationMap[dateKey] || []).filter((reservation) => (
                 calendarDesignerId == null || (calendarDesignerId === 0 ? !reservation.designerId : reservation.designerId === calendarDesignerId)
             ));
             const hasReservations = dateReservations.length > 0;
+            const isAdjacentMonth = type === 'prev' || type === 'next';
+            const isTodayDate = isTodayValue(
+                today,
+                normalizedDate.getFullYear(),
+                normalizedDate.getMonth(),
+                normalizedDate.getDate()
+            );
+            const dateLabel = isAdjacentMonth ? `${normalizedDate.getMonth() + 1}/${val}` : String(val);
 
             return (<StyledDate key={`month_${val + index}`}
                                 type={type}>
@@ -55,9 +64,10 @@ export const Month = ({
                         setCurr(new Date(fullYear, currMonth, val));
                         setView({type: ViewType.Day});
                     }}
-                         isToday={isTodayValue(today, fullYear, currMonth, +val)}>{val}</Num>
+                         isToday={isTodayDate}
+                         compact={isAdjacentMonth}>{dateLabel}</Num>
                     <ButtonAdd onClick={() => setCreateReservationInitial({date: toDateKey(fullYear, currMonth, val), startTime: '10:00'})}
-                               aria-label={`${currMonth + 1}월 ${val}일 예약 추가`}/>
+                               aria-label={`${normalizedDate.getMonth() + 1}월 ${normalizedDate.getDate()}일 예약 추가`}/>
                 </StyledDateHeader>
                 {hasReservations && (
                     <ReservationList reservations={dateReservations}
