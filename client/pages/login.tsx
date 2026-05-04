@@ -1,4 +1,4 @@
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 
 import {useRouter} from 'next/router';
 
@@ -14,6 +14,7 @@ type ProviderInfo = {id: string; label: string; bg: string; color: string; borde
 type LoginPageProps = {
     providerIds: string[];
     isDatabaseConfigured: boolean;
+    loginError: string | null;
 };
 
 function getMonthEntryPath(): string {
@@ -33,12 +34,29 @@ const ENV_KEYS: Record<string, string> = {
     naver: 'AUTH_NAVER_ID'
 };
 
-export default function LoginPage({providerIds, isDatabaseConfigured}: LoginPageProps) {
+const ERROR_MESSAGES: Record<string, string> = {
+    'no-account': '등록된 계정이 없습니다. 초대코드를 입력한 후 로그인해 주세요.',
+    'invalid-invite': '유효하지 않은 초대코드입니다.',
+    'invite-used': '이미 사용된 초대코드입니다.',
+    'invite-expired': '만료된 초대코드입니다.',
+};
+
+function setInviteCookie(code: string) {
+    document.cookie = `tas-invite-code=${encodeURIComponent(code)}; path=/; max-age=600; samesite=lax; secure`;
+}
+
+function clearInviteCookie() {
+    document.cookie = 'tas-invite-code=; path=/; max-age=0; samesite=lax; secure';
+}
+
+export default function LoginPage({providerIds, isDatabaseConfigured, loginError}: LoginPageProps) {
     const {data: session, status} = useSession();
     const router = useRouter();
     const hasAccess = !!session?.user?.role && !!session.user?.storeId;
+    const hasLoginError = session?.user?.loginError === 'no-account';
     const isAuthenticatedWithoutAccess = status === 'authenticated' && !hasAccess;
     const monthEntryPath = getMonthEntryPath();
+    const [inviteCode, setInviteCode] = useState('');
 
     useEffect(() => {
         if (hasAccess) {
@@ -52,12 +70,39 @@ export default function LoginPage({providerIds, isDatabaseConfigured}: LoginPage
 
     const providers = ALL_PROVIDERS.filter((p) => providerIds.includes(p.id));
     const canStartLogin = providers.length > 0;
+    const displayError = loginError ?? (hasLoginError ? 'no-account' : null);
+
+    const startProviderLogin = (providerId: string) => {
+        const trimmedCode = inviteCode.trim().toUpperCase();
+        if (trimmedCode) {
+            setInviteCookie(trimmedCode);
+        } else {
+            clearInviteCookie();
+        }
+        void signIn(providerId, {callbackUrl: monthEntryPath});
+    };
 
     return (
         <StyledWrapper>
             <StyledCard>
                 <StyledTitle>TAS</StyledTitle>
                 <StyledSubtitle>SNS 계정으로 로그인</StyledSubtitle>
+                {displayError && ERROR_MESSAGES[displayError] && (
+                    <StyledLoginError>
+                        <strong>{ERROR_MESSAGES[displayError]}</strong>
+                    </StyledLoginError>
+                )}
+                <StyledInviteSection>
+                    <StyledInviteLabel>초대코드 (신규 등록 시)</StyledInviteLabel>
+                    <StyledInviteInput
+                        type="text"
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value.toUpperCase().slice(0, 6))}
+                        placeholder="6자리 코드 입력"
+                        maxLength={6}
+                        autoComplete="off"
+                    />
+                </StyledInviteSection>
                 {canStartLogin ? (
                     <StyledButtonGroup>
                         {providers.map((p) => (
@@ -67,7 +112,7 @@ export default function LoginPage({providerIds, isDatabaseConfigured}: LoginPage
                                 $bg={p.bg}
                                 $color={p.color}
                                 $border={p.border}
-                                onClick={() => signIn(p.id, {callbackUrl: monthEntryPath})}
+                                onClick={() => startProviderLogin(p.id)}
                             >
                                 <AuthActionIcon direction="login" />
                                 <span>{p.label}</span>
@@ -93,9 +138,9 @@ export default function LoginPage({providerIds, isDatabaseConfigured}: LoginPage
                         현재 `DATABASE_URL`이 설정되지 않아 로그인 후 권한 연결이 완료되지 않을 수 있습니다.
                     </StyledNotice>
                 )}
-                {isAuthenticatedWithoutAccess && (
+                {isAuthenticatedWithoutAccess && !hasLoginError && (
                     <StyledNotice>
-                        현재 계정에는 연결된 매장 권한이 없습니다. 관리자에게 매장 멤버십을 추가해 달라고 요청하세요.
+                        현재 계정에는 연결된 매장 권한이 없습니다. 관리자에게 초대코드를 요청하세요.
                     </StyledNotice>
                 )}
                 {isAuthenticatedWithoutAccess && (
@@ -109,7 +154,7 @@ export default function LoginPage({providerIds, isDatabaseConfigured}: LoginPage
     );
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
     const providerIds = ALL_PROVIDERS
         .filter((p) => {
             const val = process.env[ENV_KEYS[p.id]];
@@ -121,6 +166,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
         props: {
             providerIds,
             isDatabaseConfigured: !!process.env.DATABASE_URL,
+            loginError: typeof ctx.query.error === 'string' ? ctx.query.error : null,
         }
     };
 };
@@ -162,6 +208,44 @@ const StyledSubtitle = styled.p`
     font-size: var(--font);
     color: var(--dark-gray-color2);
     margin: 0 0 30px;
+`;
+
+const StyledInviteSection = styled.div`
+    width: 100%;
+    margin-bottom: 20px;
+`;
+
+const StyledInviteLabel = styled.label`
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dark-gray-color2);
+    margin-bottom: 6px;
+`;
+
+const StyledInviteInput = styled.input`
+    width: 100%;
+    padding: 10px 14px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-align: center;
+    text-transform: uppercase;
+    outline: none;
+
+    &:focus {
+        border-color: #2d7ff9;
+        box-shadow: 0 0 0 2px rgba(45, 127, 249, 0.15);
+    }
+
+    &::placeholder {
+        letter-spacing: normal;
+        font-weight: 400;
+        font-size: 14px;
+    }
 `;
 
 const StyledButtonGroup = styled.div`
@@ -244,6 +328,25 @@ const StyledButton = styled.button<{ $bg: string; $color: string; $border: strin
         &:hover {
         opacity: 0.85;
     }
+    }
+`;
+
+const StyledLoginError = styled.div`
+    width: 100%;
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    box-sizing: border-box;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fff1f2;
+    text-align: center;
+
+    strong {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.5;
+        color: #9f1239;
     }
 `;
 
