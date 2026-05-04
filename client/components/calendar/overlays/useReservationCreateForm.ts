@@ -21,6 +21,13 @@ type UseReservationCreateFormParams = {
     onSave: (reservation: Reservation) => void;
 };
 
+function getNextNumericId(values: number[]): number {
+    const max = values.reduce((currentMax, value) => (
+        Number.isInteger(value) && value > currentMax ? value : currentMax
+    ), 0);
+    return max + 1;
+}
+
 export function useReservationCreateForm({
     initial,
     customerMap,
@@ -32,6 +39,10 @@ export function useReservationCreateForm({
     const {active: activeDesigners, onLeave: onLeaveDesigners, resigned: resignedDesigners} = splitDesignersByStatus(designers);
     const defaultDesignerId = activeDesigners[0]?.id ?? 0;
     const customers = Object.values(customerMap);
+    const nextCustomerId = getNextNumericId(customers.map((customer) => customer.id));
+    const nextReservationId = getNextNumericId(
+        Object.values(reservationMap).flat().map((reservation) => reservation.id)
+    );
 
     const [customerId, setCustomerId] = useState<number>(0);
     const [customerQuery, setCustomerQuery] = useState('');
@@ -181,7 +192,7 @@ export function useReservationCreateForm({
 
         if (customerMode === 'new') {
             const nextCustomer: Customer = {
-                id: Date.now(),
+                id: nextCustomerId,
                 name: newCustomerName.trim(),
                 tel: newCustomerTel.trim(),
                 points: 0,
@@ -193,7 +204,7 @@ export function useReservationCreateForm({
         }
 
         const reservation: Reservation = {
-            id: Date.now(),
+            id: nextReservationId,
             date: form.date,
             startTime: form.startTime,
             endTime: form.endTime,
