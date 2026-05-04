@@ -18,6 +18,7 @@ import type {CustomerMap} from '../utils/customers';
 import {ReservationDetail} from '../components/calendar/overlays/ReservationDetail';
 import {CustomerDetail} from '../components/calendar/overlays/CustomerDetail';
 import {DesignerManageSection} from '../components/settings/DesignerManageSection';
+import {MemberSection} from '../components/settings/MemberSection';
 import {PointManageSection} from '../components/settings/PointManageSection';
 import {RevenueSection, type RevenueDesignerKey, type RevenueQuickRange} from '../components/settings/RevenueSection';
 import {ServiceManageSection} from '../components/settings/ServiceManageSection';
@@ -33,7 +34,7 @@ type SettingsProps = {
     storageMode: 'remote' | 'local';
 };
 
-type SettingsTab = 'revenue' | 'point' | 'service' | 'designer' | 'store';
+type SettingsTab = 'revenue' | 'point' | 'service' | 'designer' | 'store' | 'member';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -55,7 +56,7 @@ function shiftDateKey(baseDate: Date, days: number): string {
 }
 
 function isSettingsTab(value: string): value is SettingsTab {
-    return value === 'revenue' || value === 'point' || value === 'service' || value === 'designer' || value === 'store';
+    return value === 'revenue' || value === 'point' || value === 'service' || value === 'designer' || value === 'store' || value === 'member';
 }
 
 /* ── Service Manage Section ── */
@@ -86,12 +87,11 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history, st
     const [localSnapshot, setLocalSnapshot] = useState<LocalDbSnapshot | null>(() => (
         storageMode === 'local' ? loadLocalDbSnapshot() : null
     ));
-    const effectiveReservations = storageMode === 'local'
-        ? (localSnapshot?.reservations ?? Object.values(storeReservationMap).flat())
-        : reservations;
     const reservationMap = useMemo(
-        () => storageMode === 'local' ? storeReservationMap : groupByDate(effectiveReservations),
-        [storageMode, storeReservationMap, effectiveReservations]
+        () => storageMode === 'local'
+            ? storeReservationMap
+            : (Object.keys(storeReservationMap).length > 0 ? storeReservationMap : groupByDate(reservations)),
+        [storageMode, storeReservationMap, reservations]
     );
     const initialCustomerMap: CustomerMap = useMemo(() => toCustomerMap(customers), [customers]);
     const serviceColorMap = useMemo(
@@ -245,6 +245,7 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history, st
                 {tab === 'store' && <StoreManageSection formatDateLabel={formatDateLabel}/>}
                 {tab === 'service' && <ServiceManageSection/>}
                 {tab === 'designer' && <DesignerManageSection/>}
+                {tab === 'member' && <MemberSection/>}
             </StyledContent>
             {selectedReservations.map((reservation, index) => (
                 <ReservationDetail key={`${reservation.id}-${index}`}
@@ -336,7 +337,7 @@ const StyledContent = styled.div`
     min-height: 0;
     display: flex;
     flex-direction: column;
-    padding: 10px 10px 20px;
+    padding: 0 10px 20px;
     overflow-y: auto;
     overscroll-behavior: auto;
 `;

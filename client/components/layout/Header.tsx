@@ -22,6 +22,7 @@ const SETTINGS_TAB_TITLES: Record<string, string> = {
     store: '매장관리',
     service: '서비스관리',
     designer: '디자이너관리',
+    member: '멤버관리',
 };
 
 export const Header = () => {
@@ -38,7 +39,7 @@ export const Header = () => {
     const settingsTab = typeof router.query.tab === 'string' ? router.query.tab : 'revenue';
     const isSettingsPage = router.pathname === '/settings' || router.pathname === '/settings/[tab]';
     const pageTitle = isSettingsPage
-        ? `설정 < ${SETTINGS_TAB_TITLES[settingsTab] ?? SETTINGS_TAB_TITLES.revenue}`
+        ? `${SETTINGS_TAB_TITLES[settingsTab] ?? SETTINGS_TAB_TITLES.revenue}`
         : PAGE_TITLES[router.pathname] ?? 'TAS';
     const {
         active: activeDesigners,

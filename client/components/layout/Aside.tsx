@@ -24,6 +24,7 @@ const SETTINGS_SUBMENU = [
     {tab: 'store', href: '/settings/store', label: '매장관리', icon: 'store'},
     {tab: 'service', href: '/settings/service', label: '서비스관리', icon: 'service'},
     {tab: 'designer', href: '/settings/designer', label: '디자이너관리', icon: 'designer'},
+    {tab: 'member', href: '/settings/member', label: '멤버관리', icon: 'member'},
     {tab: 'my', href: '/mypage', label: '계정관리', icon: 'account'},
 ];
 
@@ -267,6 +268,16 @@ const MenuIcon = ({icon}: { icon: string }) => {
                 <circle cx="7" cy="8" r="2" />
                 <circle cx="7" cy="16" r="2" />
                 <path d="M8.7 9.2L12 12L17.5 7.2M8.7 14.8L12 12L17.5 16.8" />
+            </StyledMenuIcon>
+        );
+    }
+
+    if (icon === 'member') {
+        return (
+            <StyledMenuIcon viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="9" cy="7" r="3" />
+                <path d="M3 21V18C3 16.3 4.3 15 6 15H12C13.7 15 15 16.3 15 18V21" />
+                <path d="M16 3.1C17.3 3.6 18.2 4.8 18.2 6.3C18.2 7.8 17.3 9 16 9.5M21 21V18C21 16.4 20.1 15 18.5 14.5" />
             </StyledMenuIcon>
         );
     }
