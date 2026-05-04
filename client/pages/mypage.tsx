@@ -2,11 +2,13 @@ import {useEffect, useMemo, useState} from 'react';
 
 import type {GetServerSideProps, NextPage} from 'next';
 
-import {signIn, signOut, useSession} from 'next-auth/react';
+import {signOut, useSession} from 'next-auth/react';
 
 import styled from 'styled-components';
 
 import {AuthActionIcon} from '../components/ui/AuthActionIcon';
+import {auth} from '../auth';
+import {prisma} from '../lib/prisma';
 
 import {
     createDefaultLocalDbSnapshot,
@@ -17,33 +19,19 @@ import {
     type LocalDbSnapshot,
 } from '../lib/local-db';
 
-type ProviderInfo = {
-    id: string;
-    label: string;
-    accent: string;
-    tint: string;
-    border: string;
+const PROVIDER_LABELS: Record<string, string> = {
+    google: 'Google',
+    kakao: 'Kakao',
+    naver: 'Naver',
 };
 
 type MyPageProps = {
-    providerIds: string[];
+    linkedProvider: string | null;
 };
 
-const ALL_PROVIDERS: ProviderInfo[] = [
-    {id: 'google', label: 'Google', accent: '#4285F4', tint: '#EEF4FF', border: '#B9D2FF'},
-    {id: 'kakao', label: 'Kakao', accent: '#FEE500', tint: '#FFF9CC', border: '#F4DD63'},
-    {id: 'naver', label: 'Naver', accent: '#03C75A', tint: '#ECFFF4', border: '#95E2B8'},
-];
-
-const ENV_KEYS: Record<string, string> = {
-    google: 'AUTH_GOOGLE_ID',
-    kakao: 'AUTH_KAKAO_ID',
-    naver: 'AUTH_NAVER_ID',
-};
-
-const MyPage: NextPage<MyPageProps> = ({providerIds}) => {
+const MyPage: NextPage<MyPageProps> = ({linkedProvider}) => {
     const {data: session, status} = useSession();
-    const isLocalMode = shouldUseLocalDb();
+    const isLocalMode = status !== 'authenticated' && shouldUseLocalDb();
     const [localSnapshot, setLocalSnapshot] = useState<LocalDbSnapshot | null>(() => (
         isLocalMode ? loadLocalDbSnapshot() : null
     ));
@@ -58,8 +46,6 @@ const MyPage: NextPage<MyPageProps> = ({providerIds}) => {
 
     const effectiveLocalSnapshot = isLocalMode ? localSnapshot : null;
     const storageModeLabel = isLocalMode ? '게스트 로컬 저장 모드' : '로그인 계정 모드';
-    const connectedProvider = session?.user?.provider ?? '';
-    const availableProviders = ALL_PROVIDERS.filter((provider) => providerIds.includes(provider.id));
 
     const localSummary = useMemo(() => ({
         customers: effectiveLocalSnapshot?.customers.length ?? 0,
@@ -107,35 +93,15 @@ const MyPage: NextPage<MyPageProps> = ({providerIds}) => {
                 </StyledCard>
 
                 <StyledCard>
-                    <StyledCardTitle>SNS 연동</StyledCardTitle>
-                    <StyledButtonRow>
-                        {availableProviders.map((provider) => {
-                            const isConnected = connectedProvider === provider.id;
-
-                            return (
-                                <StyledProviderButton
-                                    key={provider.id}
-                                    type="button"
-                                    $accent={provider.accent}
-                                    $tint={provider.tint}
-                                    $border={provider.border}
-                                    $connected={isConnected}
-                                    onClick={() => {
-                                        if (isConnected) return;
-                                        void signIn(provider.id, {callbackUrl: '/mypage'});
-                                    }}
-                                >
-                                    <span>{provider.label}</span>
-                                    <strong>{isConnected ? '연동완료' : '연동하기'}</strong>
-                                </StyledProviderButton>
-                            );
-                        })}
-                        {availableProviders.length === 0 && (
-                            <StyledHint>
-                                현재 설정된 SNS 로그인 제공자가 없습니다.
-                            </StyledHint>
-                        )}
-                    </StyledButtonRow>
+                    <StyledCardTitle>로그인 계정</StyledCardTitle>
+                    <StyledRow>
+                        <StyledLabel>연결된 SNS</StyledLabel>
+                        <StyledValue>
+                            {linkedProvider
+                                ? PROVIDER_LABELS[linkedProvider] ?? linkedProvider
+                                : '-'}
+                        </StyledValue>
+                    </StyledRow>
                     {!!session?.user && (
                         <StyledButtonRow>
                             <StyledActionButton type="button" onClick={() => signOut({callbackUrl: '/login'})}>
@@ -186,18 +152,21 @@ const MyPage: NextPage<MyPageProps> = ({providerIds}) => {
 
 export default MyPage;
 
-export const getServerSideProps: GetServerSideProps<MyPageProps> = async () => {
-    const providerIds = ALL_PROVIDERS
-        .filter((provider) => {
-            const envKey = ENV_KEYS[provider.id];
-            const value = process.env[envKey];
-            return value && !value.startsWith('REPLACE');
-        })
-        .map((provider) => provider.id);
+export const getServerSideProps: GetServerSideProps<MyPageProps> = async (ctx) => {
+    const session = await auth(ctx);
+    let linkedProvider: string | null = null;
+
+    if (session?.user?.id) {
+        const account = await prisma.authAccount.findUnique({
+            where: {userId: session.user.id},
+            select: {provider: true},
+        });
+        linkedProvider = account?.provider ?? null;
+    }
 
     return {
         props: {
-            providerIds,
+            linkedProvider,
         }
     };
 };
@@ -289,6 +258,7 @@ const StyledButtonRow = styled.div`
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    margin-top: 14px;
 `;
 
 const buttonLikeStyle = `
@@ -311,31 +281,6 @@ const StyledActionButton = styled.button`
     border: none;
     background: #111827;
     color: #fff;
-`;
-
-const StyledProviderButton = styled.button<{
-    $accent: string;
-    $tint: string;
-    $border: string;
-    $connected: boolean;
-}>`
-    ${buttonLikeStyle}
-    min-width: 180px;
-    justify-content: space-between;
-    border: 1px solid ${(props) => props.$connected ? props.$accent : props.$border};
-    background: ${(props) => props.$connected ? props.$accent : props.$tint};
-    color: ${(props) => {
-        if (!props.$connected) return '#111827';
-        return props.$accent === '#FEE500' ? '#3B2F00' : '#ffffff';
-    }};
-
-    strong {
-        font-size: 12px;
-        color: ${(props) => {
-            if (!props.$connected) return props.$accent;
-            return props.$accent === '#FEE500' ? '#5F4B00' : 'rgba(255, 255, 255, 0.88)';
-        }};
-    }
 `;
 
 const StyledGrid = styled.div`
