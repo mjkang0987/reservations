@@ -79,7 +79,10 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
             if (account) {
                 token.sub = account.providerAccountId;
                 token.provider = account.provider;
-                token.userId = await syncAuthUser({account, user}) ?? token.userId;
+                const syncedUser = await syncAuthUser({account, user});
+                token.userId = syncedUser?.id ?? token.userId;
+                token.name = syncedUser?.nickname ?? token.name;
+                token.picture = syncedUser?.image ?? token.picture;
             }
 
             const membership = await resolveUserMembership((token.userId as string) ?? null);
@@ -91,6 +94,8 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
         session({session, token}) {
             if (session.user) {
                 session.user.id = (token.userId as string) ?? token.sub ?? '';
+                session.user.name = token.name ?? session.user.name;
+                session.user.image = (token.picture as string | null | undefined) ?? session.user.image;
                 session.user.provider = (token.provider as string) ?? '';
                 session.user.role = token.role as 'owner' | 'manager' | 'staff' | undefined;
                 session.user.storeId = token.storeId as string | undefined;

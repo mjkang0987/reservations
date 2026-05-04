@@ -115,9 +115,9 @@ export function dbDesignerToFrontend(row: DbDesignerRow) {
         name: row.name,
         schedule,
         status: dbDesignerStatusToFrontend(row.status),
-        phone: row.phone ?? '',
-        note: row.note ?? '',
-        color: row.color ?? undefined,
+        ...(row.phone !== null && {phone: row.phone}),
+        ...(row.note !== null && {note: row.note}),
+        ...(row.color !== null && {color: row.color}),
     };
 }
 
@@ -158,9 +158,9 @@ export function dbCustomerToFrontend(row: DbCustomerRow): Customer {
             description: h.description,
             createdAt: h.createdAt.toISOString(),
         })),
-        allergyNote: row.allergyNote ?? undefined,
-        claimNote: row.claimNote ?? undefined,
-        preferenceNote: row.preferenceNote ?? undefined,
+        ...(row.allergyNote !== null && {allergyNote: row.allergyNote}),
+        ...(row.claimNote !== null && {claimNote: row.claimNote}),
+        ...(row.preferenceNote !== null && {preferenceNote: row.preferenceNote}),
     };
 }
 
@@ -193,10 +193,10 @@ export function dbReservationToFrontend(row: DbReservationRow): Reservation {
         endTime: row.endTime,
         service: row.serviceSummary,
         customerId: row.customer.legacyId!,
-        designerId: row.designer?.legacyId ?? undefined,
+        ...(row.designer?.legacyId != null && {designerId: row.designer.legacyId}),
         status: row.status as ReservationStatus,
         price: row.price,
-        memo: row.memo ?? undefined,
+        ...(row.memo !== null && {memo: row.memo}),
         paymentCompleted: row.paymentCompleted,
         paymentEntries: row.paymentEntries.map((e) => ({
             method: dbPaymentMethodToFrontend(e.method),

@@ -5,12 +5,12 @@ import {prisma} from '../db/prisma';
 import {dbCustomerToFrontend, dbReservationToFrontend, dbHistoryToFrontend} from '../db/mappers';
 
 export async function getPageSession(ctx: GetServerSidePropsContext) {
-    const cookieName = process.env.NODE_ENV === 'production'
-        ? '__Secure-authjs.session-token'
-        : 'authjs.session-token';
-
-    const token = ctx.req.cookies[cookieName];
+    const secureName = '__Secure-authjs.session-token';
+    const plainName = 'authjs.session-token';
+    const token = ctx.req.cookies[secureName] ?? ctx.req.cookies[plainName];
     if (!token) return null;
+
+    const cookieName = ctx.req.cookies[secureName] ? secureName : plainName;
 
     const secret = process.env.AUTH_SECRET;
     if (!secret) return null;

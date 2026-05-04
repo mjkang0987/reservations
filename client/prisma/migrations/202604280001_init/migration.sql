@@ -31,14 +31,25 @@ CREATE TABLE "Store" (
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT,
+    "nickname" TEXT NOT NULL,
     "name" TEXT,
     "image" TEXT,
-    "provider" TEXT,
-    "providerSub" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AuthAccount" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "providerSub" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AuthAccount_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -226,6 +237,15 @@ CREATE TABLE "StoreClosedDate" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_nickname_key" ON "User"("nickname");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AuthAccount_provider_providerSub_key" ON "AuthAccount"("provider", "providerSub");
+
+-- CreateIndex
+CREATE INDEX "AuthAccount_userId_idx" ON "AuthAccount"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Membership_userId_storeId_key" ON "Membership"("userId", "storeId");
 
 -- CreateIndex
@@ -263,6 +283,9 @@ CREATE UNIQUE INDEX "StoreClosedDate_storeId_date_key" ON "StoreClosedDate"("sto
 
 -- AddForeignKey
 ALTER TABLE "Membership" ADD CONSTRAINT "Membership_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AuthAccount" ADD CONSTRAINT "AuthAccount_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Membership" ADD CONSTRAINT "Membership_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -314,4 +337,3 @@ ALTER TABLE "StoreBusinessHour" ADD CONSTRAINT "StoreBusinessHour_storeId_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "StoreClosedDate" ADD CONSTRAINT "StoreClosedDate_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
