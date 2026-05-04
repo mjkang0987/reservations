@@ -5,8 +5,9 @@ import styled from 'styled-components';
 import {NewCustomerBadge} from '../../ui/NewCustomerBadge';
 import type {CustomerMap} from '../../../utils/customers';
 import type {Reservation} from '../../../utils/reservations';
-import {formatPrice} from '../../../utils/services';
+import {formatPrice, getServiceColor, parseServiceString} from '../../../utils/services';
 import {StyledBody, StyledBodyInner, StyledStatusBadge} from './ModalStyles';
+import {StyledServiceChip} from '../service/ServiceFields';
 
 interface ReservationViewSectionProps {
     reservation: Reservation;
@@ -18,6 +19,7 @@ interface ReservationViewSectionProps {
     paymentCompleted: boolean;
     paymentLines: string[];
     historyCount: number;
+    serviceColorMap: Record<string, string>;
     onCustomerClick: (customerId: number) => void;
     onOpenHistory: () => void;
 }
@@ -32,6 +34,7 @@ export function ReservationViewSection({
     paymentCompleted,
     paymentLines,
     historyCount,
+    serviceColorMap,
     onCustomerClick,
     onOpenHistory,
 }: ReservationViewSectionProps) {
@@ -67,6 +70,19 @@ export function ReservationViewSection({
                     <dd>{reservation.date}</dd>
                     <dt>시간</dt>
                     <dd>{reservation.startTime} ~ {reservation.endTime}</dd>
+                    <dt>시술</dt>
+                    <dd>
+                        <StyledServiceChipList>
+                            {parseServiceString(reservation.service).map((serviceName) => (
+                                <StyledServiceChip
+                                    key={`${reservation.id}-${serviceName}`}
+                                    $color={getServiceColor(serviceName, serviceColorMap)}
+                                >
+                                    {serviceName}
+                                </StyledServiceChip>
+                            ))}
+                        </StyledServiceChipList>
+                    </dd>
                     <dt>가격</dt>
                     <dd>{formatPrice(displayPrice)}</dd>
                     <dt>결제</dt>
@@ -208,6 +224,12 @@ const StyledPaymentBadge = styled.span<{ $completed: boolean }>`
     color: ${(props) => props.$completed ? '#137333' : 'var(--dark-gray-color2)'};
     font-size: var(--small-font);
     font-weight: 600;
+`;
+
+const StyledServiceChipList = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
 `;
 
 const StyledMemoTagList = styled.div`

@@ -54,9 +54,6 @@ export const DesignerOffDayMoveConfirmModal = ({
                 </StyledHeader>
                 <StyledContent>
                     <StyledModalMessage>{warningMessage} 이동하시겠습니까?</StyledModalMessage>
-                    <StyledWarningMessage>
-                        선택한 날짜는 디자이너 휴무일입니다. 그대로 이동하면 휴무일 예약으로 저장됩니다.
-                    </StyledWarningMessage>
                     <StyledInfoList>
                         <div>
                             <dt>시술</dt>
@@ -71,6 +68,14 @@ export const DesignerOffDayMoveConfirmModal = ({
                         <div>
                             <dt>날짜</dt>
                             <dd>{reservation.date} {'->'} {nextReservation.date}</dd>
+                        </div>
+                        <div>
+                            <dt />
+                            <dd>
+                                <StyledWarningMessage>
+                                    선택한 날짜는 디자이너 휴무일입니다. 그대로 이동하면 휴무일 예약으로 저장됩니다.
+                                </StyledWarningMessage>
+                            </dd>
                         </div>
                         <div>
                             <dt>변경 후</dt>
@@ -93,7 +98,7 @@ const StyledConfirmOverlay = styled(StyledOverlay)`
 `;
 
 const StyledConfirmModal = styled(StyledDetail)`
-    width: min(100%, 360px);
+    width: min(360px, 90vw);
 `;
 
 const StyledContent = styled.div`
@@ -101,7 +106,7 @@ const StyledContent = styled.div`
 `;
 
 const StyledWarningMessage = styled.p`
-    margin: 0 0 12px;
+    margin: 0;
     padding: 10px 12px;
     border-radius: 10px;
     background: rgba(251, 140, 0, 0.12);
@@ -120,7 +125,7 @@ const StyledInfoList = styled.dl`
         display: grid;
         grid-template-columns: 56px 1fr;
         gap: 8px;
-        align-items: center;
+        align-items: start;
         font-size: var(--small-font);
     }
 

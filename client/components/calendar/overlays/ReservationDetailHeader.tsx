@@ -43,8 +43,7 @@ const StyledReservationHeader = styled(StyledHeader)``;
 
 const StyledReservationTitleGroup = styled.div`
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     min-width: 0;
 
     h3 {

@@ -92,7 +92,7 @@ const StyledConfirmOverlay = styled(StyledOverlay)`
 `;
 
 const StyledConfirmModal = styled(StyledDetail)`
-    width: min(100%, 360px);
+    width: min(360px, 90vw);
 `;
 
 const StyledContent = styled.div`

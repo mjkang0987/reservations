@@ -134,7 +134,7 @@ export const StyledOverlay = styled.div`
 
 export const StyledDetail = styled.div<{ $width?: number | string }>`
     width: ${({$width = 400}) => typeof $width === 'number' ? `${$width}px` : $width};
-    max-width: 100%;
+    max-width: min(360px, 90vw);
     max-height: 80vh;
     display: flex;
     flex-direction: column;
@@ -145,6 +145,7 @@ export const StyledDetail = styled.div<{ $width?: number | string }>`
 
     @media (max-width: 640px) {
         width: 100%;
+        max-width: min(360px, 90vw);
         max-height: 90vh;
     }
 `;
