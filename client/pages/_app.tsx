@@ -18,7 +18,7 @@ import type {Designer} from '../utils/designers';
 import type {StoreSettings} from '../utils/storeSettings';
 import {groupByDate} from '../utils/reservations';
 import {toCustomerMap} from '../utils/customers';
-import {loadLocalDbSnapshot} from '../lib/local-db';
+import {loadLocalDbSnapshot, setAuthenticated} from '../lib/local-db';
 
 import LayoutComponent from '../components/layout/LayoutComponent';
 
@@ -34,6 +34,10 @@ function AppContent({Component, pageProps}: AppContentProps) {
     const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
     const setReservationHistory = useCalendarStore((s) => s.setReservationHistory);
     const hasApiAccess = status === 'authenticated' && !!session?.user?.role && !!session.user?.storeId;
+
+    useEffect(() => {
+        setAuthenticated(hasApiAccess);
+    }, [hasApiAccess]);
 
     useEffect(() => {
         if (status === 'unauthenticated' || (status === 'authenticated' && !hasApiAccess)) {

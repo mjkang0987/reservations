@@ -37,15 +37,20 @@ export function createDefaultLocalDbSnapshot(): LocalDbSnapshot {
     });
 }
 
-export function hasAuthSessionCookie(): boolean {
-    if (typeof document === 'undefined') return false;
+const AUTH_FLAG_KEY = 'takeaseat.authenticated';
 
-    return document.cookie.includes('authjs.session-token=')
-        || document.cookie.includes('__Secure-authjs.session-token=');
+export function setAuthenticated(value: boolean): void {
+    if (typeof sessionStorage === 'undefined') return;
+    if (value) {
+        sessionStorage.setItem(AUTH_FLAG_KEY, '1');
+    } else {
+        sessionStorage.removeItem(AUTH_FLAG_KEY);
+    }
 }
 
 export function shouldUseLocalDb(): boolean {
-    return !hasAuthSessionCookie();
+    if (typeof sessionStorage === 'undefined') return true;
+    return !sessionStorage.getItem(AUTH_FLAG_KEY);
 }
 
 export function loadLocalDbSnapshot(): LocalDbSnapshot {
