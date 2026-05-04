@@ -34,10 +34,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const existingDesigners = await prisma.designer.findMany({
             where: {storeId: session.storeId},
-            select: {id: true, legacyId: true},
+            select: {id: true, legacyId: true, name: true},
         });
 
         const toDelete = existingDesigners.filter((d) => d.legacyId !== null && !incomingLegacyIds.has(d.legacyId));
+
+        if (toDelete.length > 0) {
+            const linkedReservations = await prisma.reservation.groupBy({
+                by: ['designerId'],
+                where: {
+                    storeId: session.storeId,
+                    designerId: {in: toDelete.map((designer) => designer.id)},
+                },
+                _count: {_all: true},
+            });
+
+            const linkedDesignerIds = new Set(
+                linkedReservations
+                    .map((item) => item.designerId)
+                    .filter((designerId): designerId is string => !!designerId)
+            );
+
+            if (linkedDesignerIds.size > 0) {
+                const blockedNames = toDelete
+                    .filter((designer) => linkedDesignerIds.has(designer.id))
+                    .map((designer) => designer.name);
+
+                return res.status(400).json({
+                    error: `예약에 연결된 디자이너는 삭제할 수 없습니다: ${blockedNames.join(', ')}`
+                });
+            }
+        }
 
         await prisma.$transaction(async (tx) => {
             if (toDelete.length > 0) {
