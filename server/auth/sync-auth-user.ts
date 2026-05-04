@@ -2,15 +2,18 @@ import {Prisma} from '@prisma/client';
 import type {Account, User} from 'next-auth';
 
 import {prisma} from '../db/prisma';
+import {validateInviteCode} from './invite';
 
 type SyncAuthUserParams = {
     account: Account;
     user?: User;
+    inviteCode?: string | null;
 };
 
 type SyncedAuthUser = {
     id: string;
     nickname: string;
+    email: string | null;
     image: string | null;
 };
 
@@ -68,7 +71,60 @@ async function generateFallbackUniqueNickname(): Promise<string> {
     throw new Error('Failed to generate a fallback unique nickname after multiple attempts.');
 }
 
-export async function syncAuthUser({account, user}: SyncAuthUserParams): Promise<SyncedAuthUser | null> {
+async function createUserWithNickname(
+    data: {email: string | null; image: string | null; provider: string; providerSub: string},
+    tx: Prisma.TransactionClient,
+): Promise<{id: string; nickname: string; email: string | null; image: string | null}> {
+    for (let attempt = 0; attempt < 5; attempt++) {
+        const nickname = await generateUniqueNickname();
+        try {
+            return await tx.user.create({
+                data: {
+                    email: data.email,
+                    nickname,
+                    name: nickname,
+                    image: data.image,
+                    accounts: {
+                        create: {provider: data.provider, providerSub: data.providerSub},
+                    },
+                },
+                select: {id: true, nickname: true, email: true, image: true},
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                continue;
+            }
+            throw error;
+        }
+    }
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+        const nickname = await generateFallbackUniqueNickname();
+        try {
+            return await tx.user.create({
+                data: {
+                    email: data.email,
+                    nickname,
+                    name: nickname,
+                    image: data.image,
+                    accounts: {
+                        create: {provider: data.provider, providerSub: data.providerSub},
+                    },
+                },
+                select: {id: true, nickname: true, email: true, image: true},
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                continue;
+            }
+            throw error;
+        }
+    }
+
+    throw new Error('Failed to create a user with a unique nickname.');
+}
+
+export async function syncAuthUser({account, user, inviteCode}: SyncAuthUserParams): Promise<SyncedAuthUser | null> {
     if (!process.env.DATABASE_URL) {
         return null;
     }
@@ -78,123 +134,89 @@ export async function syncAuthUser({account, user}: SyncAuthUserParams): Promise
     const provider = account.provider;
     const providerSub = account.providerAccountId;
 
+    // 1. Existing AuthAccount → normal login
     const existingAccount = await prisma.authAccount.findUnique({
         where: {
-            provider_providerSub: {
-                provider,
-                providerSub,
-            },
+            provider_providerSub: {provider, providerSub},
         },
         select: {
-            id: true,
-            user: {
-                select: {
-                    id: true,
-                    nickname: true,
-                },
-            },
+            user: {select: {id: true, nickname: true, image: true}},
         },
     });
 
     if (existingAccount) {
         const savedUser = await prisma.user.update({
             where: {id: existingAccount.user.id},
-            data: {
-                name: existingAccount.user.nickname,
-                image,
-            },
-            select: {id: true, nickname: true, image: true},
+            data: {image},
+            select: {id: true, nickname: true, email: true, image: true},
         });
-
         return savedUser;
     }
 
-    if (email) {
-        const existingUser = await prisma.user.findUnique({
-            where: {email},
-            select: {id: true, nickname: true},
+    // 2. No existing account — check invite code
+    if (inviteCode) {
+        const validation = await validateInviteCode(inviteCode);
+
+        if (!validation.valid) {
+            console.error('[auth][invite] invalid invite code', {
+                code: inviteCode,
+                reason: validation.reason,
+                provider,
+            });
+            return null;
+        }
+
+        const {invite} = validation;
+
+        const createdUser = await prisma.$transaction(async (tx) => {
+            const newUser = await createUserWithNickname({email, image, provider, providerSub}, tx);
+
+            await tx.membership.create({
+                data: {
+                    userId: newUser.id,
+                    storeId: invite.storeId,
+                    role: invite.role,
+                },
+            });
+
+            await tx.invite.update({
+                where: {id: invite.id},
+                data: {usedAt: new Date(), usedById: newUser.id},
+            });
+
+            return newUser;
         });
 
-        if (existingUser) {
-            const savedUser = await prisma.user.update({
-                where: {id: existingUser.id},
-                data: {
-                    email,
-                    name: existingUser.nickname,
-                    image,
-                    accounts: {
-                        create: {
-                            provider,
-                            providerSub,
-                        },
-                    },
-                },
-                select: {id: true, nickname: true, image: true},
-            });
-
-            return savedUser;
-        }
+        return createdUser;
     }
 
-    for (let attempt = 0; attempt < 5; attempt++) {
-        const nickname = await generateUniqueNickname();
+    // 3. Bootstrap: if no memberships exist at all, first user becomes owner
+    const membershipCount = await prisma.membership.count();
 
-        try {
-            const createdUser = await prisma.user.create({
-                data: {
-                    email,
-                    nickname,
-                    name: nickname,
-                    image,
-                    accounts: {
-                        create: {
-                            provider,
-                            providerSub,
-                        },
-                    },
-                },
-                select: {id: true, nickname: true, image: true},
+    if (membershipCount === 0) {
+        const storeName = process.env.STORE_NAME || '내 매장';
+
+        const createdUser = await prisma.$transaction(async (tx) => {
+            const newUser = await createUserWithNickname({email, image, provider, providerSub}, tx);
+
+            const store = await tx.store.create({
+                data: {name: storeName},
             });
 
-            return createdUser;
-        } catch (error) {
-            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                continue;
-            }
-
-            throw error;
-        }
-    }
-
-    for (let attempt = 0; attempt < 5; attempt++) {
-        const nickname = await generateFallbackUniqueNickname();
-
-        try {
-            const createdUser = await prisma.user.create({
+            await tx.membership.create({
                 data: {
-                    email,
-                    nickname,
-                    name: nickname,
-                    image,
-                    accounts: {
-                        create: {
-                            provider,
-                            providerSub,
-                        },
-                    },
+                    userId: newUser.id,
+                    storeId: store.id,
+                    role: 'owner',
                 },
-                select: {id: true, nickname: true, image: true},
             });
 
-            return createdUser;
-        } catch (error) {
-            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                continue;
-            }
+            return newUser;
+        });
 
-            throw error;
-        }
+        return createdUser;
     }
 
-    throw new Error('Failed to create a user with a unique nickname.');
+    // 4. No account, no invite, not bootstrap → block
+    return null;
 }
