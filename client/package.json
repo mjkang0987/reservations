@@ -3,9 +3,10 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "next dev --webpack",
+        "dev": "next dev",
         "dev:https": "sh ./scripts/dev-https.sh",
         "dev:turbo": "next dev",
+        "dev:webpack": "next dev --webpack",
         "build": "pnpm prisma:generate && next build",
         "start": "next start",
         "postinstall": "prisma generate",
