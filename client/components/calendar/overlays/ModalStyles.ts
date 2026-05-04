@@ -158,7 +158,7 @@ export const StyledHeader = styled.div`
         font-weight: 600;
     }
 
-    > button {
+    > button:not([class]) {
         min-width: 44px;
         height: 30px;
         padding: 0 10px;
@@ -170,8 +170,10 @@ export const StyledHeader = styled.div`
         cursor: pointer;
         color: var(--dark-gray-color);
 
+        @media (hover: hover) and (pointer: fine) {
         &:hover {
             background-color: var(--black-color-10);
+        }
         }
     }
 `;
@@ -364,7 +366,9 @@ export const StyledActionButton = styled.button<{ $primary?: boolean; $danger?: 
     font-weight: 500;
     cursor: pointer;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         opacity: 0.85;
+    }
     }
 `;

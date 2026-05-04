@@ -15,6 +15,7 @@ import {
     useDialogAccessibility,
     useLayerInstanceId,
 } from './ModalStyles';
+import {CloseIconButton} from '../../ui/CloseIconButton';
 
 interface ReservationMoveConfirmModalProps {
     reservation: Reservation;
@@ -47,9 +48,7 @@ export const ReservationMoveConfirmModal = ({
             <StyledConfirmModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
                     <h3>예약 변경 전 확인</h3>
-                    <button type="button"
-                            onClick={onClose}
-                            aria-label="닫기">닫기</button>
+                    <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledContent>
                     <StyledModalMessage>드래그한 예약 시간을 변경할까요?</StyledModalMessage>

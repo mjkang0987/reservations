@@ -72,8 +72,7 @@ export function AddressCustomerReservations({
                                         <StyledServiceList>
                                             {parseServiceString(reservation.service).map((serviceName) => (
                                                 <StyledServiceToken key={`${reservation.id}-${serviceName}`}>
-                                                    <StyledServiceDot $color={getServiceColor(serviceName, serviceColorMap)} />
-                                                    <span>{serviceName}</span>
+                                                    <StyledServiceText $color={getServiceColor(serviceName, serviceColorMap)}>{serviceName}</StyledServiceText>
                                                 </StyledServiceToken>
                                             ))}
                                         </StyledServiceList>
@@ -118,8 +117,10 @@ const StyledReservationItem = styled.div<{ $color: string }>`
         margin-bottom: 0;
     }
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         background-color: ${(props) => `${props.$color}1d`};
+    }
     }
 
     dt {
@@ -162,16 +163,18 @@ const StyledServiceList = styled.span`
 const StyledServiceToken = styled.span`
     display: inline-flex;
     align-items: center;
-    gap: 4px;
     min-width: 0;
 `;
 
-const StyledServiceDot = styled.span<{ $color: string }>`
-    flex-shrink: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: ${(props) => props.$color};
+const StyledServiceText = styled.span<{ $color: string }>`
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background-color: ${(props) => `${props.$color}18`};
+    color: ${(props) => props.$color};
+    font-size: 11px;
+    font-weight: 600;
 `;
 
 const StyledReservationMetaLine = styled.div`

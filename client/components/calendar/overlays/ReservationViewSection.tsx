@@ -83,7 +83,7 @@ export function ReservationViewSection({
                     <dt>고객명</dt>
                     <dd>
                         <StyledCustomerButton type="button" onClick={() => onCustomerClick(reservation.customerId)}>
-                            {isNewCustomer && <NewCustomerBadge>N</NewCustomerBadge>}
+                            {isNewCustomer && <NewCustomerBadge>NEW</NewCustomerBadge>}
                             {customer?.name ?? '-'}
                         </StyledCustomerButton>
                     </dd>
@@ -165,8 +165,10 @@ const StyledCustomerButton = styled.button`
     cursor: pointer;
     text-decoration: underline;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         color: #1a73e8;
+    }
     }
 `;
 
@@ -252,7 +254,9 @@ const StyledHistoryButton = styled.button`
         color: var(--gray-color);
     }
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         background-color: var(--black-color-10);
+    }
     }
 `;

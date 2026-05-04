@@ -8,7 +8,6 @@ import {NewCustomerBadge} from '../../ui/NewCustomerBadge';
 import {isNewCustomerVisit} from '../../../utils/customers';
 import {getDesignerColor} from '../../../utils/designers';
 import {buildServiceColorMap, getServiceColor, parseServiceString} from '../../../utils/services';
-import {StyledColorDot} from '../service/ServiceFields';
 
 import type {Reservation} from '../../../utils/reservations';
 
@@ -56,13 +55,12 @@ export const ReservationList = ({reservations, variant, onViewAll, hideViewAll}:
                             <StyledServiceName>
                                 {parseServiceString(r.service).map((serviceName) => (
                                     <StyledServiceToken key={`${r.id}-${serviceName}`}>
-                                        <StyledColorDot $color={getServiceColor(serviceName, serviceColorMap)}/>
-                                        <strong>{serviceName}</strong>
+                                        <StyledServiceText $color={getServiceColor(serviceName, serviceColorMap)}>{serviceName}</StyledServiceText>
                                     </StyledServiceToken>
                                 ))}
                             </StyledServiceName>
                             <StyledMeta>
-                                {isNewCustomerVisit(customer?.firstVisitDate, r.date) && <NewCustomerBadge>N</NewCustomerBadge>}
+                                {isNewCustomerVisit(customer?.firstVisitDate, r.date) && <NewCustomerBadge>NEW</NewCustomerBadge>}
                                 <span>{customer?.name ?? ''}</span>
                             </StyledMeta>
                         </StyledItem>
@@ -114,8 +112,10 @@ const StyledItem = styled.button<{ $color: string }>`
     cursor: pointer;
     text-align: left;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         background-color: ${(p) => `${p.$color}1d`};
+    }
     }
 
     strong {
@@ -134,11 +134,21 @@ const StyledServiceName = styled.span`
 const StyledServiceToken = styled.span`
     display: inline-flex;
     align-items: center;
-    gap: 4px;
     min-width: 0;
     @media (max-width: 640px) {
         flex-wrap: wrap;
     }
+`;
+
+const StyledServiceText = styled.strong<{ $color: string }>`
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background-color: ${(props) => `${props.$color}18`};
+    color: ${(props) => props.$color};
+    font-size: 11px;
+    font-weight: 600;
 `;
 
 const StyledMeta = styled.span`
@@ -163,7 +173,9 @@ const StyledViewAllButton = styled.button<{ $variant: 'date' | 'month' }>`
     cursor: pointer;
     flex-shrink: 0;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         background-color: var(--light-gray-color);
+    }
     }
 `;

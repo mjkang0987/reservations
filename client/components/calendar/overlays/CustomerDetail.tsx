@@ -21,6 +21,7 @@ import {
 import {getDesignerColor} from '../../../utils/designers';
 import {buildServiceColorMap, formatPrice, getServiceColor, parseServiceString} from '../../../utils/services';
 import {useCalendarStore} from '../../../store/calendarStore';
+import {CloseIconButton} from '../../ui/CloseIconButton';
 
 const PAGE_SIZE = 5;
 
@@ -45,21 +46,13 @@ const MEMO_TAG_COLORS = ['#4285F4', '#34A853', '#EA4335', '#FBBC04', '#FF6D01', 
 type CustomerEditForm = {
     name: string;
     tel: string;
-    cautionNote: string;
     memoTags: CustomerMemoTag[];
 };
 
 function buildCustomerEditForm(customer: Customer): CustomerEditForm {
-    const cautionNote = [
-        customer.allergyNote?.trim(),
-        customer.claimNote?.trim(),
-        customer.preferenceNote?.trim(),
-    ].filter(Boolean).join('\n');
-
     return {
         name: customer.name ?? '',
         tel: customer.tel ?? '',
-        cautionNote,
         memoTags: [...(customer.memoTags ?? [])],
     };
 }
@@ -162,16 +155,9 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
         setEditError('');
     };
 
-    const displayCautionNote = [
-        customer.allergyNote?.trim(),
-        customer.claimNote?.trim(),
-        customer.preferenceNote?.trim(),
-    ].filter(Boolean).join('\n');
-
     const handleSaveEdit = () => {
         const nextName = editForm.name.trim();
         const nextTel = editForm.tel.trim();
-        const nextCautionNote = editForm.cautionNote.trim();
 
         if (!nextName) {
             setEditError('고객명을 입력해 주세요.');
@@ -186,9 +172,6 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
         updateCustomer(customer.id, {
             name: nextName,
             tel: nextTel,
-            allergyNote: nextCautionNote || undefined,
-            claimNote: undefined,
-            preferenceNote: undefined,
             memoTags: editForm.memoTags,
         });
         setEditError('');
@@ -215,7 +198,7 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                     ) : (
                         <StyledHeaderActionButton type="button" onClick={handleStartEdit}>수정</StyledHeaderActionButton>
                     )}
-                    <StyledHeaderActionButton type="button" onClick={onClose} aria-label="닫기">닫기</StyledHeaderActionButton>
+                    <StyledHeaderCloseButton onClick={onClose} />
                 </StyledHeaderActions>
             </StyledHeader>
             <StyledCustomerContent>
@@ -249,30 +232,6 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                         </dl>
                     )}
                 </StyledInfo>
-                <StyledNotesSection>
-                    <h4>주의사항</h4>
-                    {isEditing ? (
-                        <StyledNoteEditor>
-                            <label>
-                                <span>주의사항</span>
-                                <input
-                                    type="text"
-                                    value={editForm.cautionNote}
-                                    onChange={(e) => handleFieldChange('cautionNote', e.target.value)}
-                                    placeholder="주의사항 입력"
-                                />
-                            </label>
-                        </StyledNoteEditor>
-                    ) : (
-                        <StyledNoteList>
-                            {displayCautionNote ? (
-                                <StyledNoteItem><span>{displayCautionNote}</span></StyledNoteItem>
-                            ) : (
-                                <StyledEmptyText>등록된 주의사항이 없습니다.</StyledEmptyText>
-                            )}
-                        </StyledNoteList>
-                    )}
-                </StyledNotesSection>
                 <StyledAddressMemoSection>
                     <h4>고객 메모</h4>
                     {isEditing && (
@@ -359,8 +318,7 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                                         <StyledServiceList>
                                             {parseServiceString(r.service).map((serviceName) => (
                                                 <StyledServiceToken key={`${r.id}-${serviceName}`}>
-                                                    <StyledServiceDot $color={getServiceColor(serviceName, serviceColorMap)} />
-                                                    <span>{serviceName}</span>
+                                                    <StyledServiceText $color={getServiceColor(serviceName, serviceColorMap)}>{serviceName}</StyledServiceText>
                                                 </StyledServiceToken>
                                             ))}
                                         </StyledServiceList>
@@ -413,6 +371,10 @@ const StyledHeaderActionButton = styled.button<{ $primary?: boolean }>`
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+`;
+
+const StyledHeaderCloseButton = styled(CloseIconButton)`
+  flex-shrink: 0;
 `;
 
 const StyledInfo = styled.div`
@@ -733,8 +695,10 @@ const StyledReservationItem = styled.button<{ $color: string; $clickable: boolea
     opacity: 0.9;
   }
 
-  &:hover {
+  @media (hover: hover) and (pointer: fine) {
+        &:hover {
     background-color: ${props => props.$clickable ? `${props.$color}1d` : `${props.$color}12`};
+  }
   }
 `;
 
@@ -757,16 +721,18 @@ const StyledServiceList = styled.span`
 const StyledServiceToken = styled.span`
   display: inline-flex;
   align-items: center;
-  gap: 4px;
   min-width: 0;
 `;
 
-const StyledServiceDot = styled.span<{ $color: string }>`
-  flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: ${props => props.$color};
+const StyledServiceText = styled.span<{ $color: string }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background-color: ${(props) => `${props.$color}18`};
+  color: ${(props) => props.$color};
+  font-size: 11px;
+  font-weight: 600;
 `;
 
 const StyledMetaLine = styled.div`
@@ -789,7 +755,9 @@ const StyledMoreButton = styled.button`
   color: var(--gray-color);
   cursor: pointer;
 
-  &:hover {
+  @media (hover: hover) and (pointer: fine) {
+        &:hover {
     background-color: var(--black-color-10);
+  }
   }
 `;

@@ -22,6 +22,7 @@ import {
     useDialogAccessibility,
     useLayerInstanceId,
 } from './ModalStyles';
+import {CloseIconButton} from '../../ui/CloseIconButton';
 import {ReservationFormFields} from './ReservationDetailSections';
 import {ReservationCreateCustomerFields} from './ReservationCreateCustomerFields';
 import {useReservationCreateForm} from './useReservationCreateForm';
@@ -98,7 +99,7 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
         <StyledDetail ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
             <StyledHeader>
                 <h3>예약 추가</h3>
-                <button type="button" onClick={onClose} aria-label="닫기">닫기</button>
+                <CloseIconButton onClick={onClose} />
             </StyledHeader>
 
             <StyledBody><StyledBodyInner>

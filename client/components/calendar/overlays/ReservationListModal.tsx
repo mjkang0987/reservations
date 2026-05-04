@@ -21,6 +21,7 @@ import {
     useDialogAccessibility,
     useLayerInstanceId,
 } from './ModalStyles';
+import {CloseIconButton} from '../../ui/CloseIconButton';
 
 import type {Reservation} from '../../../utils/reservations';
 
@@ -155,9 +156,7 @@ export const ReservationListModal = () => {
         <StyledListModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
             <StyledHeader>
                 <h3>{title} 예약 ({reservations.length})</h3>
-                <button type="button"
-                        onClick={handleClose}
-                        aria-label="닫기">닫기</button>
+                <CloseIconButton onClick={handleClose} />
             </StyledHeader>
             <StyledListBody><StyledListBodyInner>
                 {reservations.length === 0 ? (
@@ -184,8 +183,7 @@ export const ReservationListModal = () => {
                                                 <StyledService>
                                                     {parseServiceString(r.service).map((serviceName) => (
                                                         <StyledServiceToken key={`${r.id}-${serviceName}`}>
-                                                            <StyledServiceDot $color={getServiceColor(serviceName, serviceColorMap)} />
-                                                            <span>{serviceName}</span>
+                                                            <StyledServiceText $color={getServiceColor(serviceName, serviceColorMap)}>{serviceName}</StyledServiceText>
                                                         </StyledServiceToken>
                                                     ))}
                                                 </StyledService>
@@ -194,7 +192,7 @@ export const ReservationListModal = () => {
                                                 <StyledDesigner>디자이너: {designerName}</StyledDesigner>
                                                 <StyledCustomer>
                                                     <span>고객:</span>
-                                                    {isNewCustomerVisit(customer?.firstVisitDate, r.date) && <NewCustomerBadge>N</NewCustomerBadge>}
+                                                    {isNewCustomerVisit(customer?.firstVisitDate, r.date) && <NewCustomerBadge>NEW</NewCustomerBadge>}
                                                     <span>{customer?.name ?? '-'}</span>
                                                 </StyledCustomer>
                                             </StyledMetaLine>
@@ -272,8 +270,10 @@ const StyledItem = styled.li<{ $color: string; $inactive: boolean }>`
     cursor: pointer;
     opacity: ${(props) => props.$inactive ? 0.5 : 1};
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         background-color: ${(props) => `${props.$color}1d`};
+    }
     }
 `;
 
@@ -300,16 +300,18 @@ const StyledService = styled.span`
 const StyledServiceToken = styled.span`
     display: inline-flex;
     align-items: center;
-    gap: 4px;
     min-width: 0;
 `;
 
-const StyledServiceDot = styled.span<{ $color: string }>`
-    flex-shrink: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: ${(props) => props.$color};
+const StyledServiceText = styled.span<{ $color: string }>`
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background-color: ${(props) => `${props.$color}18`};
+    color: ${(props) => props.$color};
+    font-size: 11px;
+    font-weight: 600;
 `;
 
 const StyledCustomer = styled.span`

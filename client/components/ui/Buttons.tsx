@@ -20,7 +20,7 @@ const StyledSquareButton = styled.button <Props>`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 30px;
+    min-height: 32px;
     padding: 0 8px;
     border: 1px solid var(--border-color);
     background-color: var(--white-color);
@@ -102,15 +102,6 @@ const StyledReserveButton = styled.button <Props>`
         }
     }
 
-    .dot {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        margin-right: 4px;
-        border-radius: 50%;
-        vertical-align: middle;
-    }
-
     .service-token {
         display: inline-flex;
         align-items: center;
@@ -118,6 +109,16 @@ const StyledReserveButton = styled.button <Props>`
             flex-wrap: wrap;
             gap: 4px;
         }
+    }
+
+    .service-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.2;
     }
 
     .drag-handle {
@@ -173,10 +174,12 @@ const StyledReserveButton = styled.button <Props>`
         }
     }
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         max-height: ${props => props.$height}px;
         z-index: 10;
         box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+    }
     }
 `;
 
@@ -199,9 +202,11 @@ const StyledAddButton = styled.button`
     line-height: 1;
     cursor: pointer;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         background-color: var(--light-gray-color);
         color: var(--blue-color);
+    }
     }
 `;
 

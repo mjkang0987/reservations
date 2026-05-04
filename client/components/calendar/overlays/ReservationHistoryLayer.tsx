@@ -15,6 +15,7 @@ import {
     useDialogAccessibility,
     useLayerInstanceId,
 } from './ModalStyles';
+import {CloseIconButton} from '../../ui/CloseIconButton';
 
 interface ReservationHistoryLayerProps {
     history: ReservationHistoryEntry[];
@@ -49,7 +50,7 @@ export function ReservationHistoryLayer({
             <StyledHistoryPanel ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()} $width={400}>
                 <StyledHeader>
                     <h3>변경 이력</h3>
-                    <button type="button" onClick={onClose} aria-label="닫기">닫기</button>
+                    <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledBody>
                     <StyledBodyInner>

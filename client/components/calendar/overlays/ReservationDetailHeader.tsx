@@ -3,6 +3,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 import {getServiceColor, parseServiceString} from '../../../utils/services';
+import {CloseIconButton} from '../../ui/CloseIconButton';
 import {StyledHeader} from './ModalStyles';
 
 type ReservationDetailHeaderProps = {
@@ -23,17 +24,17 @@ export function ReservationDetailHeader({
             <StyledReservationTitleGroup>
                 <StyledServiceBadgeList>
                     {parseServiceString(service).map((serviceName) => (
-                        <StyledServiceDotBadge
+                        <StyledServiceBadge
                             key={serviceName}
                             $color={getServiceColor(serviceName, serviceColorMap)}
-                            aria-label={serviceName}
-                            title={serviceName}
-                        />
+                        >
+                            {serviceName}
+                        </StyledServiceBadge>
                     ))}
                 </StyledServiceBadgeList>
                 <h3>{title}</h3>
             </StyledReservationTitleGroup>
-            <button type="button" onClick={onClose} aria-label="닫기">닫기</button>
+            <CloseIconButton onClick={onClose} />
         </StyledReservationHeader>
     );
 }
@@ -57,12 +58,13 @@ const StyledServiceBadgeList = styled.div`
     gap: 6px;
 `;
 
-const StyledServiceDotBadge = styled.span<{ $color: string }>`
+const StyledServiceBadge = styled.span<{ $color: string }>`
     display: inline-flex;
     align-items: center;
-    width: 12px;
-    height: 12px;
+    padding: 4px 10px;
     border-radius: 999px;
-    background-color: ${(props) => props.$color};
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+    font-size: var(--xsmall-font);
+    font-weight: 600;
+    color: ${(props) => props.$color};
+    background-color: ${(props) => `${props.$color}18`};
 `;

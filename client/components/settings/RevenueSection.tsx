@@ -30,6 +30,7 @@ import type {CustomerMap} from '../../utils/customers';
 import {isNewCustomerVisit} from '../../utils/customers';
 import {formControlStyle} from '../ui/FormControls';
 import {NewCustomerBadge} from '../ui/NewCustomerBadge';
+import {CloseIconButton} from '../ui/CloseIconButton';
 
 export type RevenueDesignerKey = 'all' | `${number}`;
 export type RevenueQuickRange = 'month' | 'week' | 'today';
@@ -695,7 +696,7 @@ export const RevenueSection = ({
                                                             <span>{designerMap[reservation.designerId ?? -1]?.name ?? '미지정'}</span>
                                                         </StyledRevenueMetaLabel>
                                                         <StyledCustomerName>
-                                                            {isNewCustomerVisit(customerMap[reservation.customerId]?.firstVisitDate, reservation.date) && <NewCustomerBadge>N</NewCustomerBadge>}
+                                                            {isNewCustomerVisit(customerMap[reservation.customerId]?.firstVisitDate, reservation.date) && <NewCustomerBadge>NEW</NewCustomerBadge>}
                                                             <StyledInlineCustomerButton
                                                                 type="button"
                                                                 onClick={(e) => {
@@ -709,8 +710,7 @@ export const RevenueSection = ({
                                                         <StyledRevenueServiceName>
                                                             {parseServiceString(reservation.service).map((service) => (
                                                                 <StyledRevenueServiceChip key={`${reservation.id}-${service}`}>
-                                                                    <StyledColorDot $color={getServiceColor(service, serviceColorMap)} />
-                                                                    <strong>{service}</strong>
+                                                                    <StyledRevenueServiceText $color={getServiceColor(service, serviceColorMap)}>{service}</StyledRevenueServiceText>
                                                                 </StyledRevenueServiceChip>
                                                             ))}
                                                         </StyledRevenueServiceName>
@@ -732,9 +732,9 @@ export const RevenueSection = ({
             {openedDateKey && layerDaily && (
                 <StyledLayerBackdrop onClick={() => setDetailDateKey(null)}>
                     <StyledRevenueLayer onClick={(e) => e.stopPropagation()}>
-                        <StyledRevenueLayerHeader>
+                            <StyledRevenueLayerHeader>
                             <strong>{formatDateLabel(openedDateKey)} 상세</strong>
-                            <StyledLayerCloseButton type="button" onClick={() => setDetailDateKey(null)}>닫기</StyledLayerCloseButton>
+                            <StyledLayerCloseButton onClick={() => setDetailDateKey(null)} />
                         </StyledRevenueLayerHeader>
                         {layerDaily.count === 0 ? (
                             <StyledRevenueEmpty>예약 없음</StyledRevenueEmpty>
@@ -759,7 +759,7 @@ export const RevenueSection = ({
                                                             <span>{designerMap[reservation?.designerId ?? -1]?.name ?? '미지정'}</span>
                                                         </StyledRevenueMetaLabel>
                                                         <StyledCustomerName>
-                                                            {reservation && isNewCustomerVisit(customerMap[reservation.customerId]?.firstVisitDate, reservation.date) && <NewCustomerBadge>N</NewCustomerBadge>}
+                                                            {reservation && isNewCustomerVisit(customerMap[reservation.customerId]?.firstVisitDate, reservation.date) && <NewCustomerBadge>NEW</NewCustomerBadge>}
                                                             <StyledInlineCustomerButton
                                                                 type="button"
                                                                 onClick={(e) => {
@@ -774,8 +774,7 @@ export const RevenueSection = ({
                                                         <StyledRevenueServiceName>
                                                             {parseServiceString(item.service).map((service) => (
                                                                 <StyledRevenueServiceChip key={`${item.reservationId}-${service}`}>
-                                                                    <StyledColorDot $color={getServiceColor(service, serviceColorMap)} />
-                                                                    <strong>{service}</strong>
+                                                                    <StyledRevenueServiceText $color={getServiceColor(service, serviceColorMap)}>{service}</StyledRevenueServiceText>
                                                                 </StyledRevenueServiceChip>
                                                             ))}
                                                         </StyledRevenueServiceName>
@@ -814,7 +813,7 @@ export const RevenueSection = ({
                                     </StyledMetricSubtitle>
                                 )}
                             </div>
-                            <button type="button" onClick={() => setMetricLayerKey(null)} aria-label="닫기">닫기</button>
+                            <CloseIconButton onClick={() => setMetricLayerKey(null)} />
                         </StyledHeader>
                         <StyledMetricBody>
                             {metricLayerKey === 'new' || metricLayerKey === 'returning' ? (
@@ -829,7 +828,7 @@ export const RevenueSection = ({
                                             >
                                                 <StyledTime>
                                                     <StyledCustomerName>
-                                                        {metricLayerKey === 'new' && <NewCustomerBadge>N</NewCustomerBadge>}
+                                                        {metricLayerKey === 'new' && <NewCustomerBadge>NEW</NewCustomerBadge>}
                                                         <span>{item.customer.name}</span>
                                                     </StyledCustomerName>
                                                 </StyledTime>
@@ -867,7 +866,7 @@ export const RevenueSection = ({
                                                             <span>{designerMap[reservation.designerId ?? -1]?.name ?? '미지정'}</span>
                                                         </StyledRevenueMetaLabel>
                                                         <StyledCustomerName>
-                                                            {isNewCustomerVisit(customerMap[reservation.customerId]?.firstVisitDate, reservation.date) && <NewCustomerBadge>N</NewCustomerBadge>}
+                                                            {isNewCustomerVisit(customerMap[reservation.customerId]?.firstVisitDate, reservation.date) && <NewCustomerBadge>NEW</NewCustomerBadge>}
                                                             <StyledInlineCustomerButton
                                                                 type="button"
                                                                 onClick={(e) => {
@@ -881,8 +880,7 @@ export const RevenueSection = ({
                                                         <StyledRevenueServiceName>
                                                             {parseServiceString(reservation.service).map((service) => (
                                                                 <StyledRevenueServiceChip key={`${metricLayerKey}-${reservation.id}-${service}`}>
-                                                                    <StyledColorDot $color={getServiceColor(service, serviceColorMap)} />
-                                                                    <strong>{service}</strong>
+                                                                    <StyledRevenueServiceText $color={getServiceColor(service, serviceColorMap)}>{service}</StyledRevenueServiceText>
                                                                 </StyledRevenueServiceChip>
                                                             ))}
                                                         </StyledRevenueServiceName>
@@ -921,9 +919,11 @@ const actionButtonStyle = css`
     cursor: pointer;
     transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
         transform: translateY(-1px);
+    }
     }
 `;
 
@@ -1612,8 +1612,10 @@ const StyledClickableRow = styled.div`
     border-bottom: 1px solid var(--black-color-10);
     cursor: pointer;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         background-color: var(--black-color-10);
+    }
     }
 `;
 
@@ -1724,27 +1726,22 @@ const StyledRevenueServiceName = styled.div`
 const StyledRevenueServiceChip = styled.span`
     display: inline-flex;
     align-items: center;
-    gap: 4px;
     min-width: 0;
-
-    strong {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--dark-gray-color);
-    }
 `;
 
-const StyledColorDot = styled.span<{ $color: string }>`
-    flex-shrink: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: ${(p) => p.$color};
-    align-self: center;
+const StyledRevenueServiceText = styled.strong<{ $color: string }>`
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background-color: ${(p) => `${p.$color}18`};
+    color: ${(p) => p.$color};
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
 `;
 
 const StyledPrice = styled.span`
@@ -1819,12 +1816,4 @@ const StyledRevenueLayerHeader = styled.div`
     color: var(--dark-gray-color);
 `;
 
-const StyledLayerCloseButton = styled.button`
-    border: 1px solid var(--light-gray-color);
-    background: var(--white-color);
-    color: var(--dark-gray-color);
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 12px;
-    cursor: pointer;
-`;
+const StyledLayerCloseButton = styled(CloseIconButton)``;

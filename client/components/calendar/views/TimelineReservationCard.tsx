@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import {ButtonReserve} from '../../ui/Buttons';
 import {NewCustomerBadge} from '../../ui/NewCustomerBadge';
-import {getCustomerAlertItems, type Customer} from '../../../utils/customers';
+import type {Customer} from '../../../utils/customers';
 import type {Reservation} from '../../../utils/reservations';
 import {getServiceColor, parseServiceString} from '../../../utils/services';
 import type {DragPreview} from './timelineDrag';
@@ -43,7 +43,7 @@ export function TimelineReservationCard({
     onTouchDragStart,
 }: TimelineReservationCardProps) {
     const isCancelled = reservation.status === 'cancelled' || reservation.status === 'noshow' || reservation.status === 'completed';
-    const customerAlerts = getCustomerAlertItems(customer);
+
 
     return (
         <ButtonReserve
@@ -73,8 +73,11 @@ export function TimelineReservationCard({
             <strong className="highlight">
                 {parseServiceString(reservation.service).map((serviceName) => (
                     <span className="service-token" key={`${reservation.id}-${serviceName}`}>
-                        <span className="dot" style={{backgroundColor: getServiceColor(serviceName, serviceColorMap)}} />
-                        {serviceName}
+                        <span className="service-chip"
+                              style={{
+                                  backgroundColor: `${getServiceColor(serviceName, serviceColorMap)}18`,
+                                  color: getServiceColor(serviceName, serviceColorMap),
+                              }}>{serviceName}</span>
                     </span>
                 ))}
                 {reservation.status === 'cancelled' ? ' (취소)' : reservation.status === 'noshow' ? ' (노쇼)' : reservation.status === 'completed' ? ' (완료)' : ''}
@@ -82,15 +85,8 @@ export function TimelineReservationCard({
             {preview && <span className="sub">{preview.date} {preview.startTime}~{preview.endTime}</span>}
             {customerName && (
                 <span className="detail">
-                    {isNewCustomer && <NewCustomerBadge>N</NewCustomerBadge>}
+                    {isNewCustomer && <NewCustomerBadge>NEW</NewCustomerBadge>}
                     <span>{customerName}</span>
-                </span>
-            )}
-            {customerAlerts.length > 0 && (
-                <span className="alerts">
-                    {customerAlerts.map((alert) => (
-                        <span className={`alert-badge ${alert.tone}`} key={alert.key}>{alert.label}</span>
-                    ))}
                 </span>
             )}
         </ButtonReserve>
@@ -117,7 +113,7 @@ export function TimelineDragGhost({
     serviceColorMap,
 }: TimelineDragGhostProps) {
     const isCancelled = reservation.status === 'cancelled' || reservation.status === 'noshow' || reservation.status === 'completed';
-    const customerAlerts = getCustomerAlertItems(customer);
+
 
     return (
         <StyledDragGhost
@@ -132,8 +128,11 @@ export function TimelineDragGhost({
             <strong>
                 {parseServiceString(reservation.service).map((serviceName) => (
                     <span className="service-token" key={`${reservation.id}-${serviceName}`}>
-                        <span className="dot" style={{backgroundColor: getServiceColor(serviceName, serviceColorMap)}} />
-                        {serviceName}
+                        <span className="service-chip"
+                              style={{
+                                  backgroundColor: `${getServiceColor(serviceName, serviceColorMap)}18`,
+                                  color: getServiceColor(serviceName, serviceColorMap),
+                              }}>{serviceName}</span>
                     </span>
                 ))}
                 {reservation.status === 'cancelled' ? ' (취소)' : reservation.status === 'noshow' ? ' (노쇼)' : reservation.status === 'completed' ? ' (완료)' : ''}
@@ -141,15 +140,8 @@ export function TimelineDragGhost({
             <span className="sub">{preview.date} {preview.startTime}~{preview.endTime}</span>
             {customerName && (
                 <span className="detail">
-                    {isNewCustomer && <NewCustomerBadge>N</NewCustomerBadge>}
+                    {isNewCustomer && <NewCustomerBadge>NEW</NewCustomerBadge>}
                     <span>{customerName}</span>
-                </span>
-            )}
-            {customerAlerts.length > 0 && (
-                <span className="alerts">
-                    {customerAlerts.map((alert) => (
-                        <span className={`alert-badge ${alert.tone}`} key={alert.key}>{alert.label}</span>
-                    ))}
                 </span>
             )}
         </StyledDragGhost>
@@ -212,51 +204,6 @@ const StyledDragGhost = styled.div<{
         }
     }
 
-    .alerts {
-        display: inline-flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin-top: 2px;
-
-        @media (max-width: 640px) {
-            display: none;
-        }
-    }
-
-    .alert-badge {
-        display: inline-flex;
-        align-items: center;
-        min-height: 16px;
-        padding: 0 6px;
-        border-radius: 999px;
-        font-size: 10px;
-        font-weight: 700;
-    }
-
-    .alert-badge.danger {
-        background: #FDE8E6;
-        color: #B42318;
-    }
-
-    .alert-badge.warning {
-        background: #FFF7DB;
-        color: #9A6700;
-    }
-
-    .alert-badge.info {
-        background: #EFF6FF;
-        color: #1D4ED8;
-    }
-
-    .dot {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        margin-right: 4px;
-        border-radius: 50%;
-        vertical-align: middle;
-    }
-
     .service-token {
         display: inline-flex;
         align-items: center;
@@ -265,5 +212,14 @@ const StyledDragGhost = styled.div<{
             flex-wrap: wrap;
             gap: 4px;
         }
+    }
+
+    .service-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 7px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
     }
 `;

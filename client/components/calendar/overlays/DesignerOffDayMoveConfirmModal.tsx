@@ -15,6 +15,7 @@ import {
     useDialogAccessibility,
     useLayerInstanceId,
 } from './ModalStyles';
+import {CloseIconButton} from '../../ui/CloseIconButton';
 
 interface DesignerOffDayMoveConfirmModalProps {
     reservation: Reservation;
@@ -49,7 +50,7 @@ export const DesignerOffDayMoveConfirmModal = ({
             <StyledConfirmModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
                     <h3>휴무일 이동 확인</h3>
-                    <button type="button" onClick={onClose} aria-label="닫기">닫기</button>
+                    <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledContent>
                     <StyledModalMessage>{warningMessage} 이동하시겠습니까?</StyledModalMessage>

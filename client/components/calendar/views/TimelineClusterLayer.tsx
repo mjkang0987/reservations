@@ -17,6 +17,7 @@ import {
     useDialogAccessibility,
     useLayerInstanceId,
 } from '../overlays/ModalStyles';
+import {CloseIconButton} from '../../ui/CloseIconButton';
 
 type TimelineClusterReservation = Reservation;
 
@@ -72,10 +73,7 @@ export function TimelineClusterLayer({
                             {`${pad(Math.floor(cluster.startMinutes / 60))}:${pad(cluster.startMinutes % 60)} ~ ${pad(Math.floor(cluster.endMinutes / 60))}:${pad(cluster.endMinutes % 60)}`}
                         </StyledClusterSubtitle>
                     </div>
-                    <button type="button"
-                            onClick={onClose}
-                            aria-label="닫기">닫기
-                    </button>
+                    <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledClusterBody>
                     <StyledClusterBodyInner>
@@ -110,9 +108,11 @@ export function TimelineClusterLayer({
                                                 {parseServiceString(reservation.service).map((serviceName) => (
                                                     <span className="service-token"
                                                           key={`${reservation.id}-${serviceName}`}>
-                                                        <span className="dot"
-                                                              style={{backgroundColor: getServiceColor(serviceName, serviceColorMap)}} />
-                                                        {serviceName}
+                                                        <span className="service-chip"
+                                                              style={{
+                                                                  backgroundColor: `${getServiceColor(serviceName, serviceColorMap)}18`,
+                                                                  color: getServiceColor(serviceName, serviceColorMap),
+                                                              }}>{serviceName}</span>
                                                     </span>
                                                 ))}
                                                 {reservation.status === 'cancelled' && (
@@ -128,7 +128,7 @@ export function TimelineClusterLayer({
                                             {customer && (
                                                 <span className="detail">
                                                     {isNewCustomerVisit(customer.firstVisitDate, reservation.date) &&
-                                                        <NewCustomerBadge>N</NewCustomerBadge>}
+                                                        <NewCustomerBadge>NEW</NewCustomerBadge>}
                                                     <span>{customer.name}</span>
                                                 </span>
                                             )}
@@ -189,8 +189,10 @@ const StyledClusterItem = styled.button<{ $color: string }>`
     color: var(--dark-gray-color);
     cursor: pointer;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         background: ${(props) => `${props.$color}1d`};
+    }
     }
 
     .detail {
@@ -263,6 +265,15 @@ const StyledClusterService = styled.div`
 
     .service-token {
         padding: 2px 0;
+    }
+
+    .service-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
     }
 `;
 

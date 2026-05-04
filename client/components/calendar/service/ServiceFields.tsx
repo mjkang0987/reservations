@@ -43,8 +43,9 @@ export const ServiceFields = ({selectedServices, onServiceToggle, totalDuration,
                                        id={`${idPrefix}-service-${item.name}`}
                                        checked={selectedServices.includes(item.name)}
                                        onChange={() => onServiceToggle(item.name)}/>
-                                <StyledColorDot $color={getServiceColor(item.name, serviceColorMap)}/>
-                                <span>{item.name}</span>
+                                <StyledServiceChip $color={getServiceColor(item.name, serviceColorMap)}>
+                                    {item.name}
+                                </StyledServiceChip>
                                 <StyledItemMeta>
                                     {item.price > 0 && <span>{formatPrice(item.price)}</span>}
                                     <StyledDuration>{formatDuration(item.durationMinutes)}</StyledDuration>
@@ -59,8 +60,9 @@ export const ServiceFields = ({selectedServices, onServiceToggle, totalDuration,
                     <StyledBadgeList>
                         {selectedServices.map((name) => (
                             <StyledBadge key={name} $color={getServiceColor(name, serviceColorMap)}>
-                                <StyledColorDot $color={getServiceColor(name, serviceColorMap)}/>
-                                <span>{name}</span>
+                                <StyledServiceChip $color={getServiceColor(name, serviceColorMap)}>
+                                    {name}
+                                </StyledServiceChip>
                                 {getServicePrice(name, catalogMap) > 0 && <StyledBadgePrice>{formatPrice(getServicePrice(name, catalogMap))}</StyledBadgePrice>}
                             </StyledBadge>
                         ))}
@@ -123,17 +125,17 @@ export const StyledServiceCheckbox = styled.label`
     cursor: pointer;
   }
 
-  > span {
-    color: var(--dark-gray-color);
-  }
 `;
 
-export const StyledColorDot = styled.span<{ $color: string }>`
-  flex-shrink: 0;
-  width: var(--dot-size);
-  height: var(--dot-size);
-  border-radius: 50%;
-  background-color: ${(props) => props.$color};
+export const StyledServiceChip = styled.span<{ $color: string }>`
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: var(--xsmall-font);
+  font-weight: 600;
+  color: ${(props) => props.$color};
+  background-color: ${(props) => `${props.$color}18`};
 `;
 
 const StyledItemMeta = styled.span`
@@ -169,7 +171,7 @@ const StyledBadge = styled.span<{ $color: string }>`
   display: inline-flex;
   align-items: center;
   gap: var(--gap-xs);
-  padding: 2px var(--gap-md);
+  padding: 2px var(--gap-xs);
   border-radius: var(--radius-sm);
   font-size: var(--xsmall-font);
   font-weight: 500;

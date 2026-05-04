@@ -247,10 +247,11 @@ export const ServiceManageSection = () => {
                                 ) : (
                                     <StyledViewRow>
                                         <StyledDragHandle>::</StyledDragHandle>
-                                        <StyledColorDot $color={getServiceColor(item.name, serviceColorMap)} />
                                         <StyledServiceContent>
                                             <StyledServiceMainLine>
-                                                <StyledName>{item.name}</StyledName>
+                                                <StyledNameChip $color={getServiceColor(item.name, serviceColorMap)}>
+                                                    {item.name}
+                                                </StyledNameChip>
                                                 <StyledServiceActions>
                                                     <StyledEditBtn type="button" onClick={() => startEdit(item)}>수정</StyledEditBtn>
                                                     <StyledDeleteBtn type="button" onClick={() => handleDelete(item.name)}>삭제</StyledDeleteBtn>
@@ -358,9 +359,11 @@ const actionButtonStyle = css`
     cursor: pointer;
     transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
         transform: translateY(-1px);
+    }
     }
 `;
 
@@ -513,19 +516,19 @@ const StyledDragHandle = styled.span`
     user-select: none;
 `;
 
-const StyledColorDot = styled.span<{ $color: string }>`
-    flex-shrink: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: ${(p) => p.$color};
-    align-self: center;
-`;
-
-const StyledName = styled.span`
+const StyledNameChip = styled.span<{ $color: string }>`
+    display: inline-flex;
+    align-items: center;
     flex: 1;
     min-width: 0;
-    color: var(--dark-gray-color);
+    width: fit-content;
+    max-width: 100%;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: ${(p) => p.$color};
+    background-color: ${(p) => `${p.$color}18`};
 `;
 
 const StyledMeta = styled.span`
@@ -610,9 +613,11 @@ const StyledAddButton = styled.button`
     font-size: 13px;
     color: var(--dark-gray-color);
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
         border-color: var(--blue-color);
         color: var(--blue-color);
+    }
     }
 `;
 

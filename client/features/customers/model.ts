@@ -30,15 +30,6 @@ export interface Customer {
     preferenceNote?: string;
 }
 
-export type CustomerAlertTone = 'danger' | 'warning' | 'info';
-
-export interface CustomerAlertItem {
-    key: 'allergy' | 'claim' | 'preference';
-    label: string;
-    value: string;
-    tone: CustomerAlertTone;
-}
-
 export type CustomerMap = Record<number, Customer>;
 
 export function toCustomerMap(list: Customer[]): CustomerMap {
@@ -114,37 +105,3 @@ export function appendPointHistories(
     };
 }
 
-export function getCustomerAlertItems(customer?: Customer | null): CustomerAlertItem[] {
-    if (!customer) return [];
-
-    const items: CustomerAlertItem[] = [];
-
-    if (customer.allergyNote?.trim()) {
-        items.push({
-            key: 'allergy',
-            label: '알레르기',
-            value: customer.allergyNote.trim(),
-            tone: 'danger',
-        });
-    }
-
-    if (customer.claimNote?.trim()) {
-        items.push({
-            key: 'claim',
-            label: '클레임',
-            value: customer.claimNote.trim(),
-            tone: 'warning',
-        });
-    }
-
-    if (customer.preferenceNote?.trim()) {
-        items.push({
-            key: 'preference',
-            label: '선호사항',
-            value: customer.preferenceNote.trim(),
-            tone: 'info',
-        });
-    }
-
-    return items;
-}
