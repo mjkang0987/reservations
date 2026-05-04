@@ -377,72 +377,92 @@ export const RevenueSection = ({
     return (
         <>
             <StyledRevenueStickyArea>
-                <StyledRangeFilter>
-                    <StyledRangeNavButton type="button" onClick={() => handleMoveRange('prev')}>이전</StyledRangeNavButton>
-                    <StyledRangeInputWrap>
-                        <span>시작일</span>
-                        <StyledDateInput type="date" value={startDateKey} onChange={(e) => setStartDateKey(e.target.value)} />
-                    </StyledRangeInputWrap>
-                    <StyledRangeDivider>~</StyledRangeDivider>
-                    <StyledRangeInputWrap>
-                        <span>종료일</span>
-                        <StyledDateInput type="date" value={endDateKey} onChange={(e) => setEndDateKey(e.target.value)} />
-                    </StyledRangeInputWrap>
-                    <StyledRangeNavButton type="button" onClick={() => handleMoveRange('next')}>다음</StyledRangeNavButton>
-                </StyledRangeFilter>
                 <StyledQuickFilters>
                     <StyledQuickFilterButton type="button" $active={quickRange === 'today'} onClick={() => setQuickRange('today')}>오늘</StyledQuickFilterButton>
                     <StyledQuickFilterButton type="button" $active={quickRange === 'week'} onClick={() => setQuickRange('week')}>7일</StyledQuickFilterButton>
                     <StyledQuickFilterButton type="button" $active={quickRange === 'month'} onClick={() => setQuickRange('month')}>30일</StyledQuickFilterButton>
                 </StyledQuickFilters>
-                <StyledDesignerTabs>
-                    <StyledDesignerTab type="button" $active={designerKey === 'all'} onClick={() => setDesignerKey('all')}>전체</StyledDesignerTab>
-                    {designers.map((designer) => (
-                        <StyledDesignerTab
-                            key={designer.id}
-                            type="button"
-                            $active={designerKey === String(designer.id)}
-                            onClick={() => setDesignerKey(String(designer.id) as RevenueDesignerKey)}
-                        >
-                            {designer.name}
-                        </StyledDesignerTab>
-                    ))}
-                </StyledDesignerTabs>
-                <StyledRevenueViewTabs>
-                    <StyledRevenueViewTab type="button" $active={revenueViewTab === 'all'} onClick={() => setRevenueViewTab('all')}>전체</StyledRevenueViewTab>
-                    <StyledRevenueViewTab type="button" $active={revenueViewTab === 'chart'} onClick={() => setRevenueViewTab('chart')}>그래프</StyledRevenueViewTab>
-                    <StyledRevenueViewTab type="button" $active={revenueViewTab === 'list'} onClick={() => setRevenueViewTab('list')}>일별목록</StyledRevenueViewTab>
-                </StyledRevenueViewTabs>
-                <StyledRevenueFilterTabs>
-                    <StyledRevenueFilterTab
-                        type="button"
-                        $active={revenueFilterMode === 'completed'}
-                        onClick={() => setRevenueFilterMode('completed')}
-                    >
-                        예약완료 매출
-                    </StyledRevenueFilterTab>
-                    <StyledRevenueFilterTab
-                        type="button"
-                        $active={revenueFilterMode === 'booked'}
-                        onClick={() => setRevenueFilterMode('booked')}
-                    >
-                        예약매출
-                    </StyledRevenueFilterTab>
-                </StyledRevenueFilterTabs>
-                <StyledRevenueCriteria>
-                    <strong>집계 기준</strong>
-                    {revenueFilterMode === 'completed' ? (
-                        <>
-                            <span>예약완료 매출은 예약상태가 예약완료인 건만 집계합니다.</span>
-                            <span>결제완료 금액은 해당 집계 대상 중 결제수단과 금액이 입력된 내역만 합산됩니다.</span>
-                        </>
-                    ) : (
-                        <>
-                            <span>예약매출은 취소, 노쇼를 제외한 전체 예약을 기준으로 집계합니다.</span>
-                            <span>결제완료 금액은 예약완료 기준으로만 집계되며 예약매출 필터에서도 동일하게 유지됩니다.</span>
-                        </>
-                    )}
-                </StyledRevenueCriteria>
+                <StyledRangeFilter>
+                    <StyledRangeNavButton type="button" onClick={() => handleMoveRange('prev')} aria-label="이전 기간">
+                        <DirectionIcon direction="left" />
+                    </StyledRangeNavButton>
+                    <StyledRangeInputWrap>
+                        <StyledDateInput type="date" value={startDateKey} onChange={(e) => setStartDateKey(e.target.value)} />
+                    </StyledRangeInputWrap>
+                    <StyledRangeDivider>~</StyledRangeDivider>
+                    <StyledRangeInputWrap>
+                        <StyledDateInput type="date" value={endDateKey} onChange={(e) => setEndDateKey(e.target.value)} />
+                    </StyledRangeInputWrap>
+                    <StyledRangeNavButton type="button" onClick={() => handleMoveRange('next')} aria-label="다음 기간">
+                        <DirectionIcon direction="right" />
+                    </StyledRangeNavButton>
+                </StyledRangeFilter>
+                <StyledFilterDetails>
+                    <StyledFilterSummary>
+                        <strong>필터</strong>
+                    </StyledFilterSummary>
+                    <StyledFilterPanel>
+                        <StyledFilterSection>
+                            <StyledFilterSectionTitle>디자이너선택</StyledFilterSectionTitle>
+                            <StyledDesignerTabs>
+                                <StyledDesignerTab type="button" $active={designerKey === 'all'} onClick={() => setDesignerKey('all')}>전체</StyledDesignerTab>
+                                {designers.map((designer) => (
+                                    <StyledDesignerTab
+                                        key={designer.id}
+                                        type="button"
+                                        $active={designerKey === String(designer.id)}
+                                        onClick={() => setDesignerKey(String(designer.id) as RevenueDesignerKey)}
+                                    >
+                                        {designer.name}
+                                    </StyledDesignerTab>
+                                ))}
+                            </StyledDesignerTabs>
+                        </StyledFilterSection>
+                        <StyledFilterSection>
+                            <StyledFilterSectionTitle>그래프선택</StyledFilterSectionTitle>
+                            <StyledRevenueViewTabs>
+                                <StyledRevenueViewTab type="button" $active={revenueViewTab === 'all'} onClick={() => setRevenueViewTab('all')}>전체</StyledRevenueViewTab>
+                                <StyledRevenueViewTab type="button" $active={revenueViewTab === 'chart'} onClick={() => setRevenueViewTab('chart')}>그래프</StyledRevenueViewTab>
+                                <StyledRevenueViewTab type="button" $active={revenueViewTab === 'list'} onClick={() => setRevenueViewTab('list')}>일별목록</StyledRevenueViewTab>
+                            </StyledRevenueViewTabs>
+                        </StyledFilterSection>
+                        <StyledFilterSection>
+                            <StyledFilterSectionTitle>매출기준 선택</StyledFilterSectionTitle>
+                            <StyledRevenueFilterTabs>
+                                <StyledRevenueFilterTab
+                                    type="button"
+                                    $active={revenueFilterMode === 'completed'}
+                                    onClick={() => setRevenueFilterMode('completed')}
+                                >
+                                    예약완료 매출
+                                </StyledRevenueFilterTab>
+                                <StyledRevenueFilterTab
+                                    type="button"
+                                    $active={revenueFilterMode === 'booked'}
+                                    onClick={() => setRevenueFilterMode('booked')}
+                                >
+                                    예약매출
+                                </StyledRevenueFilterTab>
+                            </StyledRevenueFilterTabs>
+                        </StyledFilterSection>
+                        <StyledFilterSection>
+                            <StyledFilterSectionTitle>집계기준</StyledFilterSectionTitle>
+                            <StyledRevenueCriteria>
+                                {revenueFilterMode === 'completed' ? (
+                                    <>
+                                        <span>예약완료 매출은 예약상태가 예약완료인 건만 집계합니다.</span>
+                                        <span>결제완료 금액은 해당 집계 대상 중 결제수단과 금액이 입력된 내역만 합산됩니다.</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>예약매출은 취소, 노쇼를 제외한 전체 예약을 기준으로 집계합니다.</span>
+                                        <span>결제완료 금액은 예약완료 기준으로만 집계되며 예약매출 필터에서도 동일하게 유지됩니다.</span>
+                                    </>
+                                )}
+                            </StyledRevenueCriteria>
+                        </StyledFilterSection>
+                    </StyledFilterPanel>
+                </StyledFilterDetails>
             </StyledRevenueStickyArea>
             {(revenueViewTab === 'all' || revenueViewTab === 'chart') && (
                 <StyledRevenueDashboard>
@@ -534,34 +554,6 @@ export const RevenueSection = ({
                         </StyledChartCard>
                         <StyledChartCard $autoHeight>
                             <StyledChartHeader>
-                                <strong>디자이너별 매출</strong>
-                                <span>{designerKey === 'all' ? '전체 기준' : '선택 디자이너 기준'}</span>
-                            </StyledChartHeader>
-                            {designerChartItems.length === 0 ? (
-                                <StyledChartEmpty>디자이너 매출이 없습니다.</StyledChartEmpty>
-                            ) : (
-                                <StyledBarChartList>
-                                    {designerChartItems.map((item) => {
-                                        const ratio = linePeak > 0 ? (item.total / Math.max(...designerChartItems.map((entry) => entry.total), 1)) * 100 : 0;
-
-                                        return (
-                                            <StyledBarRow key={`${item.designerId ?? 'none'}-${item.name}`} $valueWidthCh={designerBarValueWidthCh}>
-                                                <StyledBarLabel>
-                                                    <StyledColorSwatch $color={item.color} />
-                                                    <span>{item.name}</span>
-                                                </StyledBarLabel>
-                                                <StyledBarTrack>
-                                                    <StyledBarFill $color={item.color} $width={ratio} />
-                                                </StyledBarTrack>
-                                                <StyledBarValue>{formatPrice(item.total)}</StyledBarValue>
-                                            </StyledBarRow>
-                                        );
-                                    })}
-                                </StyledBarChartList>
-                            )}
-                        </StyledChartCard>
-                        <StyledChartCard $autoHeight>
-                            <StyledChartHeader>
                                 <strong>결제수단 비중</strong>
                                 <span>결제완료 기준</span>
                             </StyledChartHeader>
@@ -596,7 +588,64 @@ export const RevenueSection = ({
                                 </StyledPaymentChartWrap>
                             )}
                         </StyledChartCard>
-                        <StyledChartCard $autoHeight>
+                        <StyledChartCard>
+                            <StyledChartHeader>
+                                <strong>디자이너별 매출</strong>
+                                <span>{designerKey === 'all' ? '전체 기준' : '선택 디자이너 기준'}</span>
+                            </StyledChartHeader>
+                            {designerChartItems.length === 0 ? (
+                                <StyledChartEmpty>디자이너 매출이 없습니다.</StyledChartEmpty>
+                            ) : (
+                                <StyledBarChartList>
+                                    {designerChartItems.map((item) => {
+                                        const ratio = linePeak > 0 ? (item.total / Math.max(...designerChartItems.map((entry) => entry.total), 1)) * 100 : 0;
+
+                                        return (
+                                            <StyledBarRow key={`${item.designerId ?? 'none'}-${item.name}`} $valueWidthCh={designerBarValueWidthCh}>
+                                                <StyledBarLabel>
+                                                    <StyledColorSwatch $color={item.color} />
+                                                    <span>{item.name}</span>
+                                                </StyledBarLabel>
+                                                <StyledBarTrack>
+                                                    <StyledBarFill $color={item.color} $width={ratio} />
+                                                </StyledBarTrack>
+                                                <StyledBarValue>{formatPrice(item.total)}</StyledBarValue>
+                                            </StyledBarRow>
+                                        );
+                                    })}
+                                </StyledBarChartList>
+                            )}
+                        </StyledChartCard>
+                        <StyledChartCard>
+                            <StyledChartHeader>
+                                <strong>디자이너별 취소율</strong>
+                                <span>기간 내 전체 예약 기준</span>
+                            </StyledChartHeader>
+                            <StyledOperationSummary>
+                                <span>전체 취소 {operationInsights.totalCancelledCount}건</span>
+                                <strong>{operationInsights.totalCancelledRate}%</strong>
+                            </StyledOperationSummary>
+                            {designerCancellationItems.length === 0 ? (
+                                <StyledChartEmpty>취소 데이터가 없습니다.</StyledChartEmpty>
+                            ) : (
+                                <StyledOperationList>
+                                    {designerCancellationItems.map((item) => (
+                                        <StyledOperationRow key={`cancel-${item.designerId ?? 'none'}`}>
+                                            <StyledOperationLabel>
+                                                <StyledRevenueMetaLabel>
+                                                    <StyledColorSwatch $color={item.color} />
+                                                    <span>{item.name}</span>
+                                                </StyledRevenueMetaLabel>
+                                                <small>{item.total}건 중 {item.cancelled}건</small>
+                                            </StyledOperationLabel>
+                                            <StyledOperationRate>{item.rate}%</StyledOperationRate>
+                                        </StyledOperationRow>
+                                    ))}
+                                </StyledOperationList>
+                            )}
+                        </StyledChartCard>
+
+                        <StyledChartCard>
                             <StyledChartHeader>
                                 <strong>고객별 노쇼율</strong>
                                 <span>기간 내 전체 예약 기준</span>
@@ -623,34 +672,6 @@ export const RevenueSection = ({
                                                     <span>고객 미지정</span>
                                                 )}
                                                 <small>{item.total}건 중 {item.noshow}건</small>
-                                            </StyledOperationLabel>
-                                            <StyledOperationRate>{item.rate}%</StyledOperationRate>
-                                        </StyledOperationRow>
-                                    ))}
-                                </StyledOperationList>
-                            )}
-                        </StyledChartCard>
-                        <StyledChartCard $autoHeight>
-                            <StyledChartHeader>
-                                <strong>디자이너별 취소율</strong>
-                                <span>기간 내 전체 예약 기준</span>
-                            </StyledChartHeader>
-                            <StyledOperationSummary>
-                                <span>전체 취소 {operationInsights.totalCancelledCount}건</span>
-                                <strong>{operationInsights.totalCancelledRate}%</strong>
-                            </StyledOperationSummary>
-                            {designerCancellationItems.length === 0 ? (
-                                <StyledChartEmpty>취소 데이터가 없습니다.</StyledChartEmpty>
-                            ) : (
-                                <StyledOperationList>
-                                    {designerCancellationItems.map((item) => (
-                                        <StyledOperationRow key={`cancel-${item.designerId ?? 'none'}`}>
-                                            <StyledOperationLabel>
-                                                <StyledRevenueMetaLabel>
-                                                    <StyledColorSwatch $color={item.color} />
-                                                    <span>{item.name}</span>
-                                                </StyledRevenueMetaLabel>
-                                                <small>{item.total}건 중 {item.cancelled}건</small>
                                             </StyledOperationLabel>
                                             <StyledOperationRate>{item.rate}%</StyledOperationRate>
                                         </StyledOperationRow>
@@ -918,13 +939,6 @@ const actionButtonStyle = css`
     font-weight: 500;
     cursor: pointer;
     transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    @media (hover: hover) and (pointer: fine) {
-        &:hover {
-        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
-        transform: translateY(-1px);
-    }
-    }
 `;
 
 const mobileStretchButtonStyle = css`
@@ -938,18 +952,17 @@ const StyledRevenueStickyArea = styled.div`
     top: 0;
     z-index: 10;
     background: var(--white-color);
-    border-bottom: 1px solid var(--light-gray-color);
 `;
 
 const StyledRangeFilter = styled.div`
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    grid-template-columns: auto 1fr auto 1fr auto;
     align-items: flex-end;
-    gap: 8px;
+    gap: 4px;
     padding: 8px 0;
 
     @media (max-width: 640px) {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: auto 1fr 1fr auto;
     }
 `;
 
@@ -982,16 +995,35 @@ const StyledRangeDivider = styled.span`
 `;
 
 const StyledRangeNavButton = styled.button`
-    ${actionButtonStyle};
-    border: 1px solid var(--light-gray-color);
-    background: var(--white-color);
-    color: var(--dark-gray-color);
-    white-space: nowrap;
-
-    @media (max-width: 640px) {
-        order: 1;
-    }
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    line-height: 0;
+    cursor: pointer;
 `;
+
+const DirectionIcon = ({direction}: { direction: 'left' | 'right' }) => (
+    <svg
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+    >
+        <rect x="1" y="1" width="30" height="30" rx="8" stroke="#D1D5DB" fill="white" />
+        <path
+            d={direction === 'left' ? 'M18.5 10.5L13 16L18.5 21.5' : 'M13.5 10.5L19 16L13.5 21.5'}
+            stroke="#111827"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
 
 const StyledQuickFilters = styled.div`
     display: flex;
@@ -1008,10 +1040,78 @@ const StyledQuickFilterButton = styled.button<{ $active: boolean }>`
     color: ${(p) => p.$active ? '#fff' : 'var(--dark-gray-color)'};
 `;
 
+const StyledFilterDetails = styled.details`
+    margin: 0;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 14px;
+    background: var(--white-color);
+
+    & + & {
+        margin-top: 8px;
+    }
+
+    &[open] {
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    }
+`;
+
+const StyledFilterSummary = styled.summary`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+        display: none;
+    }
+
+    &::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        flex-shrink: 0;
+        border-right: 2px solid var(--dark-gray-color2);
+        border-bottom: 2px solid var(--dark-gray-color2);
+        transform: rotate(45deg);
+        transition: transform 0.2s ease;
+    }
+
+    ${StyledFilterDetails}[open] &::after {
+        transform: rotate(-135deg);
+    }
+
+    strong {
+        font-size: 13px;
+        color: var(--black-color);
+    }
+`;
+
+const StyledFilterPanel = styled.div`
+    padding: 0 14px 14px;
+`;
+
+const StyledFilterSection = styled.section`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    & + & {
+        margin-top: 12px;
+    }
+`;
+
+const StyledFilterSectionTitle = styled.strong`
+    font-size: 12px;
+    color: var(--dark-gray-color);
+`;
+
 const StyledDesignerTabs = styled.div`
     display: flex;
     gap: 6px;
-    padding: 8px 0;
+    padding: 0;
     overflow-x: auto;
     overscroll-behavior: auto;
 `;
@@ -1030,13 +1130,13 @@ const StyledDesignerTab = styled.button<{ $active: boolean }>`
 const StyledRevenueViewTabs = styled.div`
     display: flex;
     gap: 6px;
-    padding: 0 0 8px;
+    padding: 0;
 `;
 
 const StyledRevenueFilterTabs = styled.div`
     display: flex;
     gap: 6px;
-    padding: 0 0 8px;
+    padding: 0;
     overflow-x: auto;
     overscroll-behavior: auto;
 `;
@@ -1056,12 +1156,7 @@ const StyledRevenueCriteria = styled.div`
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 0 0 10px;
-
-    strong {
-        font-size: 11px;
-        color: var(--dark-gray-color);
-    }
+    padding: 0;
 
     span {
         font-size: 11px;
@@ -1091,7 +1186,7 @@ const StyledKpiGrid = styled.div`
     gap: 10px;
 
     @media (max-width: 1080px) {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     @media (max-width: 640px) {
@@ -1171,6 +1266,10 @@ const StyledChartGrid = styled.div`
     gap: 12px;
 
     @media (max-width: 1080px) {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 640px) {
         grid-template-columns: 1fr;
     }
 `;
@@ -1189,9 +1288,9 @@ const StyledChartCard = styled.div<{ $hero?: boolean; $autoHeight?: boolean }>`
 
     ${(props) => props.$hero && `
         grid-column: span 2;
-    `}
+    `};
 
-    @media (max-width: 1080px) {
+    @media (max-width: 640px) {
         grid-column: span 1;
     }
 `;
@@ -1798,7 +1897,7 @@ const StyledLayerBackdrop = styled.div`
 `;
 
 const StyledRevenueLayer = styled.div`
-    width: min(560px, 100%);
+    width: min(360px, 90vw);
     max-height: 80vh;
     overflow-y: auto;
     background: var(--white-color);
