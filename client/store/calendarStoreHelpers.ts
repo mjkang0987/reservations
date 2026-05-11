@@ -10,10 +10,39 @@ import {
 } from '../lib/local-db';
 
 export function syncServiceSettings(services: ServiceItem[], categoryBaseColors: Record<string, string>): void {
+    const normalizedServices = services.map((service) => ({
+        ...service,
+        name: service.name.trim(),
+        category: service.category.trim(),
+    }));
+    const duplicateNames = normalizedServices.reduce<string[]>((acc, service, index, list) => {
+        if (!service.name) {
+            return acc;
+        }
+
+        const firstIndex = list.findIndex((item) => item.name === service.name);
+        if (firstIndex !== index || acc.includes(service.name)) {
+            return acc;
+        }
+
+        const duplicateCount = list.filter((item) => item.name === service.name).length;
+        return duplicateCount > 1 ? [...acc, service.name] : acc;
+    }, []);
+
+    if (duplicateNames.length > 0) {
+        console.error('[services] duplicate service names in payload:', duplicateNames);
+        return;
+    }
+
+    if (normalizedServices.some((service) => !service.name || !service.category)) {
+        console.error('[services] invalid service payload: empty name/category', normalizedServices);
+        return;
+    }
+
     if (shouldUseLocalDb()) {
         updateLocalDbSnapshot((current) => ({
             ...current,
-            services,
+            services: normalizedServices,
             categoryBaseColors,
         }));
         return;
@@ -22,10 +51,36 @@ export function syncServiceSettings(services: ServiceItem[], categoryBaseColors:
     fetch('/api/services', {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({services, categoryBaseColors})
-    }).catch(() => {
+        body: JSON.stringify({services: normalizedServices, categoryBaseColors})
+    })
+        .then(async (response) => {
+            if (response.ok) {
+                return;
+            }
+
+            let message = `${response.status} ${response.statusText}`;
+
+            try {
+                const data = await response.json();
+                if (data?.error) {
+                    message = data.error;
+                }
+            } catch {
+                try {
+                    const text = await response.text();
+                    if (text) {
+                        message = text;
+                    }
+                } catch {
+                    // Keep fallback message.
+                }
+            }
+
+            console.error('[services] sync failed:', message, normalizedServices);
+        })
+        .catch(() => {
         // Preserve local UX even if sync fails; server data can be retried later.
-    });
+        });
 }
 
 export function syncDesignerSettings(designers: Designer[]): void {
