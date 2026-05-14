@@ -133,9 +133,10 @@ const StyledHeading = styled.h2`
 const StyledSticky = styled.div`
     position: sticky;
     top: 0;
-    background-color: var(--white-color);
     padding: 20px 10px;
     z-index: 1;
+    background: rgba(255, 255, 255, .1); /* 살짝만 흰색 */
+    backdrop-filter: blur(.8px) saturate(180%);
 `;
 
 const StyledGrid = styled.div`
@@ -151,11 +152,12 @@ const StyledHeaderRow = styled.div`
     top: 95px;
     padding: 0 10px 10px;
     border-bottom: 2px solid var(--black-color);
-    background-color: var(--white-color);
     font-size: var(--small-font);
     font-weight: 600;
     color: var(--dark-gray-color);
     z-index: 1;
+    background: rgba(255, 255, 255, .1); /* 살짝만 흰색 */
+    backdrop-filter: blur(.8px) saturate(180%);
 
     @media (max-width: 600px) {
         display: none;

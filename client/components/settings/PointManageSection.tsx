@@ -385,9 +385,9 @@ const StyledStickyHeader = styled.div`
     gap: 12px;
     margin: 0 -10px;
     padding: 0 10px 12px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.94) 100%);
-    backdrop-filter: blur(8px);
     border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    background: rgba(255, 255, 255, .1); /* 살짝만 흰색 */
+    backdrop-filter: blur(.8px) saturate(180%);
 `;
 
 const actionButtonStyle = css`
@@ -441,7 +441,7 @@ const StyledTotalCard = styled.div`
     min-width: 180px;
     padding: 12px 14px;
     border: 1px solid var(--light-gray-color);
-    border-radius: 12px;
+    border-radius: 8px;
     background: var(--white-color);
 
     span {
@@ -481,7 +481,7 @@ const StyledHistorySection = styled.section`
     gap: 12px;
     padding: 14px;
     border: 1px solid var(--light-gray-color);
-    border-radius: 12px;
+    border-radius: 8px;
     background: #fbfcff;
 `;
 
@@ -530,7 +530,7 @@ const StyledHistoryCustomerCard = styled.div`
     gap: 10px;
     padding: 12px;
     border: 1px solid rgba(15, 23, 42, 0.08);
-    border-radius: 12px;
+    border-radius: 8px;
     background: var(--white-color);
 `;
 
@@ -617,7 +617,7 @@ const StyledPolicyCard = styled.div`
     gap: 12px;
     padding: 14px;
     border: 1px solid var(--light-gray-color);
-    border-radius: 12px;
+    border-radius: 8px;
     background: var(--white-color);
 `;
 
@@ -807,7 +807,7 @@ const StyledCustomerCard = styled.div`
     align-items: center;
     padding: 12px 14px;
     border: 1px solid var(--light-gray-color);
-    border-radius: 12px;
+    border-radius: 8px;
     background: var(--white-color);
 
     @media (max-width: 860px) {

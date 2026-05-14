@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 
 import {createPortal} from 'react-dom';
 import styled from 'styled-components';
@@ -134,14 +134,30 @@ function buildSyncedPaidReservation(reservation: Reservation, nextReservation: R
 export const ReservationDetail = ({
                                       reservation,
                                       customerMap,
-                                      reservationMap,
+                                      reservationMap: reservationMapProp,
                                       history,
                                       onClose,
                                       onCustomerClick,
                                       onUpdate,
                                       onCancel
                                   }: ReservationDetailProps) => {
-    const customer = customerMap[reservation.customerId];
+    const storeReservationMap = useCalendarStore((s) => s.reservationMap);
+    const effectiveReservationMap = useMemo(
+        () => Object.keys(storeReservationMap).length > 0 ? storeReservationMap : reservationMapProp,
+        [reservationMapProp, storeReservationMap]
+    );
+    const sourceReservation = useMemo(() => {
+        const sameDateReservation = (effectiveReservationMap[reservation.date] ?? []).find((item) => item.id === reservation.id);
+        if (sameDateReservation) return sameDateReservation;
+
+        for (const reservations of Object.values(effectiveReservationMap)) {
+            const matched = reservations.find((item) => item.id === reservation.id);
+            if (matched) return matched;
+        }
+
+        return reservation;
+    }, [effectiveReservationMap, reservation]);
+    const customer = customerMap[sourceReservation.customerId];
     const designers = useCalendarStore((s) => s.designers);
     const updateCustomer = useCalendarStore((s) => s.updateCustomer);
     const storeSettings = useCalendarStore((s) => s.storeSettings);
@@ -153,8 +169,8 @@ export const ReservationDetail = ({
         onLeave: onLeaveDesigners,
         resigned: resignedDesigners
     } = splitDesignersByStatus(designers);
-    const currentDesigner = reservation.designerId
-        ? designers.find((designer) => designer.id === reservation.designerId) ?? null
+    const currentDesigner = sourceReservation.designerId
+        ? designers.find((designer) => designer.id === sourceReservation.designerId) ?? null
         : null;
     const designerNameMap = designers.reduce<Record<number, string>>((acc, designer) => {
         acc[designer.id] = designer.name;
@@ -164,7 +180,7 @@ export const ReservationDetail = ({
     const modalRoot = document.getElementById('modal-root');
     const {layerId, layerDataId} = useLayerInstanceId('reservation-detail');
     const getDefaultPointAwardAmount = (baseAmount: number) => Math.floor((baseAmount * storeSettings.pointSettings.serviceRate) / 100);
-    const latestKnownDesignerId = reservation.designerId ?? history.reduce<number | undefined>((found, entry) => {
+    const latestKnownDesignerId = sourceReservation.designerId ?? history.reduce<number | undefined>((found, entry) => {
         if (found) return found;
         const afterDesignerId = entry.after?.designerId;
         if (typeof afterDesignerId === 'number' && afterDesignerId > 0) return afterDesignerId;
@@ -175,58 +191,56 @@ export const ReservationDetail = ({
 
     const [mode, setMode] = useState<ReservationDetailMode>('view');
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-    const initialForm = buildReservationFormState(reservation);
+    const initialForm = buildReservationFormState(sourceReservation);
     const [form, setForm] = useState<ReservationDetailFormState>(initialForm);
     const [priceInputValue, setPriceInputValue] = useState(initialForm.price === 0 ? '' : String(initialForm.price));
     const [error, setError] = useState('');
     const [selectedServices, setSelectedServices] = useState<string[]>(
-        () => parseServiceString(reservation.service)
+        () => parseServiceString(sourceReservation.service)
     );
     const [isEndTimeManual, setIsEndTimeManual] = useState(false);
     const [isPriceManual, setIsPriceManual] = useState(false);
-    const draftReservation = buildDraftReservation(reservation, form);
+    const draftReservation = buildDraftReservation(sourceReservation, form);
     const displayPrice = resolveReservationPrice(draftReservation);
     const [paymentEntries, setPaymentEntries] = useState<Array<{ method: PaymentMethod | ''; amount: string }>>(
-        () => getPaymentEntryDrafts(reservation, displayPrice)
+        () => getPaymentEntryDrafts(sourceReservation, displayPrice)
     );
     const [isPointAwardManual, setIsPointAwardManual] = useState(false);
     const [pointAward, setPointAward] = useState<PointAwardDraft>(() => ({
-        enabled: (reservation.pointEarned ?? 0) > 0 || storeSettings.pointSettings.enableServiceRate,
-        amount: String(reservation.pointEarned ?? getDefaultPointAwardAmount(displayPrice)),
+        enabled: (sourceReservation.pointEarned ?? 0) > 0 || storeSettings.pointSettings.enableServiceRate,
+        amount: String(sourceReservation.pointEarned ?? getDefaultPointAwardAmount(displayPrice)),
     }));
 
     useEffect(() => {
-        const nextForm = buildReservationFormState(reservation);
-        const nextDisplayPrice = resolveReservationPrice(reservation);
+        const nextForm = buildReservationFormState(sourceReservation);
+        const nextDisplayPrice = resolveReservationPrice(sourceReservation);
 
         setForm(nextForm);
         setPriceInputValue(nextForm.price === 0 ? '' : String(nextForm.price));
-        setSelectedServices(parseServiceString(reservation.service));
+        setSelectedServices(parseServiceString(sourceReservation.service));
         setIsEndTimeManual(false);
         setIsPriceManual(false);
-        setPaymentEntries(getPaymentEntryDrafts(reservation, nextDisplayPrice));
+        setPaymentEntries(getPaymentEntryDrafts(sourceReservation, nextDisplayPrice));
         setIsPointAwardManual(false);
         setPointAward({
-            enabled: (reservation.pointEarned ?? 0) > 0 || storeSettings.pointSettings.enableServiceRate,
-            amount: String(reservation.pointEarned ?? getDefaultPointAwardAmount(nextDisplayPrice)),
+            enabled: (sourceReservation.pointEarned ?? 0) > 0 || storeSettings.pointSettings.enableServiceRate,
+            amount: String(sourceReservation.pointEarned ?? getDefaultPointAwardAmount(nextDisplayPrice)),
         });
         setError('');
-    }, [reservation, storeSettings.pointSettings.enableServiceRate, storeSettings.pointSettings.serviceRate]);
+    }, [sourceReservation, storeSettings.pointSettings.enableServiceRate, storeSettings.pointSettings.serviceRate]);
 
-    const changedFields = getChangedFields(reservation, form, designerNameMap);
-    const thisHistory = history.filter((h) => h.reservationId === reservation.id);
+    const changedFields = getChangedFields(sourceReservation, form, designerNameMap);
+    const thisHistory = history.filter((h) => h.reservationId === sourceReservation.id);
     const totalDuration = sumDurationMinutes(selectedServices);
     const totalPrice = sumPrice(selectedServices);
     const displayDesignerName = draftReservation.designerId
         ? (designerNameMap[draftReservation.designerId] ?? '미지정')
-        : latestKnownDesignerId
-            ? `연결 끊긴 디자이너 (#${latestKnownDesignerId})`
-            : '미지정';
+        : '미지정';
     const displayDesignerColor = draftReservation.designerId
         ? getDesignerColor(designers.find((designer) => designer.id === draftReservation.designerId))
         : '#8E8E93';
-    const normalizedPaymentEntries = getPaymentEntries(reservation);
-    const paymentCompleted = hasCompletedPayment(reservation);
+    const normalizedPaymentEntries = getPaymentEntries(sourceReservation);
+    const paymentCompleted = hasCompletedPayment(sourceReservation);
     const paymentLines = formatPaymentEntries(normalizedPaymentEntries);
     const showPointAward = storeSettings.pointSettings.enableServiceRate;
 
@@ -310,7 +324,7 @@ export const ReservationDetail = ({
         );
         if (availabilityError) return availabilityError;
 
-        const overlap = findOverlap(reservationMap, form.date, form.startTime, form.endTime, reservation.id);
+        const overlap = findOverlap(effectiveReservationMap, form.date, form.startTime, form.endTime, sourceReservation.id);
 
         if (overlap) {
             const name = customerMap[overlap.customerId]?.name ?? '-';
@@ -347,19 +361,19 @@ export const ReservationDetail = ({
 
     const handleConfirmSave = () => {
         if (mode === 'completing') {
-            if (!hasCompletedPayment(reservation)) {
+            if (!hasCompletedPayment(sourceReservation)) {
                 setError('결제 완료된 예약만 완료 처리할 수 있습니다.');
                 setMode('view');
                 return;
             }
-            onUpdate(reservation, {...reservation, status: 'completed'});
+            onUpdate(sourceReservation, {...sourceReservation, status: 'completed'});
             setMode('view');
             return;
         }
-        const nextReservation = hasCompletedPayment(reservation)
-            ? buildSyncedPaidReservation(reservation, draftReservation)
+        const nextReservation = hasCompletedPayment(sourceReservation)
+            ? buildSyncedPaidReservation(sourceReservation, draftReservation)
             : draftReservation;
-        onUpdate(reservation, nextReservation);
+        onUpdate(sourceReservation, nextReservation);
         setMode('view');
     };
 
@@ -397,13 +411,13 @@ export const ReservationDetail = ({
             return;
         }
 
-        const previousPointAmount = getPointAmount(getPaymentEntries(reservation));
+        const previousPointAmount = getPointAmount(getPaymentEntries(sourceReservation));
         const nextPointAmount = getPointAmount(normalizedEntries);
         const pointUsageDiff = nextPointAmount - previousPointAmount;
         const nextPointEarned = pointAward.enabled
             ? Number(pointAward.amount.replace(/[^0-9]/g, '')) || 0
             : 0;
-        const previousPointEarned = reservation.pointEarned ?? 0;
+        const previousPointEarned = sourceReservation.pointEarned ?? 0;
         const pointEarnDiff = nextPointEarned - previousPointEarned;
         const currentCustomerPoints = customer?.points ?? 0;
 
@@ -412,8 +426,8 @@ export const ReservationDetail = ({
             return;
         }
 
-        onUpdate(reservation, {
-            ...reservation,
+        onUpdate(sourceReservation, {
+            ...sourceReservation,
             paymentCompleted: true,
             paymentMethod: normalizedEntries[0].method,
             paymentEntries: normalizedEntries,
@@ -429,7 +443,7 @@ export const ReservationDetail = ({
                     type: 'payment_use' as const,
                     delta: -pointUsageDiff,
                     description: '예약 결제 적립금 사용',
-                    relatedReservationId: reservation.id,
+                    relatedReservationId: sourceReservation.id,
                 });
             }
 
@@ -438,7 +452,7 @@ export const ReservationDetail = ({
                     type: pointEarnDiff > 0 ? 'payment_earn' as const : 'payment_adjust' as const,
                     delta: pointEarnDiff,
                     description: pointEarnDiff > 0 ? '예약 결제 적립' : '예약 결제 적립 조정',
-                    relatedReservationId: reservation.id,
+                    relatedReservationId: sourceReservation.id,
                 });
             }
 
@@ -452,20 +466,20 @@ export const ReservationDetail = ({
     };
 
     const handleCancel = () => {
-        const nextForm = buildReservationFormState(reservation);
-        const nextDisplayPrice = resolveReservationPrice(reservation);
+        const nextForm = buildReservationFormState(sourceReservation);
+        const nextDisplayPrice = resolveReservationPrice(sourceReservation);
 
         setForm(nextForm);
         setPriceInputValue(nextForm.price === 0 ? '' : String(nextForm.price));
-        setSelectedServices(parseServiceString(reservation.service));
+        setSelectedServices(parseServiceString(sourceReservation.service));
         setIsEndTimeManual(false);
         setIsPriceManual(false);
         setIsHistoryOpen(false);
-        setPaymentEntries(getPaymentEntryDrafts(reservation, nextDisplayPrice));
+        setPaymentEntries(getPaymentEntryDrafts(sourceReservation, nextDisplayPrice));
         setIsPointAwardManual(false);
         setPointAward({
-            enabled: (reservation.pointEarned ?? 0) > 0 || storeSettings.pointSettings.enableServiceRate,
-            amount: String(reservation.pointEarned ?? getDefaultPointAwardAmount(nextDisplayPrice)),
+            enabled: (sourceReservation.pointEarned ?? 0) > 0 || storeSettings.pointSettings.enableServiceRate,
+            amount: String(sourceReservation.pointEarned ?? getDefaultPointAwardAmount(nextDisplayPrice)),
         });
         setMode('view');
     };
@@ -485,10 +499,11 @@ export const ReservationDetail = ({
         }
     };
 
-    const isCancelled = reservation.status === 'cancelled';
-    const isCompleted = reservation.status === 'completed';
-    const isNoshow = reservation.status === 'noshow';
+    const isCancelled = sourceReservation.status === 'cancelled';
+    const isCompleted = sourceReservation.status === 'completed';
+    const isNoshow = sourceReservation.status === 'noshow';
     const isInactive = isCancelled || isNoshow || isCompleted;
+    const isNaverBooking = Boolean(sourceReservation.naverBookingId);
     const dialogLabel = MODE_LABELS[mode] ?? '예약 상세';
     const headerService = mode === 'view' ? draftReservation.service : form.service;
     const dialogTitle = mode === 'editing'
@@ -523,7 +538,7 @@ export const ReservationDetail = ({
                     displayPrice={displayPrice}
                     displayDesignerName={displayDesignerName}
                     displayDesignerColor={displayDesignerColor}
-                    isNewCustomer={isNewCustomerVisit(customer?.firstVisitDate, reservation.date)}
+                    isNewCustomer={isNewCustomerVisit(customer?.firstVisitDate, sourceReservation.date)}
                     paymentCompleted={paymentCompleted}
                     paymentLines={paymentLines}
                     historyCount={thisHistory.length}
@@ -668,8 +683,9 @@ export const ReservationDetail = ({
                         isInactive={isInactive}
                         isCompleted={isCompleted}
                         paymentCompleted={paymentCompleted}
+                        isNaverBooking={isNaverBooking}
                         onOpenCompleting={() => {
-                            if (!hasCompletedPayment(reservation)) {
+                            if (!hasCompletedPayment(sourceReservation)) {
                                 setError('결제 완료된 예약만 완료 처리할 수 있습니다.');
                                 return;
                             }
@@ -679,11 +695,11 @@ export const ReservationDetail = ({
                         onOpenCancelling={() => setMode('cancelling')}
                         onOpenNoshow={() => setMode('noshow')}
                         onOpenPayment={() => {
-                            setPaymentEntries(getPaymentEntryDrafts(reservation, displayPrice));
+                            setPaymentEntries(getPaymentEntryDrafts(sourceReservation, displayPrice));
                             setIsPointAwardManual(false);
                             setPointAward({
-                                enabled: (reservation.pointEarned ?? 0) > 0 || storeSettings.pointSettings.enableServiceRate,
-                                amount: String(reservation.pointEarned ?? getDefaultPointAwardAmount(displayPrice)),
+                                enabled: (sourceReservation.pointEarned ?? 0) > 0 || storeSettings.pointSettings.enableServiceRate,
+                                amount: String(sourceReservation.pointEarned ?? getDefaultPointAwardAmount(displayPrice)),
                             });
                             setError('');
                             setMode('payment');
@@ -692,8 +708,8 @@ export const ReservationDetail = ({
                         onCancelEdit={handleCancel}
                         onConfirmRequest={handleConfirmRequest}
                         onConfirmSave={handleConfirmSave}
-                        onCancelReservation={() => onCancel(reservation)}
-                        onNoshowReservation={() => onCancel(reservation, 'noshow')}
+                        onCancelReservation={() => onCancel(sourceReservation)}
+                        onNoshowReservation={() => onCancel(sourceReservation, 'noshow')}
                         onPaymentSave={handlePaymentSave}
                         onBackToEditing={() => setMode('editing')}
                         onBackToView={() => setMode('view')}

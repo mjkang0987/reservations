@@ -539,7 +539,7 @@ const StyledServiceModal = styled(StyledDetail)`
 `;
 
 const StyledModalBody = styled.div`
-    padding: 16px;
+    padding: 10px;
     overflow-y: auto;
 `;
 
@@ -635,11 +635,12 @@ const StyledCategoryHeader = styled.summary`
     font-weight: 600;
     color: var(--dark-gray-color);
     padding: 6px 16px;
-    background-color: var(--black-color-10);
     position: sticky;
     top: 0;
     z-index: 2;
     cursor: pointer;
+    background: rgba(255, 255, 255, .1); /* 살짝만 흰색 */
+    backdrop-filter: blur(.8px) saturate(180%);
 
     &::-webkit-details-marker {
         display: none;

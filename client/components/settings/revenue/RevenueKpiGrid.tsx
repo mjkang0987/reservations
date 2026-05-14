@@ -65,9 +65,9 @@ const StyledKpiCard = styled.div`
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 14px 16px;
+    padding: 10px 8px;
     border: 1px solid var(--light-gray-color);
-    border-radius: 14px;
+    border-radius: 10px;
     background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
     cursor: pointer;

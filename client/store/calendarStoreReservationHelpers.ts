@@ -1,8 +1,8 @@
 import type {Reservation, ReservationHistoryEntry, ReservationMap} from '../utils/reservations';
 
 type ReservationOverlayState = {
-    selectedReservation: Reservation | null;
-    selectedReservations: Reservation[];
+    selectedReservation: number | null;
+    selectedReservations: number[];
     reservationHistory: ReservationHistoryEntry[];
 };
 
@@ -52,10 +52,8 @@ export function buildUpdatedReservationState(
 
     return {
         reservationMap: nextMap,
-        selectedReservation: updated,
-        selectedReservations: state.selectedReservations.map((reservation) => (
-            reservation.id === updated.id ? updated : reservation
-        )),
+        selectedReservation: updated.id,
+        selectedReservations: state.selectedReservations,
         reservationHistory: [...state.reservationHistory, buildHistoryEntry(prev, updated)],
     };
 }
@@ -72,7 +70,7 @@ export function buildCancelledReservationState(
         nextMap[key] = nextMap[key].map((item) => item.id === reservation.id ? updated : item);
     }
 
-    const nextSelectedReservations = state.selectedReservations.filter((item) => item.id !== reservation.id);
+    const nextSelectedReservations = state.selectedReservations.filter((item) => item !== reservation.id);
 
     return {
         reservationMap: nextMap,

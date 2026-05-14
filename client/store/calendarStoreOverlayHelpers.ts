@@ -1,19 +1,17 @@
-import type {Reservation} from '../utils/reservations';
-
 type OverlayState = {
-    selectedReservation: Reservation | null;
-    selectedReservations: Reservation[];
+    selectedReservation: number | null;
+    selectedReservations: number[];
     createReservationInitial: { date: string; startTime: string } | null;
 };
 
 export function buildOpenedReservationState(
     state: Pick<OverlayState, 'selectedReservations'>,
-    selectedReservation: Reservation
+    selectedReservationId: number
 ): Pick<OverlayState, 'selectedReservation' | 'selectedReservations' | 'createReservationInitial'> {
-    const nextReservations = [...state.selectedReservations, selectedReservation];
+    const nextReservations = [...state.selectedReservations, selectedReservationId];
 
     return {
-        selectedReservation,
+        selectedReservation: selectedReservationId,
         selectedReservations: nextReservations,
         createReservationInitial: null,
     };

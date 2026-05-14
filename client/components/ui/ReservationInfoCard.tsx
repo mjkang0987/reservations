@@ -78,15 +78,34 @@ export function ReservationInfoCard({
             {!compactDate && timeMode !== 'none' && (
                 <StyledTime>{timeText}</StyledTime>
             )}
+            {compactDate && (
+                <StyledCompactDate>
+                    {showDate ? `${reservation.date} ` : ''}{timeText}
+                </StyledCompactDate>
+            )}
+            {!compactDate && showDate && (
+                <StyledDate>{reservation.date}</StyledDate>
+            )}
             <StyledBody>
-                {compactDate && (
-                    <StyledCompactDate>
-                        {showDate ? `${reservation.date} ` : ''}{timeText}
-                    </StyledCompactDate>
+                {customerName && (
+                    <StyledCustomerMeta>
+                        {isNewCustomer && <NewCustomerBadge>N</NewCustomerBadge>}
+                        {onCustomerClick ? (
+                            <StyledCustomerButton
+                                type="button"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onCustomerClick(reservation.customerId);
+                                }}
+                            >
+                                {customerName}
+                            </StyledCustomerButton>
+                        ) : (
+                            <StyledCustomerName>{customerName}</StyledCustomerName>
+                        )}
+                    </StyledCustomerMeta>
                 )}
-                {!compactDate && showDate && (
-                    <StyledDate>{reservation.date}</StyledDate>
-                )}
+
                 <StyledServiceList
                     service={reservation.service}
                     serviceColorMap={serviceColorMap}
@@ -97,24 +116,6 @@ export function ReservationInfoCard({
                         <span>디자이너</span>
                         <DesignerLabel color={designerColor} name={designerName} />
                     </StyledDesignerMeta>
-                    {customerName && (
-                        <StyledCustomerMeta>
-                            {isNewCustomer && <NewCustomerBadge>N</NewCustomerBadge>}
-                            {onCustomerClick ? (
-                                <StyledCustomerButton
-                                    type="button"
-                                    onClick={(event) => {
-                                        event.stopPropagation();
-                                        onCustomerClick(reservation.customerId);
-                                    }}
-                                >
-                                    {customerName}
-                                </StyledCustomerButton>
-                            ) : (
-                                <StyledCustomerName>{customerName}</StyledCustomerName>
-                            )}
-                        </StyledCustomerMeta>
-                    )}
                 </StyledMetaLine>
             </StyledBody>
             {(showStatus || showPrice) && (
@@ -182,7 +183,6 @@ const StyledBody = styled.div`
     flex: 1;
     min-width: 0;
     display: flex;
-    flex-direction: column;
     gap: 6px;
 `;
 

@@ -278,12 +278,33 @@ export const RevenueSection = ({
         [customerMap, newCustomerEntries]
     );
 
+    const prevVisitByCustomer = useMemo(() => {
+        const visitDates = new Map<number, string[]>();
+        for (const [dateKey, reservations] of Object.entries(reservationMap)) {
+            for (const reservation of reservations) {
+                if (!isRevenueReservationTarget(reservation, selectedDesignerId, revenueFilterMode)) continue;
+                const dates = visitDates.get(reservation.customerId) ?? [];
+                if (!dates.includes(dateKey)) dates.push(dateKey);
+                visitDates.set(reservation.customerId, dates);
+            }
+        }
+        const result = new Map<number, string>();
+        for (const reservation of returningCustomerEntries) {
+            const dates = (visitDates.get(reservation.customerId) ?? [])
+                .filter((d) => d < reservation.date)
+                .sort((a, b) => b.localeCompare(a));
+            if (dates.length > 0) result.set(reservation.customerId, dates[0]);
+        }
+        return result;
+    }, [reservationMap, selectedDesignerId, revenueFilterMode, returningCustomerEntries]);
+
     const returningCustomerList = useMemo(
         () => returningCustomerEntries.map((reservation) => ({
             customer: customerMap[reservation.customerId],
             visitDate: reservation.date,
-        })).filter((item): item is {customer: NonNullable<typeof item.customer>; visitDate: string} => !!item.customer),
-        [customerMap, returningCustomerEntries]
+            prevVisitDate: prevVisitByCustomer.get(reservation.customerId),
+        })).filter((item): item is {customer: NonNullable<typeof item.customer>; visitDate: string; prevVisitDate: string | undefined} => !!item.customer),
+        [customerMap, returningCustomerEntries, prevVisitByCustomer]
     );
 
     const paidReservations = useMemo(

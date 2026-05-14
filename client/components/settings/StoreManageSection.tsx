@@ -197,7 +197,7 @@ const StyledStoreCard = styled.div`
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 14px 16px;
+    padding: 10px 8px;
     border: 1px solid var(--light-gray-color);
     border-radius: 10px;
     background: var(--white-color);

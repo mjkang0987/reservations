@@ -136,11 +136,12 @@ const StyledStickyArea = styled.div`
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--white-color);
     display: flex;
     flex-direction: column;
     gap: 6px;
     padding-top: 8px;
+    background: rgba(255, 255, 255, .1); /* 살짝만 흰색 */
+    backdrop-filter: blur(.8px) saturate(180%);
 `;
 
 const StyledRow1 = styled.div`
@@ -170,7 +171,7 @@ const StyledRangeFilter = styled.div`
     align-items: flex-end;
     gap: 4px;
     flex: 1;
-    min-width: 0;
+    min-width: min(300px, 100%);
 `;
 
 const StyledRangeNavButton = styled.button`
@@ -186,6 +187,7 @@ const StyledRangeNavButton = styled.button`
 
 const StyledRangeInputWrap = styled.label`
     flex: 1;
+    width: 0;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -220,7 +222,7 @@ const StyledDesignerTab = styled.button<{ $active: boolean }>`
     min-height: 30px;
     padding: 0 11px;
     border: 1px solid ${(p) => p.$active ? 'var(--blue-color)' : 'var(--light-gray-color)'};
-    border-radius: 14px;
+    border-radius: 10px;
     background: ${(p) => p.$active ? 'var(--blue-color)' : 'var(--white-color)'};
     color: ${(p) => p.$active ? '#fff' : 'var(--dark-gray-color)'};
 `;
@@ -241,12 +243,14 @@ const StyledTabGroup = styled.div`
 
 const StyledViewTab = styled.button<{ $active: boolean }>`
     ${actionButtonStyle};
+    white-space: nowrap;
     border: 1px solid ${(p) => p.$active ? 'var(--black-color)' : 'var(--light-gray-color)'};
     background: ${(p) => p.$active ? 'var(--black-color)' : 'var(--white-color)'};
     color: ${(p) => p.$active ? '#fff' : 'var(--dark-gray-color)'};
 
     @media (max-width: 640px) {
-        flex: 1;
+        min-width: 0;
+        padding: 0 8px;
     }
 `;
 
@@ -255,7 +259,7 @@ const StyledFilterModeTab = styled.button<{ $active: boolean }>`
     ${actionButtonStyle};
     padding: 0 11px;
     border: 1px solid ${(p) => p.$active ? 'var(--blue-color)' : 'var(--light-gray-color)'};
-    border-radius: 14px;
+    border-radius: 10px;
     background: ${(p) => p.$active ? 'rgba(45, 127, 249, 0.1)' : 'var(--white-color)'};
     color: ${(p) => p.$active ? 'var(--blue-color)' : 'var(--dark-gray-color)'};
     font-weight: ${(p) => p.$active ? 700 : 500};
