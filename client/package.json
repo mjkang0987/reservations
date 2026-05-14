@@ -5,6 +5,7 @@
     "scripts": {
         "dev": "next dev",
         "dev:https": "sh ./scripts/dev-https.sh",
+        "dev:test": "sh ./scripts/dev-test.sh",
         "dev:turbo": "next dev",
         "dev:webpack": "next dev --webpack",
         "build": "pnpm prisma:generate && next build",
@@ -25,7 +26,8 @@
         "prisma:seed": "node prisma/seed.mjs",
         "prisma:verify-seed": "node scripts/verify-seed.mjs",
         "prisma:import": "pnpm prisma:prepare && pnpm prisma:db:push && pnpm prisma:seed && pnpm prisma:verify-seed",
-        "prisma:bootstrap": "pnpm prisma:deploy && pnpm prisma:seed && pnpm prisma:verify-seed"
+        "prisma:bootstrap": "pnpm prisma:deploy && pnpm prisma:seed && pnpm prisma:verify-seed",
+        "test:db:setup": "sh ./scripts/setup-test-db.sh"
     },
     "dependencies": {
         "@prisma/client": "^6.7.0",

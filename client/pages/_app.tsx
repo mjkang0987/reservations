@@ -110,16 +110,30 @@ function AppContent({Component, pageProps}: AppContentProps) {
             return;
         }
 
-        fetch('/api/store')
-            .then((res) => {
-                if (!res.ok) throw new Error('Failed to load store settings');
-                return res.json() as Promise<StoreSettings>;
+        Promise.all([
+            fetch('/api/store'),
+            fetch('/api/reservations'),
+            fetch('/api/customers'),
+        ])
+            .then(async ([storeRes, reservationsRes, customersRes]) => {
+                if (!storeRes.ok) throw new Error('Failed to load store settings');
+                if (!reservationsRes.ok) throw new Error('Failed to load reservations');
+                if (!customersRes.ok) throw new Error('Failed to load customers');
+
+                return Promise.all([
+                    storeRes.json() as Promise<StoreSettings>,
+                    reservationsRes.json() as Promise<{
+                        reservations: Array<Parameters<typeof groupByDate>[0][number]>;
+                        history: Parameters<typeof setReservationHistory>[0];
+                    }>,
+                    customersRes.json() as Promise<{customers: Array<Parameters<typeof toCustomerMap>[0][number]>}>,
+                ]);
             })
-            .then((data) => {
-                if (data && typeof data === 'object' && data.businessHours && Array.isArray(data.closedDates)) {
-                    const rawPointSettings = data.pointSettings as StoreSettings['pointSettings'] & {mode?: string} | undefined;
+            .then(([storeData, reservationsData, customersData]) => {
+                if (storeData && typeof storeData === 'object' && storeData.businessHours && Array.isArray(storeData.closedDates)) {
+                    const rawPointSettings = storeData.pointSettings as StoreSettings['pointSettings'] & {mode?: string} | undefined;
                     setStoreSettings({
-                        ...data,
+                        ...storeData,
                         pointSettings: rawPointSettings
                             ? {
                                 enableServiceRate: typeof rawPointSettings.enableServiceRate === 'boolean'
@@ -141,9 +155,21 @@ function AppContent({Component, pageProps}: AppContentProps) {
                             },
                     });
                 }
+
+                if (Array.isArray(reservationsData.reservations)) {
+                    setReservationMap(groupByDate(reservationsData.reservations));
+                }
+
+                if (Array.isArray(reservationsData.history)) {
+                    setReservationHistory(reservationsData.history);
+                }
+
+                if (Array.isArray(customersData.customers)) {
+                    setCustomerMap(toCustomerMap(customersData.customers));
+                }
             })
             .catch(() => {
-                // Keep default store settings if loading fails.
+                // Keep the current in-memory data if loading fails.
             });
     }, [hasApiAccess, status, setStoreSettings, setReservationMap, setCustomerMap, setReservationHistory]);
 

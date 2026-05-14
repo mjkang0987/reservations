@@ -557,6 +557,63 @@ async function seedReservations() {
     console.log(`[seed] Reservations seeded: ${(reservationData.reservations ?? []).length}`);
 }
 
+async function seedTestConflicts() {
+    const testData = await readJson(seedDataPath('test-conflicts.json'));
+    const storeId = await getDefaultStoreIdOrThrow('Default store must exist before seeding test conflicts.');
+
+    const designerIdMap = buildLegacyIdMap(
+        (testData.reservations ?? []).map((r) => ({id: r.designerId})).filter((e) => Number.isInteger(e.id) && e.id > 0),
+        (e) => e.id,
+    );
+
+    for (const reservation of testData.reservations ?? []) {
+        const customer = await prisma.customer.findUnique({
+            where: {storeId_legacyId: {storeId, legacyId: reservation.customerId}},
+            select: {id: true},
+        });
+
+        if (!customer) {
+            throw new Error(`Customer not found for test reservation legacyId=${reservation.id}`);
+        }
+
+        const normalizedDesignerId = designerIdMap.get(reservation.designerId) ?? reservation.designerId;
+        const designer = reservation.designerId
+            ? await prisma.designer.findUnique({
+                where: {storeId_legacyId: {storeId, legacyId: normalizedDesignerId}},
+                select: {id: true},
+            })
+            : null;
+
+        await prisma.reservation.upsert({
+            where: {storeId_legacyId: {storeId, legacyId: reservation.id}},
+            update: {
+                customerId: customer.id,
+                designerId: designer?.id ?? null,
+                date: new Date(`${reservation.date}T00:00:00`),
+                startTime: reservation.startTime,
+                endTime: reservation.endTime,
+                serviceSummary: reservation.service,
+                status: mapReservationStatus(reservation.status),
+                naverBookingId: reservation.naverBookingId ?? null,
+            },
+            create: {
+                storeId,
+                legacyId: reservation.id,
+                customerId: customer.id,
+                designerId: designer?.id ?? null,
+                date: new Date(`${reservation.date}T00:00:00`),
+                startTime: reservation.startTime,
+                endTime: reservation.endTime,
+                serviceSummary: reservation.service,
+                status: mapReservationStatus(reservation.status),
+                naverBookingId: reservation.naverBookingId ?? null,
+            },
+        });
+    }
+
+    console.log(`[seed] Test conflict reservations seeded: ${(testData.reservations ?? []).length}`);
+}
+
 async function main() {
     await seedDefaultStore();
     await seedOwnerMembership();
@@ -564,6 +621,9 @@ async function main() {
     await seedCustomers();
     await seedServices();
     await seedReservations();
+    if (process.env.TEST_DB === '1') {
+        await seedTestConflicts();
+    }
 }
 
 main()

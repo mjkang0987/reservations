@@ -82,7 +82,7 @@ const StyledButton = styled.button`
     justify-content: center;
     gap: 8px;
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     background: #111827;
     color: #fff;
     font-size: 14px;

@@ -1,13 +1,19 @@
+import {useCallback} from 'react';
+
 import styled from 'styled-components';
 
 import {useRouter} from 'next/router';
 
 import {useCalendarStore} from '../../store/calendarStore';
+import {useNaverBookingSync} from '../../hooks/useNaverBookingSync';
 import {splitDesignersByStatus} from '../../utils/designers';
 import {isCalendar} from '../../utils/router';
+import type {Reservation} from '../../utils/reservations';
 
 import {CalendarDirection} from '../calendar/CalendarDirection';
 import {CalendarHeading} from '../calendar/CalendarHeading';
+import {NaverSyncNotification} from './NaverSyncNotification';
+import {NaverSyncConflictModal} from './NaverSyncConflictModal';
 import {formControlStyle} from '../ui/FormControls';
 
 const PAGE_TITLES: Record<string, string> = {
@@ -46,6 +52,21 @@ export const Header = () => {
         onLeave: onLeaveDesigners,
         resigned: resignedDesigners
     } = splitDesignersByStatus(designers);
+    const reservationMap = useCalendarStore((s) => s.reservationMap);
+    const setReservationMap = useCalendarStore((s) => s.setReservationMap);
+    const openReservationDetail = useCalendarStore((s) => s.openReservationDetail);
+    const {visibleNotifications, unreadCount, markRead, markAllRead, currentConflict, advanceConflict, deferConflict, openConflictByKey, sync, syncing, isActive} = useNaverBookingSync();
+
+    const handleConflictReservationClick = useCallback((reservation: Reservation) => {
+        const dateReservations = reservationMap[reservation.date] ?? [];
+        if (!dateReservations.some((r) => r.id === reservation.id)) {
+            setReservationMap({
+                ...reservationMap,
+                [reservation.date]: [...dateReservations, reservation],
+            });
+        }
+        openReservationDetail(reservation);
+    }, [reservationMap, setReservationMap, openReservationDetail]);
 
     return (
         <StyledHeader>
@@ -96,8 +117,44 @@ export const Header = () => {
                         </optgroup>
                     )}
                 </StyledDesignerFilter>
+                {isActive && (
+                    <StyledSyncButton type="button" onClick={sync} disabled={syncing} aria-label="네이버 예약 동기화">
+                        <StyledSyncIcon $syncing={syncing} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
+                        </StyledSyncIcon>
+                    </StyledSyncButton>
+                )}
+                <NaverSyncNotification notifications={visibleNotifications}
+                                       unreadCount={unreadCount}
+                                       markRead={markRead}
+                                       markAllRead={markAllRead}
+                                       reservationMap={reservationMap}
+                                       onSelectReservation={openReservationDetail}
+                                       onSelectConflict={openConflictByKey} />
             </>}
-            {!isCalendarPage && <StyledPageTitle>{pageTitle}</StyledPageTitle>}
+            {!isCalendarPage && <>
+                <StyledPageTitle>{pageTitle}</StyledPageTitle>
+                {isActive && (
+                    <StyledSyncButton type="button" onClick={sync} disabled={syncing} aria-label="네이버 예약 동기화">
+                        <StyledSyncIcon $syncing={syncing} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
+                        </StyledSyncIcon>
+                    </StyledSyncButton>
+                )}
+                <NaverSyncNotification notifications={visibleNotifications}
+                                       unreadCount={unreadCount}
+                                       markRead={markRead}
+                                       markAllRead={markAllRead}
+                                       reservationMap={reservationMap}
+                                       onSelectReservation={openReservationDetail}
+                                       onSelectConflict={openConflictByKey} />
+            </>}
+            {currentConflict && (
+                <NaverSyncConflictModal conflict={currentConflict}
+                                        onAdvance={advanceConflict}
+                                        onDefer={deferConflict}
+                                        onSelectReservation={handleConflictReservationClick} />
+            )}
         </StyledHeader>
     );
 };
@@ -105,7 +162,7 @@ export const Header = () => {
 const StyledHeader = styled.header`
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 4px;
     width: 100%;
     padding: 0 12px 0 0;
     height: 48px;
@@ -213,4 +270,38 @@ const StyledDesignerFilter = styled.select`
     @media (max-width: 640px) {
         min-width: 96px;
     }
+`;
+
+const StyledSyncButton = styled.button`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    border: none;
+    color: var(--dark-gray-color);
+    flex-shrink: 0;
+    cursor: pointer;
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.5;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:not(:disabled):hover {
+            background-color: var(--gray-color2);
+        }
+    }
+`;
+
+const StyledSyncIcon = styled.svg<{ $syncing: boolean }>`
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    ${(props) => props.$syncing && 'animation: spin 1s linear infinite;'}
 `;

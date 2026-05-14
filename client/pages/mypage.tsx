@@ -268,7 +268,7 @@ const buttonLikeStyle = `
     min-width: 140px;
     height: 42px;
     padding: 0 16px;
-    border-radius: 12px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
@@ -291,7 +291,7 @@ const StyledGrid = styled.div`
 
 const StyledMetric = styled.div`
     padding: 16px 12px;
-    border-radius: 14px;
+    border-radius: 10px;
     background: #f8fafc;
     text-align: center;
 

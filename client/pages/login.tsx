@@ -176,7 +176,7 @@ const StyledWrapper = styled.div`
     align-items: center;
     justify-content: center;
     height: 100%;
-    padding: 16px;
+    padding: 10px;
     box-sizing: border-box;
     background-color: var(--gray-color2);
 `;
@@ -283,7 +283,7 @@ const StyledSpinner = styled.span`
 const StyledEmptyState = styled.p`
     width: 100%;
     margin: 0;
-    padding: 14px 16px;
+    padding: 10px 8px;
     box-sizing: border-box;
     border: 1px solid var(--light-gray-color);
     border-radius: 10px;
@@ -297,7 +297,7 @@ const StyledEmptyState = styled.p`
 const StyledNotice = styled.p`
     width: 100%;
     margin: 16px 0 0;
-    padding: 14px 16px;
+    padding: 10px 8px;
     box-sizing: border-box;
     border: 1px solid #fecaca;
     border-radius: 10px;
@@ -334,7 +334,7 @@ const StyledButton = styled.button<{ $bg: string; $color: string; $border: strin
 const StyledLoginError = styled.div`
     width: 100%;
     margin: 0 0 16px;
-    padding: 14px 16px;
+    padding: 10px 8px;
     box-sizing: border-box;
     border: 1px solid #fecaca;
     border-radius: 10px;

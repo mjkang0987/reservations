@@ -34,12 +34,18 @@ type HomeProps = {
 };
 
 const Home: NextPage<HomeProps> = (props) => {
+    const resolveReservationsByIds = (reservationMap: ReturnType<typeof groupByDate>, reservationIds: number[]) => {
+        const allReservations = Object.values(reservationMap).flat();
+        return reservationIds
+            .map((reservationId) => allReservations.find((item) => item.id === reservationId) ?? null)
+            .filter((reservation): reservation is Reservation => reservation !== null);
+    };
     const aside = useCalendarStore((s) => s.aside);
     const target = useCalendarStore((s) => s.target);
     const curr = useMemo(() => computeTargetDerived(target), [target]);
     const setReservationMap = useCalendarStore((s) => s.setReservationMap);
     const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
-    const selectedReservations = useCalendarStore((s) => s.selectedReservations);
+    const selectedReservationIds = useCalendarStore((s) => s.selectedReservations);
     const closeReservationDetail = useCalendarStore((s) => s.closeReservationDetail);
     const openReservationDetailFromCustomer = useCalendarStore((s) => s.openReservationDetailFromCustomer);
     const updateReservation = useCalendarStore((s) => s.updateReservation);
@@ -56,6 +62,10 @@ const Home: NextPage<HomeProps> = (props) => {
     const openCustomerDetail = useCalendarStore((s) => s.openCustomerDetail);
 
     const selectedCustomer = selectedCustomerId !== null ? customerMap[selectedCustomerId] : null;
+    const selectedReservations = useMemo(
+        () => resolveReservationsByIds(reservationMap, selectedReservationIds),
+        [reservationMap, selectedReservationIds]
+    );
 
     useEffect(() => {
         if (props.storageMode === 'local') {

@@ -10,6 +10,7 @@ import {CATEGORY_BASE_COLOR_MAP, SERVICE_CATALOG} from '../utils/services';
 import type {DaySchedule, Designer, DesignerStatus} from '../utils/designers';
 import {DEFAULT_DESIGNERS} from '../utils/designers';
 import type {StoreSettings} from '../utils/storeSettings';
+import type {SyncNotification} from '../hooks/useNaverBookingSync';
 import {DEFAULT_STORE_SETTINGS} from '../utils/storeSettings';
 import {
     buildAddedDesignerState,
@@ -49,6 +50,31 @@ import {
     buildUpdatedStorePointSettingsState,
 } from './calendarStoreStoreSettingsHelpers';
 import {shouldUseLocalDb} from '../lib/local-db';
+
+// ── Notification localStorage persistence ──
+
+const SYNC_NOTIFICATIONS_KEY = 'sync-notifications';
+
+function loadSyncNotifications(): SyncNotification[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        const raw = localStorage.getItem(SYNC_NOTIFICATIONS_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw) as Array<SyncNotification & {timestamp: string}>;
+        return parsed.map((n) => ({...n, timestamp: new Date(n.timestamp)}));
+    } catch {
+        return [];
+    }
+}
+
+function saveSyncNotifications(notifications: SyncNotification[]) {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.setItem(SYNC_NOTIFICATIONS_KEY, JSON.stringify(notifications));
+    } catch {
+        // Silently ignore storage errors
+    }
+}
 
 export type FullType = Date | null;
 
@@ -94,8 +120,8 @@ export interface CalendarState {
     router: RouterSlice;
     reservationMap: ReservationMap;
     customerMap: CustomerMap;
-    selectedReservation: Reservation | null;
-    selectedReservations: Reservation[];
+    selectedReservation: number | null;
+    selectedReservations: number[];
     reservationHistory: ReservationHistoryEntry[];
     reservationListFilter: { type: 'month'; year: number; month: number } | { type: 'date'; dateKey: string } | null;
     createReservationInitial: CreateReservationInitial | null;
@@ -105,6 +131,7 @@ export interface CalendarState {
     categoryBaseColorMap: Record<string, string>;
     designers: Designer[];
     storeSettings: StoreSettings;
+    syncNotifications: SyncNotification[];
 
     setToday: (v: FullType) => void;
     setTarget: (partial: Partial<DateType>) => void;
@@ -121,8 +148,8 @@ export interface CalendarState {
         patch: Partial<Customer>,
         pointHistory?: Array<Omit<PointHistoryEntry, 'id' | 'balance' | 'createdAt'>> | Omit<PointHistoryEntry, 'id' | 'balance' | 'createdAt'>
     ) => void;
-    setSelectedReservation: (v: Reservation | null) => void;
-    setSelectedReservations: (v: Reservation[]) => void;
+    setSelectedReservation: (v: number | null) => void;
+    setSelectedReservations: (v: number[]) => void;
     openReservationDetail: (reservation: Reservation) => void;
     openReservationDetailFromCustomer: (reservation: Reservation) => void;
     closeReservationDetail: (layerIndex: number) => void;
@@ -155,6 +182,12 @@ export interface CalendarState {
     addReservation: (reservation: Reservation) => void;
     updateReservation: (prev: Reservation, updated: Reservation) => void;
     cancelReservation: (reservation: Reservation, status?: ReservationStatus) => void;
+    addSyncNotifications: (items: SyncNotification[]) => void;
+    markSyncNotificationRead: (id: string) => void;
+    markSyncNotificationsRead: () => void;
+    updateConflictNotificationStatus: (conflictKey: string, status: 'pending' | 'deferred' | 'confirmed') => void;
+    replaceMockConflictNotifications: (items: SyncNotification[]) => void;
+    clearSyncNotifications: () => void;
 }
 
 type ServiceSettingsState = Pick<CalendarState, 'serviceCatalog' | 'categoryBaseColorMap'>;
@@ -167,6 +200,11 @@ function withSyncedCatalog(state: ServiceSettingsState, nextCatalog: ServiceItem
 function withSyncedCategoryColors(state: ServiceSettingsState, nextCategoryBaseColorMap: Record<string, string>) {
     syncServiceSettings(state.serviceCatalog, nextCategoryBaseColorMap);
     return {categoryBaseColorMap: nextCategoryBaseColorMap};
+}
+
+function resolveLatestReservation(reservationMap: ReservationMap, reservation: Reservation): Reservation {
+    const dateReservations = reservationMap[reservation.date] ?? [];
+    return dateReservations.find((item) => item.id === reservation.id) ?? reservation;
 }
 
 export const useCalendarStore = create<CalendarState>((set) => ({
@@ -207,6 +245,7 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     categoryBaseColorMap: CATEGORY_BASE_COLOR_MAP,
     designers: DEFAULT_DESIGNERS,
     storeSettings: DEFAULT_STORE_SETTINGS,
+    syncNotifications: loadSyncNotifications(),
 
     setToday: (today) => set({today}),
 
@@ -320,10 +359,16 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     }),
 
     openReservationDetail: (selectedReservation) =>
-        set((state) => buildOpenedReservationState(state, selectedReservation)),
+        set((state) => buildOpenedReservationState(
+            state,
+            resolveLatestReservation(state.reservationMap, selectedReservation).id
+        )),
 
     openReservationDetailFromCustomer: (selectedReservation) =>
-        set((state) => buildOpenedReservationState(state, selectedReservation)),
+        set((state) => buildOpenedReservationState(
+            state,
+            resolveLatestReservation(state.reservationMap, selectedReservation).id
+        )),
 
     closeReservationDetail: (layerIndex) =>
         set((state) => buildClosedReservationState(state, layerIndex)),
@@ -560,16 +605,12 @@ export const useCalendarStore = create<CalendarState>((set) => ({
                         nextMap[newKey].push(savedReservation);
                     }
 
-                    const nextSelectedReservations = state.selectedReservations.map((reservation) => (
-                        reservation.id === savedReservation.id ? savedReservation : reservation
-                    ));
-
                     return {
                         reservationMap: nextMap,
-                        selectedReservation: state.selectedReservation?.id === savedReservation.id
-                            ? savedReservation
+                        selectedReservation: state.selectedReservation === savedReservation.id
+                            ? savedReservation.id
                             : state.selectedReservation,
-                        selectedReservations: nextSelectedReservations,
+                        selectedReservations: state.selectedReservations,
                     };
                 });
             })
@@ -608,5 +649,50 @@ export const useCalendarStore = create<CalendarState>((set) => ({
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id: reservation.id, status})
         });
-    }
+    },
+
+    addSyncNotifications: (items) =>
+        set((state) => {
+            const next = [...items, ...state.syncNotifications].slice(0, 50);
+            saveSyncNotifications(next);
+            return {syncNotifications: next};
+        }),
+
+    markSyncNotificationRead: (id) =>
+        set((state) => {
+            const next = state.syncNotifications.map((n) => n.id === id ? {...n, read: true} : n);
+            saveSyncNotifications(next);
+            return {syncNotifications: next};
+        }),
+
+    markSyncNotificationsRead: () =>
+        set((state) => {
+            const next = state.syncNotifications.map((n) => ({...n, read: true}));
+            saveSyncNotifications(next);
+            return {syncNotifications: next};
+        }),
+
+    updateConflictNotificationStatus: (conflictKey, status) =>
+        set((state) => {
+            const next = state.syncNotifications.map((notification) => (
+                notification.conflictKey === conflictKey
+                    ? {...notification, conflictStatus: status}
+                    : notification
+            ));
+            saveSyncNotifications(next);
+            return {syncNotifications: next};
+        }),
+
+    replaceMockConflictNotifications: (items) =>
+        set((state) => {
+            const preserved = state.syncNotifications.filter((notification) => notification.type !== 'conflict');
+            const next = [...items, ...preserved].slice(0, 50);
+            saveSyncNotifications(next);
+            return {syncNotifications: next};
+        }),
+
+    clearSyncNotifications: () => {
+        saveSyncNotifications([]);
+        set({syncNotifications: []});
+    },
 }));

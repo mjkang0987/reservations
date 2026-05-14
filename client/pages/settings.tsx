@@ -64,6 +64,12 @@ function isSettingsTab(value: string): value is SettingsTab {
 /* ── Settings Page ── */
 
 const Settings: NextPage<SettingsProps> = ({reservations, customers, history, storageMode}) => {
+    const resolveReservationsByIds = (reservationMap: ReturnType<typeof groupByDate>, reservationIds: number[]) => {
+        const allReservations = Object.values(reservationMap).flat();
+        return reservationIds
+            .map((reservationId) => allReservations.find((item) => item.id === reservationId) ?? null)
+            .filter((reservation): reservation is Reservation => reservation !== null);
+    };
     const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
     const storeCustomerMap = useCalendarStore((s) => s.customerMap);
     const setReservationMap = useCalendarStore((s) => s.setReservationMap);
@@ -71,7 +77,7 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history, st
     const designers = useCalendarStore((s) => s.designers);
     const updateReservation = useCalendarStore((s) => s.updateReservation);
     const cancelReservation = useCalendarStore((s) => s.cancelReservation);
-    const selectedReservations = useCalendarStore((s) => s.selectedReservations);
+    const selectedReservationIds = useCalendarStore((s) => s.selectedReservations);
     const openReservationDetail = useCalendarStore((s) => s.openReservationDetail);
     const openReservationDetailFromCustomer = useCalendarStore((s) => s.openReservationDetailFromCustomer);
     const closeReservationDetail = useCalendarStore((s) => s.closeReservationDetail);
@@ -97,6 +103,10 @@ const Settings: NextPage<SettingsProps> = ({reservations, customers, history, st
     const serviceColorMap = useMemo(
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
         [serviceCatalog, categoryBaseColorMap]
+    );
+    const selectedReservations = useMemo(
+        () => resolveReservationsByIds(storeReservationMap, selectedReservationIds),
+        [selectedReservationIds, storeReservationMap]
     );
 
     const now = new Date();
