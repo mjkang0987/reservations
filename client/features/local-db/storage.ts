@@ -25,10 +25,22 @@ function cloneSnapshot(snapshot: LocalDbSnapshot): LocalDbSnapshot {
     return JSON.parse(JSON.stringify(snapshot)) as LocalDbSnapshot;
 }
 
+function todayDateKey(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function createDefaultLocalDbSnapshot(): LocalDbSnapshot {
+    const today = todayDateKey();
     return cloneSnapshot({
-        customers: [],
-        reservations: [],
+        customers: [
+            {id: 1, name: '테스트고객A', tel: '010-1234-0001', points: 0, memoTags: []},
+            {id: 2, name: '테스트고객B', tel: '010-1234-0002', points: 0, memoTags: []},
+        ],
+        reservations: [
+            {id: 90001, date: today, startTime: '10:30', endTime: '13:30', service: '여자 매직', customerId: 1, designerId: 1, status: 'active', naverBookingId: 'NBK-TEST-90001', channel: '네이버예약'},
+            {id: 90002, date: today, startTime: '10:30', endTime: '11:00', service: '남성커트', customerId: 2, designerId: 1, status: 'active', channel: '전화예약'},
+        ],
         history: [],
         services: SERVICE_CATALOG,
         categoryBaseColors: CATEGORY_BASE_COLOR_MAP,
@@ -60,6 +72,10 @@ export function loadLocalDbSnapshot(): LocalDbSnapshot {
 
     const raw = window.localStorage.getItem(LOCAL_DB_KEY);
     if (!raw) {
+        // 로컬DB가 새로 생성될 때 관련 상태도 초기화하여 알림·중복감지가 새로 동작하도록 함
+        window.localStorage.removeItem('sync-notifications');
+        window.localStorage.removeItem('naver-sync-deferred-conflicts');
+        window.localStorage.removeItem('naver-sync-active-conflicts');
         const snapshot = createDefaultLocalDbSnapshot();
         saveLocalDbSnapshot(snapshot);
         return snapshot;
