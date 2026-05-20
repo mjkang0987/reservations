@@ -117,7 +117,7 @@ export function AddressContent({
 
     return (
         <>
-            <StyledSticky>
+            <StyledSticky $expanded={!!mergePreview}>
                 <StyledSearchRow>
                     <InputWrap htmlFor="filterSearch">
                         <input
@@ -128,46 +128,46 @@ export function AddressContent({
                             placeholder="고객명, 연락처, 메모 검색"
                         />
                     </InputWrap>
-                    {selectedIds.size >= 2 && (
+                    {selectedIds.size >= 2 && !mergePreview && (
                         <StyledMergeButton type="button" onClick={openMergePreview}>병합({selectedIds.size}명)</StyledMergeButton>
                     )}
-                    {selectedIds.size === 1 && (
+                    {selectedIds.size === 1 && !mergePreview && (
                         <StyledMergeHint>병합할 고객을 더 선택하세요</StyledMergeHint>
                     )}
                 </StyledSearchRow>
+                {mergePreview && (
+                    <StyledMergePreview>
+                        <StyledPreviewTitle>기준 고객을 선택하세요</StyledPreviewTitle>
+                        <StyledPreviewDesc>기준 고객의 이름·연락처가 유지되고, 나머지 고객의 예약·적립금이 병합됩니다.</StyledPreviewDesc>
+                        <StyledPreviewList>
+                            {mergePreview.customers.map((c) => (
+                                <StyledPreviewItem
+                                    key={c.id}
+                                    $isTarget={c.id === mergePreview.targetId}
+                                    onClick={() => setMergePreview((prev) => prev ? {...prev, targetId: c.id} : null)}
+                                >
+                                    <StyledPreviewRadio
+                                        type="radio"
+                                        name="mergeTarget"
+                                        checked={c.id === mergePreview.targetId}
+                                        onChange={() => setMergePreview((prev) => prev ? {...prev, targetId: c.id} : null)}
+                                    />
+                                    <StyledPreviewName>{c.name}</StyledPreviewName>
+                                    <StyledPreviewTel>{c.tel.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')}</StyledPreviewTel>
+                                    {c.id === mergePreview.targetId
+                                        ? <StyledPreviewBadge $type="target">기준</StyledPreviewBadge>
+                                        : <StyledPreviewBadge $type="source">삭제</StyledPreviewBadge>
+                                    }
+                                </StyledPreviewItem>
+                            ))}
+                        </StyledPreviewList>
+                        <StyledPreviewActions>
+                            <StyledPreviewCancel type="button" onClick={() => setMergePreview(null)}>취소</StyledPreviewCancel>
+                            <StyledMergeButton type="button" onClick={confirmMerge}>병합 실행</StyledMergeButton>
+                        </StyledPreviewActions>
+                    </StyledMergePreview>
+                )}
             </StyledSticky>
-            {mergePreview && (
-                <StyledMergePreview>
-                    <StyledPreviewTitle>기준 고객을 선택하세요</StyledPreviewTitle>
-                    <StyledPreviewDesc>기준 고객의 이름·연락처가 유지되고, 나머지 고객의 예약·적립금이 병합됩니다.</StyledPreviewDesc>
-                    <StyledPreviewList>
-                        {mergePreview.customers.map((c) => (
-                            <StyledPreviewItem
-                                key={c.id}
-                                $isTarget={c.id === mergePreview.targetId}
-                                onClick={() => setMergePreview((prev) => prev ? {...prev, targetId: c.id} : null)}
-                            >
-                                <StyledPreviewRadio
-                                    type="radio"
-                                    name="mergeTarget"
-                                    checked={c.id === mergePreview.targetId}
-                                    onChange={() => setMergePreview((prev) => prev ? {...prev, targetId: c.id} : null)}
-                                />
-                                <StyledPreviewName>{c.name}</StyledPreviewName>
-                                <StyledPreviewTel>{c.tel.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')}</StyledPreviewTel>
-                                {c.id === mergePreview.targetId
-                                    ? <StyledPreviewBadge $type="target">기준</StyledPreviewBadge>
-                                    : <StyledPreviewBadge $type="source">삭제</StyledPreviewBadge>
-                                }
-                            </StyledPreviewItem>
-                        ))}
-                    </StyledPreviewList>
-                    <StyledPreviewActions>
-                        <StyledPreviewCancel type="button" onClick={() => setMergePreview(null)}>취소</StyledPreviewCancel>
-                        <StyledMergeButton type="button" onClick={confirmMerge}>병합 실행</StyledMergeButton>
-                    </StyledPreviewActions>
-                </StyledMergePreview>
-            )}
             <StyledGrid>
                 <StyledHeaderRow>
                     <span></span>
@@ -220,13 +220,12 @@ export function AddressContent({
     );
 }
 
-const StyledSticky = styled.div`
+const StyledSticky = styled.div<{ $expanded?: boolean }>`
     position: sticky;
     top: 0;
-    padding: 20px 10px;
-    z-index: 1;
-    background: rgba(255, 255, 255, .1);
-    backdrop-filter: blur(.8px) saturate(180%);
+    padding: 20px 10px ${(p) => p.$expanded ? '0' : '20px'};
+    z-index: 2;
+    background-color: var(--bg-color, #fff);
 `;
 
 const StyledSearchRow = styled.div`
@@ -275,16 +274,12 @@ const StyledHeaderRow = styled.div`
     display: grid;
     grid-template-columns: 24px 80px 130px 1fr auto;
     gap: 12px;
-    position: sticky;
-    top: 95px;
     padding: 0 10px 10px;
     border-bottom: 2px solid var(--black-color);
     font-size: var(--small-font);
     font-weight: 600;
     color: var(--dark-gray-color);
-    z-index: 1;
-    background: rgba(255, 255, 255, .1); /* 살짝만 흰색 */
-    backdrop-filter: blur(.8px) saturate(180%);
+    background-color: var(--bg-color, #fff);
 
     @media (max-width: 600px) {
         display: none;
@@ -306,15 +301,12 @@ const StyledEmpty = styled.p`
 `;
 
 const StyledMergePreview = styled.div`
-    position: sticky;
-    top: 72px;
-    z-index: 2;
-    margin: 0 10px;
+    margin-top: 12px;
     padding: 16px;
     background-color: #fff;
     border: 1px solid var(--light-gray-color);
     border-radius: var(--radius-md);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 `;
 
 const StyledPreviewTitle = styled.p`
