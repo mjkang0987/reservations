@@ -58,7 +58,7 @@ export const GlobalStyle = createGlobalStyle`
         --aside-divider: rgba(255, 255, 255, 0.12);
 
         --overlay-padding: 14px;
-        --overlay-backdrop-blur: 2px;
+        --overlay-backdrop-blur: .7px;
 
         --modal-radius: 10px;
         --modal-radius-mobile: 12px;
@@ -69,7 +69,7 @@ export const GlobalStyle = createGlobalStyle`
         --modal-header-gap: 10px;
         --modal-header-padding: 4px 8px;
         --modal-header-border: rgba(148, 163, 184, 0.18);
-        --modal-body-padding: 8px 6px 16px;
+        --modal-body-padding: 8px 6px 30px;
         --modal-content-padding: 12px;
         --modal-footer-gap: 6px;
         --modal-footer-padding: 10px 14px 14px;
@@ -233,6 +233,12 @@ export const GlobalStyle = createGlobalStyle`
             ~ [id*="customer-detail-layer-1"] {
                 z-index: 151;
             }
+        }
+    }
+
+    [id*="notification-modal"] {
+        ~ [id*="naver-sync-conflict-layer"] {
+            z-index: 121;
         }
     }
 

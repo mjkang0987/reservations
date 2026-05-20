@@ -667,7 +667,9 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
     markSyncNotificationsRead: () =>
         set((state) => {
-            const next = state.syncNotifications.map((n) => ({...n, read: true}));
+            const next = state.syncNotifications.map((n) =>
+                n.type === 'conflict' && n.conflictStatus === 'deferred' ? n : {...n, read: true}
+            );
             saveSyncNotifications(next);
             return {syncNotifications: next};
         }),

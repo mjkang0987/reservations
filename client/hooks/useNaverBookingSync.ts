@@ -47,6 +47,64 @@ function conflictKey(c: ConflictInfo): string {
     return `${c.newReservation.id}-${c.existingReservation.id}`;
 }
 
+const ACTIVE_CONFLICTS_KEY = 'naver-sync-active-conflicts';
+
+interface StoredConflictPair {
+    newReservation: Reservation;
+    existingReservation: Reservation;
+}
+
+function loadActiveConflictPairs(): StoredConflictPair[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        const raw = localStorage.getItem(ACTIVE_CONFLICTS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveActiveConflictPairs(conflicts: ConflictInfo[]): void {
+    if (typeof window === 'undefined') return;
+    const pairs: StoredConflictPair[] = conflicts.map((c) => ({
+        newReservation: c.newReservation,
+        existingReservation: c.existingReservation,
+    }));
+    localStorage.setItem(ACTIVE_CONFLICTS_KEY, JSON.stringify(pairs));
+}
+
+function removeActiveConflictPair(key: string): void {
+    if (typeof window === 'undefined') return;
+    const pairs = loadActiveConflictPairs();
+    const [newId, existingId] = key.split('-').map(Number);
+    const next = pairs.filter((p) => !(p.newReservation.id === newId && p.existingReservation.id === existingId));
+    localStorage.setItem(ACTIVE_CONFLICTS_KEY, JSON.stringify(next));
+}
+
+function restoreConflictsFromPairs(): ConflictInfo[] {
+    const pairs = loadActiveConflictPairs();
+    if (pairs.length === 0) return [];
+
+    const reservationMap = useCalendarStore.getState().reservationMap;
+    const allReservations = Object.values(reservationMap).flat();
+    const conflicts: ConflictInfo[] = [];
+
+    for (const stored of pairs) {
+        // 예약이 아직 존재하는지 확인
+        const newExists = allReservations.some((r) => r.id === stored.newReservation.id);
+        const existingExists = allReservations.some((r) => r.id === stored.existingReservation.id);
+        if (newExists && existingExists) {
+            // 원본 스냅샷을 유지 (변경 비교용)
+            conflicts.push({
+                newReservation: stored.newReservation,
+                existingReservation: stored.existingReservation,
+            });
+        }
+    }
+
+    return conflicts;
+}
+
 export function useNaverBookingSync() {
     const {data: session} = useSession();
     const isSyncingRef = useRef(false);
@@ -67,55 +125,71 @@ export function useNaverBookingSync() {
     const replaceMockConflictNotifications = useCalendarStore((s) => s.replaceMockConflictNotifications);
     const clearSyncNotifications = useCalendarStore((s) => s.clearSyncNotifications);
     const reservationMap = useCalendarStore((s) => s.reservationMap);
-    const testModeDetectedRef = useRef(false);
+    const conflictDetectedRef = useRef(false);
 
-    // 테스트 모드 자동 중복 감지
+
+    // 자동 중복 감지 (예약 데이터 로드 시)
     useEffect(() => {
-        if (testModeDetectedRef.current) return;
+        if (conflictDetectedRef.current) return;
 
         const reservationDates = Object.keys(reservationMap);
         if (reservationDates.length === 0) return;
 
-        let cancelled = false;
+        conflictDetectedRef.current = true;
 
-        fetch('/api/test-mode')
-            .then((res) => res.ok ? res.json() as Promise<{testMode: boolean}> : null)
-            .then((data) => {
-                if (cancelled || !data?.testMode) return;
-                testModeDetectedRef.current = true;
+        // 새 conflict 감지 + 이전에 저장된 미해결 conflict 복원
+        const detected = detectConflictsFromStore();
+        const restored = restoreConflictsFromPairs();
 
-                const detected = detectConflictsFromStore();
-                if (detected.length === 0) return;
+        // 합치기 (중복 제거)
+        const allKeys = new Set(detected.map(conflictKey));
+        const merged = [...detected];
+        for (const r of restored) {
+            const key = conflictKey(r);
+            if (!allKeys.has(key)) {
+                allKeys.add(key);
+                merged.push(r);
+            }
+        }
 
-                const customerMap = useCalendarStore.getState().customerMap;
-                const designers = useCalendarStore.getState().designers;
+        if (merged.length === 0) return;
 
-                const conflictNotifications: SyncNotification[] = detected.map((conflict, index) => ({
-                    id: `test-conflict-${conflict.newReservation.id}-${index}`,
-                    bookingId: String(conflict.newReservation.naverBookingId ?? conflict.newReservation.id),
-                    customerName: customerMap[conflict.newReservation.customerId]?.name ?? `고객 ${conflict.newReservation.customerId}`,
-                    designerName: designers.find((designer) => designer.id === conflict.newReservation.designerId)?.name ?? '미지정',
-                    appointmentDate: conflict.newReservation.date,
-                    appointmentTime: conflict.newReservation.startTime,
-                    reservationId: conflict.newReservation.id,
-                    timestamp: new Date(),
-                    read: false,
-                    type: 'conflict' as const,
-                    conflictKey: conflictKey(conflict),
-                    conflictStatus: 'pending' as const,
-                }));
+        // 활성 conflict 저장
+        saveActiveConflictPairs(merged);
 
-                if (conflictNotifications.length > 0) {
-                    replaceMockConflictNotifications(conflictNotifications);
-                }
+        const customerMap = useCalendarStore.getState().customerMap;
+        const designers = useCalendarStore.getState().designers;
 
-                setConflictQueue(detected);
-                setCurrentIndex(0);
-            })
-            .catch(() => {});
+        const existingKeys = new Set(
+            useCalendarStore.getState().syncNotifications
+                .filter((n) => n.type === 'conflict')
+                .map((n) => n.conflictKey)
+        );
 
-        return () => { cancelled = true; };
-    }, [reservationMap, replaceMockConflictNotifications]);
+        const conflictNotifications: SyncNotification[] = merged
+            .filter((conflict) => !existingKeys.has(conflictKey(conflict)))
+            .map((conflict, index) => ({
+                id: `conflict-${conflict.newReservation.id}-${index}`,
+                bookingId: String(conflict.newReservation.naverBookingId ?? conflict.newReservation.id),
+                customerName: customerMap[conflict.newReservation.customerId]?.name ?? `고객 ${conflict.newReservation.customerId}`,
+                designerName: designers.find((designer) => designer.id === conflict.newReservation.designerId)?.name ?? '미지정',
+                appointmentDate: conflict.newReservation.date,
+                appointmentTime: conflict.newReservation.startTime,
+                reservationId: conflict.newReservation.id,
+                timestamp: new Date(),
+                read: false,
+                type: 'conflict' as const,
+                conflictKey: conflictKey(conflict),
+                conflictStatus: 'pending' as const,
+            }));
+
+        if (conflictNotifications.length > 0) {
+            addSyncNotifications(conflictNotifications);
+        }
+
+        setConflictQueue(merged);
+        setCurrentIndex(0);
+    }, [reservationMap, addSyncNotifications]);
 
     const isActive =
         session?.user?.provider === 'google'
@@ -262,14 +336,29 @@ export function useNaverBookingSync() {
 
 
     const visibleNotifications = notifications;
-    const unreadCount = visibleNotifications.filter((n) => !n.read).length;
+    const unreadCount = visibleNotifications.filter((n) =>
+        !n.read || (n.type === 'conflict' && n.conflictStatus !== 'confirmed')
+    ).length;
 
     const activeQueue = conflictQueue.filter((c) => !deferredIds.has(conflictKey(c)));
     const currentConflict: ConflictInfo | null = activeQueue[currentIndex] ?? null;
+    const currentConflictStatus: 'pending' | 'deferred' | 'confirmed' | null = currentConflict
+        ? (notifications.find((n) => n.type === 'conflict' && n.conflictKey === conflictKey(currentConflict))?.conflictStatus ?? 'pending')
+        : null;
 
     const advanceConflict = useCallback(() => {
         if (currentConflict) {
-            updateConflictNotificationStatus(conflictKey(currentConflict), 'confirmed');
+            const key = conflictKey(currentConflict);
+            updateConflictNotificationStatus(key, 'confirmed');
+            // 확인 시 해당 알림 읽음 처리
+            const notification = notifications.find((n) => n.type === 'conflict' && n.conflictKey === key);
+            if (notification) markSyncNotificationRead(notification.id);
+            setDeferredIds((prev) => {
+                const next = new Set(prev);
+                next.add(key);
+                localStorage.setItem('naver-sync-deferred-conflicts', JSON.stringify([...next]));
+                return next;
+            });
         }
         setCurrentIndex((prev) => {
             const nextIndex = prev + 1;
@@ -303,26 +392,64 @@ export function useNaverBookingSync() {
         });
     }, [currentConflict, activeQueue.length, updateConflictNotificationStatus]);
 
-    const openConflictByKey = useCallback((key: string) => {
-        const existing = conflictQueue.find((conflict) => conflictKey(conflict) === key);
-        if (!existing) return;
+    const dismissConflicts = useCallback(() => {
+        setConflictQueue([]);
+        setCurrentIndex(0);
+    }, []);
 
+    const openConflictByKey = useCallback((key: string) => {
+        let queue = conflictQueue;
+
+        // conflictQueue가 비어있으면 store에서 재감지 + 저장된 conflict 복원
+        if (queue.length === 0) {
+            const detected = detectConflictsFromStore();
+            const restored = restoreConflictsFromPairs();
+            const allKeys = new Set(detected.map(conflictKey));
+            queue = [...detected];
+            for (const r of restored) {
+                const k = conflictKey(r);
+                if (!allKeys.has(k)) {
+                    allKeys.add(k);
+                    queue.push(r);
+                }
+            }
+            if (queue.length > 0) {
+                setConflictQueue(queue);
+            }
+        }
+
+        let existing = queue.find((conflict) => conflictKey(conflict) === key);
+
+        // queue에도 없으면 notification + reservationMap에서 직접 복원
+        if (!existing) {
+            const [newIdStr, existingIdStr] = key.split('-');
+            const newId = Number(newIdStr);
+            const existingId = Number(existingIdStr);
+            const allReservations = Object.values(reservationMap).flat();
+            const newRes = allReservations.find((r) => r.id === newId);
+            const existingRes = allReservations.find((r) => r.id === existingId);
+            if (!newRes || !existingRes) return;
+            existing = {newReservation: newRes, existingReservation: existingRes};
+            queue = [...queue, existing];
+            setConflictQueue(queue);
+            saveActiveConflictPairs(queue);
+        }
+
+        // deferredIds에서 메모리에서만 임시 제거 (localStorage는 유지)
         setDeferredIds((prev) => {
             if (!prev.has(key)) return prev;
             const next = new Set(prev);
             next.delete(key);
-            localStorage.setItem('naver-sync-deferred-conflicts', JSON.stringify([...next]));
             return next;
         });
 
-        const nextActiveQueue = conflictQueue.filter((conflict) => {
+        const nextActiveQueue = queue.filter((conflict) => {
             const itemKey = conflictKey(conflict);
             return itemKey === key || !deferredIds.has(itemKey);
         });
         const nextIndex = nextActiveQueue.findIndex((conflict) => conflictKey(conflict) === key);
         setCurrentIndex(nextIndex >= 0 ? nextIndex : 0);
-        updateConflictNotificationStatus(key, 'pending');
-    }, [conflictQueue, deferredIds, updateConflictNotificationStatus]);
+    }, [conflictQueue, deferredIds]);
 
     return {
         notifications,
@@ -332,8 +459,10 @@ export function useNaverBookingSync() {
         markAllRead: markSyncNotificationsRead,
         clearAll: clearSyncNotifications,
         currentConflict,
+        currentConflictStatus,
         advanceConflict,
         deferConflict,
+        dismissConflicts,
         openConflictByKey,
         sync,
         syncing,

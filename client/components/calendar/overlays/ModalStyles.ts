@@ -130,7 +130,7 @@ export const StyledOverlay = styled.div`
     justify-content: center;
     padding: var(--overlay-padding);
     background: radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 38%),
-    rgba(15, 23, 42, 0.5);
+    rgba(15, 23, 42, 0.1);
     backdrop-filter: blur(var(--overlay-backdrop-blur));
     box-sizing: border-box;
 `;
@@ -250,7 +250,7 @@ export const StyledForm = styled.div`
     flex-direction: column;
     gap: 10px;
 
-    label {
+    label:not(:has(input[type="checkbox"])) {
         display: flex;
         flex-direction: column;
         gap: 4px;
