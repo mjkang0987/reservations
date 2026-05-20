@@ -167,8 +167,6 @@ export function AddressContent({
                         </StyledPreviewActions>
                     </StyledMergePreview>
                 )}
-            </StyledSticky>
-            <StyledGrid>
                 <StyledHeaderRow>
                     <span></span>
                     <span>이름</span>
@@ -176,6 +174,8 @@ export function AddressContent({
                     <span>최근 시술</span>
                     <span>예약현황</span>
                 </StyledHeaderRow>
+            </StyledSticky>
+            <StyledGrid>
                 {filteredCustomers.length === 0 ? (
                     <StyledEmpty>검색 결과가 없습니다.</StyledEmpty>
                 ) : (
@@ -223,7 +223,7 @@ export function AddressContent({
 const StyledSticky = styled.div<{ $expanded?: boolean }>`
     position: sticky;
     top: 0;
-    padding: 20px 10px ${(p) => p.$expanded ? '0' : '20px'};
+    padding: 20px 10px 0;
     z-index: 2;
     background-color: var(--bg-color, #fff);
 `;
@@ -274,12 +274,12 @@ const StyledHeaderRow = styled.div`
     display: grid;
     grid-template-columns: 24px 80px 130px 1fr auto;
     gap: 12px;
-    padding: 0 10px 10px;
+    padding: 10px 10px;
+    margin-top: 10px;
     border-bottom: 2px solid var(--black-color);
     font-size: var(--small-font);
     font-weight: 600;
     color: var(--dark-gray-color);
-    background-color: var(--bg-color, #fff);
 
     @media (max-width: 600px) {
         display: none;
