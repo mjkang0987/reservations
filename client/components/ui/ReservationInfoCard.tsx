@@ -80,11 +80,11 @@ export function ReservationInfoCard({
 
     return (
         <StyledCard
+            {...(clickable ? {as: 'button' as const, type: 'button' as const} : {})}
             className={className}
             $accentColor={accentColor ?? designerColor}
             $accentBar={accentBar}
             $clickable={clickable}
-            role={clickable ? 'button' : undefined}
             tabIndex={clickable ? 0 : undefined}
             onClick={clickable ? handleActivate : undefined}
             onKeyDown={handleKeyDown}
@@ -169,6 +169,7 @@ const StyledCard = styled.div<{
     color: var(--dark-gray-color);
     box-sizing: border-box;
     text-align: left;
+    font: inherit;
     cursor: ${(props) => props.$clickable ? 'pointer' : 'default'};
     transition: border-color 0.14s ease, background-color 0.14s ease, box-shadow 0.14s ease;
 
