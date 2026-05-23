@@ -171,12 +171,12 @@ const actionButtonStyle = css`
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
-        
-    }
+            opacity: 0.85;
+        }
     }
 `;
 
@@ -229,10 +229,6 @@ const StyledStoreActionRow = styled.div`
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-
-    @media (max-width: 640px) {
-        justify-content: stretch;
-    }
 `;
 
 const StyledClosedDateAddRow = styled.div`
@@ -315,7 +311,7 @@ const StyledSaveBtn = styled.button`
     ${mobileStretchButtonStyle};
     border: 1px solid var(--blue-color);
     background-color: var(--blue-color);
-    color: #fff;
+    color: var(--white-color);
 `;
 
 const StyledCancelBtn = styled.button`
