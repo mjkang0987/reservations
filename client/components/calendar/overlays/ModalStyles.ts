@@ -379,6 +379,12 @@ export const StyledDiffGrid = styled.dl`
     gap: var(--gap-xs) var(--gap-lg);
     margin: 0;
 
+    dt {
+        font-size: 13px;
+        color: var(--dark-gray-color);
+        font-weight: 500;
+    }
+
     dd {
         display: flex;
         align-items: center;
