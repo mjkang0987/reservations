@@ -118,8 +118,8 @@ const StyledConfirmContent = styled.div`
 
     dl {
         display: grid;
-        grid-template-columns: 52px 1fr;
-        gap: 10px 12px;
+        grid-template-columns: 60px 1fr;
+        gap: 8px 12px;
         margin: 0;
     }
 
@@ -127,15 +127,11 @@ const StyledConfirmContent = styled.div`
         font-size: 13px;
         color: var(--dark-gray-color);
         font-weight: 500;
-        padding-top: 1px;
     }
 
     dd {
         margin: 0;
         font-size: 13px;
-        color: var(--black-color);
-        font-weight: 500;
-        line-height: 1.45;
     }
 `;
 
