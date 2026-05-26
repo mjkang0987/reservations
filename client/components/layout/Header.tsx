@@ -215,8 +215,8 @@ const StyledCalendarRow = styled.div`
     min-width: 0;
 
     @media (max-width: 640px) {
+        flex-wrap: wrap;
         width: 100%;
-        height: 40px;
         padding: 0 2px;
     }
 `;
@@ -327,6 +327,7 @@ const StyledDesignerFilter = styled.select`
 
     @media (max-width: 640px) {
         min-width: 96px;
+        margin-left: 0;
     }
 `;
 
