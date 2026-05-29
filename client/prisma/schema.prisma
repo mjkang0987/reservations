@@ -315,6 +315,15 @@ model CustomerMergeHistory {
   @@index([storeId])
 }
 
+model Inquiry {
+  id        String   @id @default(cuid())
+  storeId   String?
+  name      String
+  email     String   @default("")
+  content   String
+  createdAt DateTime @default(now())
+}
+
 enum DesignerStatus {
   active
   on_leave

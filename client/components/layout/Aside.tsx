@@ -20,13 +20,13 @@ import {ButtonText} from '../ui/ButtonText';
 
 const SETTINGS_SUBMENU = [
     {tab: 'revenue', href: '/settings/revenue', label: '매출', icon: 'revenue'},
-    {tab: 'point', href: '/settings/point', label: '적립금관리', icon: 'point'},
-    {tab: 'store', href: '/settings/store', label: '매장관리', icon: 'store'},
-    {tab: 'service', href: '/settings/service', label: '서비스관리', icon: 'service'},
-    {tab: 'designer', href: '/settings/designer', label: '디자이너관리', icon: 'designer'},
-    {tab: 'customers', href: '/address', label: '고객명단', icon: 'customers'},
-    {tab: 'member', href: '/settings/member', label: '멤버관리', icon: 'member'},
-    {tab: 'my', href: '/mypage', label: '계정관리', icon: 'account'},
+    {tab: 'point', href: '/settings/point', label: '적립금 관리', icon: 'point'},
+    {tab: 'store', href: '/settings/store', label: '매장 관리', icon: 'store'},
+    {tab: 'service', href: '/settings/service', label: '서비스 관리', icon: 'service'},
+    {tab: 'designer', href: '/settings/designer', label: '디자이너 관리', icon: 'designer'},
+    {tab: 'customers', href: '/address', label: '고객 명단', icon: 'customers'},
+    {tab: 'member', href: '/settings/member', label: '멤버 관리', icon: 'member'},
+    {tab: 'my', href: '/mypage', label: '계정 관리', icon: 'account'},
 ];
 
 export const Aside = () => {
@@ -177,6 +177,10 @@ export const Aside = () => {
                     </StyledAccordionContent>
                 </StyledNav>
                     <StyledDivider />
+                    <StyledInquiryLink href="/inquiry" onClick={closeMobile}>
+                        <MenuIcon icon="inquiry" />
+                        <span>문의하기</span>
+                    </StyledInquiryLink>
                     <StyledLogoutButton type="button"
                                         onClick={() => signOut({callbackUrl: '/login'})}>
                         <AuthActionIcon direction="logout" />
@@ -319,6 +323,15 @@ const MenuIcon = ({icon}: { icon: string }) => {
                 <circle cx="9" cy="7" r="3" />
                 <path d="M3 21V18C3 16.3 4.3 15 6 15H12C13.7 15 15 16.3 15 18V21" />
                 <path d="M16 3.1C17.3 3.6 18.2 4.8 18.2 6.3C18.2 7.8 17.3 9 16 9.5M21 21V18C21 16.4 20.1 15 18.5 14.5" />
+            </StyledMenuIcon>
+        );
+    }
+
+    if (icon === 'inquiry') {
+        return (
+            <StyledMenuIcon viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="3" />
+                <path d="M3 7L12 13L21 7" />
             </StyledMenuIcon>
         );
     }
@@ -575,19 +588,51 @@ const StyledSubNavLink = styled(Link)<{ $active?: boolean }>`
     }
 `;
 
-const StyledLogoutButton = styled.button`
-    display: inline-flex;
+const StyledInquiryLink = styled(Link)`
+    display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 12px;
-    height: 28px;
+    width: 100%;
+    padding: 0 16px 0 20px;
+    min-height: 36px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    box-sizing: border-box;
+    font-size: var(--small-font);
+    font-weight: 500;
+    color: var(--aside-text);
+    text-decoration: none;
+    white-space: nowrap;
+    opacity: 0.7;
+    transition: background-color 0.1s, opacity 0.1s, filter 0.1s;
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
+        opacity: 1;
+        filter: brightness(1.18);
+    }
+    }
+`;
+
+const StyledLogoutButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 0 16px 0 20px;
+    min-height: 36px;
+    flex-shrink: 0;
     border: none;
     text-align: left;
     border-radius: var(--radius-md);
     background-color: transparent;
+    box-sizing: border-box;
     font-size: var(--small-font);
+    font-weight: 500;
     color: var(--aside-text);
+    text-decoration: none;
     cursor: pointer;
+    white-space: nowrap;
     opacity: 0.7;
     transition: background-color 0.1s, opacity 0.1s, filter 0.1s;
 
