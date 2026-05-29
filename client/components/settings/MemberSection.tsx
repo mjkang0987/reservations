@@ -4,6 +4,8 @@ import {useSession} from 'next-auth/react';
 
 import styled from 'styled-components';
 import {LabelBadge} from '../ui/LabelBadge';
+import {PageHero} from '../ui/PageHero';
+import {StyledEmpty} from './settings-styles';
 
 type Invite = {
     id: string;
@@ -123,12 +125,29 @@ export const MemberSection = () => {
 
     const activeInvites = invites.filter((inv) => !inv.usedAt && new Date(inv.expiresAt) > new Date());
     const usedOrExpiredInvites = invites.filter((inv) => inv.usedAt || new Date(inv.expiresAt) <= new Date());
+    const isGuest = !session?.user;
     const isManager = session?.user?.role === 'owner' || session?.user?.role === 'manager';
+
+    if (isGuest) {
+        return (
+            <StyledContainer>
+                <PageHero eyebrow="MEMBER" title="멤버 관리" subtitle="초대코드를 생성하고 매장 멤버를 관리합니다." />
+                <StyledGuestCard>
+                    <StyledGuestTitle>게스트 모드</StyledGuestTitle>
+                    <StyledGuestDesc>
+                        멤버 관리 기능은 로그인 후 이용할 수 있습니다.
+                        매장 오너 또는 매니저 권한이 있는 계정으로 로그인하면
+                        초대코드 생성, 멤버 조회 등의 기능을 사용할 수 있습니다.
+                    </StyledGuestDesc>
+                </StyledGuestCard>
+            </StyledContainer>
+        );
+    }
 
     if (!isManager) {
         return (
             <StyledContainer>
-                <StyledSectionTitle>멤버 관리</StyledSectionTitle>
+                <PageHero eyebrow="MEMBER" title="멤버 관리" subtitle="초대코드를 생성하고 매장 멤버를 관리합니다." />
                 <StyledHint>멤버 관리는 오너 또는 매니저만 가능합니다.</StyledHint>
             </StyledContainer>
         );
@@ -136,7 +155,7 @@ export const MemberSection = () => {
 
     return (
         <StyledContainer>
-            <StyledSectionTitle>멤버 관리</StyledSectionTitle>
+            <PageHero eyebrow="MEMBER" title="멤버 관리" subtitle="초대코드를 생성하고 매장 멤버를 관리합니다." />
 
             <StyledCard>
                 <StyledCardTitle>초대코드 생성</StyledCardTitle>
@@ -156,9 +175,9 @@ export const MemberSection = () => {
                 {error && <StyledError>{error}</StyledError>}
             </StyledCard>
 
-            {activeInvites.length > 0 && (
-                <StyledCard>
-                    <StyledCardTitle>활성 초대코드</StyledCardTitle>
+            <StyledCard>
+                <StyledCardTitle>활성 초대코드</StyledCardTitle>
+                {activeInvites.length > 0 ? (
                     <StyledList>
                         {activeInvites.map((inv) => (
                             <StyledInviteItem key={inv.id}>
@@ -176,12 +195,14 @@ export const MemberSection = () => {
                             </StyledInviteItem>
                         ))}
                     </StyledList>
-                </StyledCard>
-            )}
+                ) : (
+                    <StyledEmpty>내역이 없습니다.</StyledEmpty>
+                )}
+            </StyledCard>
 
-            {members.length > 0 && (
-                <StyledCard>
-                    <StyledCardTitle>현재 멤버</StyledCardTitle>
+            <StyledCard>
+                <StyledCardTitle>현재 멤버</StyledCardTitle>
+                {members.length > 0 ? (
                     <StyledList>
                         {members.map((m) => (
                             <StyledMemberItem key={m.id}>
@@ -193,8 +214,10 @@ export const MemberSection = () => {
                             </StyledMemberItem>
                         ))}
                     </StyledList>
-                </StyledCard>
-            )}
+                ) : (
+                    <StyledEmpty>내역이 없습니다.</StyledEmpty>
+                )}
+            </StyledCard>
 
             {usedOrExpiredInvites.length > 0 && (
                 <StyledCard>
@@ -224,15 +247,8 @@ const StyledContainer = styled.div`
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 12px 0;
 `;
 
-const StyledSectionTitle = styled.h2`
-    margin: 0 0 4px;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--black-color);
-`;
 
 const StyledCard = styled.div`
     padding: 14px;
@@ -455,5 +471,27 @@ const StyledMemberEmail = styled.span`
 const StyledHint = styled.p`
     margin: 0;
     font-size: 13px;
+    color: var(--dark-gray-color2);
+`;
+
+const StyledGuestCard = styled.div`
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--white-color);
+    box-shadow: var(--shadow-sm);
+`;
+
+const StyledGuestTitle = styled.h3`
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-gray-color);
+`;
+
+const StyledGuestDesc = styled.p`
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
     color: var(--dark-gray-color2);
 `;
