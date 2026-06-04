@@ -422,45 +422,33 @@ export const ServiceManageSection = () => {
                     >
                         <StyledCategoryToggle open>
                         <StyledCategoryHeader>
-                            {editingCategory === category ? (
-                                <StyledCategoryEditRow>
-                                    <StyledCategoryEditInput
-                                        id="service-category-edit"
-                                        value={editingCategoryName}
-                                        onChange={(e) => setEditingCategoryName(e.target.value)}
-                                        placeholder="카테고리명"
-                                    />
-                                    <StyledSaveBtn type="button" onClick={() => saveCategoryEdit(category)}>저장</StyledSaveBtn>
-                                    <StyledCancelBtn type="button" onClick={() => {
-                                        setEditingCategory(null);
-                                        setEditingCategoryName('');
-                                        setManageError('');
-                                    }}>취소</StyledCancelBtn>
-                                </StyledCategoryEditRow>
-                            ) : (
-                                <StyledCategoryLabel>
-                                    <StyledCategoryNameChip>
-                                        <StyledCategoryDragHandle
-                                            draggable
-                                            onDragStart={(e) => handleCategoryDragStart(e, category)}
-                                            onClick={(e) => e.preventDefault()}
-                                            title="카테고리 순서 이동"
-                                            aria-label={`${category} 카테고리 순서 이동`}
-                                        >
-                                            <svg viewBox="0 0 16 16" aria-hidden="true">
-                                                <rect x="2.5" y="3" width="11" height="1.5" rx="0.75" />
-                                                <rect x="2.5" y="7.25" width="11" height="1.5" rx="0.75" />
-                                                <rect x="2.5" y="11.5" width="11" height="1.5" rx="0.75" />
-                                            </svg>
-                                        </StyledCategoryDragHandle>
-                                        <span>{category}</span>
-                                    </StyledCategoryNameChip>
-                                </StyledCategoryLabel>
-                            )}
-                            <StyledCategoryActions>
-                                {editingCategory !== category && (
-                                    <StyledEditBtn type="button" onClick={() => startCategoryEdit(category)}>이름수정</StyledEditBtn>
-                                )}
+                            <StyledCategoryLabel>
+                                <StyledCategoryNameChip>
+                                    <StyledCategoryDragHandle
+                                        draggable
+                                        onDragStart={(e) => handleCategoryDragStart(e, category)}
+                                        onClick={(e) => e.preventDefault()}
+                                        title="카테고리 순서 이동"
+                                        aria-label={`${category} 카테고리 순서 이동`}
+                                    >
+                                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                                            <rect x="2.5" y="3" width="11" height="1.5" rx="0.75" />
+                                            <rect x="2.5" y="7.25" width="11" height="1.5" rx="0.75" />
+                                            <rect x="2.5" y="11.5" width="11" height="1.5" rx="0.75" />
+                                        </svg>
+                                    </StyledCategoryDragHandle>
+                                    <span>{category}</span>
+                                </StyledCategoryNameChip>
+                            </StyledCategoryLabel>
+                        </StyledCategoryHeader>
+                        {editingCategory === category && (
+                            <StyledCategoryEditRow>
+                                <StyledCategoryEditInput
+                                    id="service-category-edit"
+                                    value={editingCategoryName}
+                                    onChange={(e) => setEditingCategoryName(e.target.value)}
+                                    placeholder="카테고리명"
+                                />
                                 <StyledColorField>
                                     <StyledCategoryColorInput
                                         id={`service-category-color-${category}`}
@@ -471,8 +459,14 @@ export const ServiceManageSection = () => {
                                         title={`${category} 대표 컬러`}
                                     />
                                 </StyledColorField>
-                            </StyledCategoryActions>
-                        </StyledCategoryHeader>
+                                <StyledSaveBtn type="button" onClick={() => saveCategoryEdit(category)}>저장</StyledSaveBtn>
+                                <StyledCancelBtn type="button" onClick={() => {
+                                    setEditingCategory(null);
+                                    setEditingCategoryName('');
+                                    setManageError('');
+                                }}>취소</StyledCancelBtn>
+                            </StyledCategoryEditRow>
+                        )}
                         <StyledCategoryBody>
                         {items.map((item) => (
                             <StyledItem
@@ -507,6 +501,11 @@ export const ServiceManageSection = () => {
                         ))}
                         </StyledCategoryBody>
                         </StyledCategoryToggle>
+                        {editingCategory !== category && (
+                            <StyledCategoryActions>
+                                <StyledEditBtn type="button" onClick={() => startCategoryEdit(category)}>이름수정</StyledEditBtn>
+                            </StyledCategoryActions>
+                        )}
                     </StyledGroup>
                 ))}
             </StyledServiceBody>
@@ -669,17 +668,14 @@ const StyledCategoryNameChip = styled.span`
     min-width: 0;
 `;
 
-const StyledCategoryActions = styled.span`
+const StyledCategoryActions = styled.div`
+    position: absolute;
+    top: 6px;
+    right: 0;
+    z-index: 3;
     display: inline-flex;
     align-items: center;
-    margin-left: auto;
     gap: 6px;
-    flex-shrink: 0;
-
-    @media (max-width: 640px) {
-        flex-wrap: wrap;
-        justify-content: flex-end;
-    }
 `;
 
 const StyledColorField = styled.span`
@@ -690,12 +686,11 @@ const StyledColorField = styled.span`
     color: var(--dark-gray-color2);
 `;
 
-const StyledCategoryEditRow = styled.span`
+const StyledCategoryEditRow = styled.div`
     display: flex;
     align-items: center;
     gap: 6px;
-    flex: 1;
-    min-width: 0;
+    padding: 0 0 6px;
 `;
 
 const StyledCategoryEditInput = styled.input`
