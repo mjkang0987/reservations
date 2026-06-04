@@ -113,6 +113,7 @@ export function useNaverBookingSync() {
     const {data: session} = useSession();
     const isSyncingRef = useRef(false);
     const [syncing, setSyncing] = useState(false);
+    const [gmailTokenExpired, setGmailTokenExpired] = useState(false);
     const [conflictQueue, setConflictQueue] = useState<ConflictInfo[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [deferredIds, setDeferredIds] = useState<Set<string>>(() => {
@@ -129,8 +130,15 @@ export function useNaverBookingSync() {
     const replaceMockConflictNotifications = useCalendarStore((s) => s.replaceMockConflictNotifications);
     const clearSyncNotifications = useCalendarStore((s) => s.clearSyncNotifications);
     const reservationMap = useCalendarStore((s) => s.reservationMap);
+    const customerMap = useCalendarStore((s) => s.customerMap);
+    const patchNotificationNames = useCalendarStore((s) => s.patchNotificationNames);
     const conflictDetectedRef = useRef(false);
 
+    // 빈 고객명 알림 보정 (데이터 로드 후)
+    useEffect(() => {
+        if (Object.keys(customerMap).length === 0) return;
+        patchNotificationNames();
+    }, [customerMap, patchNotificationNames]);
 
     // 자동 중복 감지 (예약 데이터 로드 시)
     useEffect(() => {
@@ -218,7 +226,13 @@ export function useNaverBookingSync() {
                 error?: string;
             };
 
-            if (data.error === 'gmail_not_connected') return;
+            if (data.error) {
+                console.log('[naver-sync] API error:', data.error);
+                if (data.error === 'gmail_token_expired') {
+                    setGmailTokenExpired(true);
+                }
+                return;
+            }
 
             localStorage.setItem('naver-sync-last', String(Date.now()));
             console.log('[naver-sync]', {synced: data.synced.length, cancelled: data.cancelled.length, skipped: data.skipped.length, errors: data.errors.length});
@@ -241,10 +255,10 @@ export function useNaverBookingSync() {
             const cancelNotifications: SyncNotification[] = data.cancelled.map((entry, i) => ({
                 id: `${Date.now()}-cancel-${i}`,
                 bookingId: entry.bookingId,
-                customerName: entry.customerName ?? '',
-                designerName: entry.designerName ?? '미지정',
-                appointmentDate: entry.appointmentDate ?? '',
-                appointmentTime: entry.appointmentTime ?? '',
+                customerName: entry.customerName || '고객',
+                designerName: entry.designerName || '미지정',
+                appointmentDate: entry.appointmentDate || '',
+                appointmentTime: entry.appointmentTime || '',
                 reservationId: entry.reservationId,
                 timestamp: now,
                 read: false,
@@ -471,6 +485,8 @@ export function useNaverBookingSync() {
         sync,
         syncing,
         isActive,
+        gmailTokenExpired,
+        dismissGmailTokenExpired: useCallback(() => setGmailTokenExpired(false), []),
     };
 }
 

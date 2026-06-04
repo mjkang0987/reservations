@@ -152,8 +152,10 @@ export const NaverSyncNotification = ({
                                             <span className="time">{n.appointmentTime}</span>
                                             <span className="name">{n.customerName}</span>
                                             <span className="suffix">고객님</span>
-                                            <StyledNaverTag>네이버예약</StyledNaverTag>
-                                            <span className="suffix">예약 확정</span>
+                                            {n.type === 'cancel'
+                                                ? <StyledCancelTag>예약취소</StyledCancelTag>
+                                                : <><StyledNaverTag>네이버예약</StyledNaverTag><span className="suffix">확정</span></>
+                                            }
                                         </StyledItemText>
                                     )}
                                     <StyledDesignerMeta>
@@ -286,8 +288,10 @@ const NotificationModal = ({notifications, designers, reservationMap, markRead, 
                                                 <span className="time">{n.appointmentTime}</span>
                                                 <span className="name">{n.customerName}</span>
                                                 <span className="suffix">고객님</span>
-                                                <StyledNaverTag>네이버예약</StyledNaverTag>
-                                                <span className="suffix">완료</span>
+                                                {n.type === 'cancel'
+                                                    ? <StyledCancelTag>예약취소</StyledCancelTag>
+                                                    : <><StyledNaverTag>네이버예약</StyledNaverTag><span className="suffix">확정</span></>
+                                                }
                                             </StyledItemText>
                                         )}
                                         <StyledDesignerMeta>
@@ -326,8 +330,10 @@ const NotificationModal = ({notifications, designers, reservationMap, markRead, 
                                                 <span className="time">{n.appointmentTime}</span>
                                                 <span className="name">{n.customerName}</span>
                                                 <span className="suffix">고객님</span>
-                                                <StyledNaverTag>네이버예약</StyledNaverTag>
-                                                <span className="suffix">완료</span>
+                                                {n.type === 'cancel'
+                                                    ? <StyledCancelTag>예약취소</StyledCancelTag>
+                                                    : <><StyledNaverTag>네이버예약</StyledNaverTag><span className="suffix">확정</span></>
+                                                }
                                             </StyledItemText>
                                         )}
                                         <StyledDesignerMeta>
@@ -372,7 +378,6 @@ const StyledBellButton = styled.button`
     border: none;
     color: var(--dark-gray-color);
     flex-shrink: 0;
-    cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
@@ -436,7 +441,6 @@ const StyledMarkReadButton = styled.button`
     border: none;
     color: var(--blue-color);
     font-size: var(--small-font);
-    cursor: pointer;
     padding: 0;
 `;
 
@@ -571,6 +575,14 @@ const StyledNaverTag = styled(LabelBadge).attrs({
     font-size: 10px;
 `;
 
+const StyledCancelTag = styled(LabelBadge).attrs({
+    $tone: 'neutral',
+    $shape: 'soft',
+    $size: 'sm',
+})`
+    font-size: 10px;
+`;
+
 const StyledConflictTag = styled(LabelBadge).attrs({
     $tone: 'danger',
     $shape: 'soft',
@@ -613,7 +625,6 @@ const StyledShowAllButton = styled.button`
     color: var(--blue-color);
     font-size: var(--small-font);
     font-weight: 600;
-    cursor: pointer;
     padding: 0;
 `;
 
@@ -627,7 +638,7 @@ const StyledModalDetail = styled(StyledDetail)`
 `;
 
 const StyledModalBodyInner = styled(StyledBodyInner)`
-    padding: 0;
+    padding: 0 0 30px 0;
 `;
 
 const StyledModalItem = styled.div<{ $unread: boolean }>`

@@ -4,7 +4,7 @@ import type {ReservationDetailFormState} from './ReservationDetailSections';
 import type {PaymentEntryDraft, ReservationDiffItem} from './reservationDetailTypes';
 
 const FIELD_LABELS: Record<keyof ReservationDetailFormState, string> = {
-    service: '시술',
+    service: '서비스',
     designerId: '디자이너',
     date: '날짜',
     startTime: '시작시간',
@@ -104,23 +104,23 @@ export function getHistoryDiffs(entry: ReservationHistoryEntry, designerNameMap:
     const diffs: ReservationDiffItem[] = [];
 
     if (entry.after.status === 'cancelled' && entry.before.status !== 'cancelled') {
-        diffs.push({label: '상태', before: '활성', after: '취소됨'});
+        diffs.push({label: '상태', before: '예약', after: '예약취소'});
         return diffs;
     }
 
     if (entry.after.status === 'noshow' && entry.before.status !== 'noshow') {
-        diffs.push({label: '상태', before: '활성', after: '노쇼'});
+        diffs.push({label: '상태', before: '예약', after: '노쇼'});
         return diffs;
     }
 
     if (entry.after.status === 'completed' && entry.before.status !== 'completed') {
-        diffs.push({label: '상태', before: '활성', after: '완료'});
+        diffs.push({label: '상태', before: '예약', after: '완료'});
         return diffs;
     }
 
     if (entry.after.status === 'active' && (entry.before.status === 'cancelled' || entry.before.status === 'noshow')) {
-        const beforeLabel = entry.before.status === 'cancelled' ? '취소됨' : '노쇼';
-        diffs.push({label: '상태', before: beforeLabel, after: '활성'});
+        const beforeLabel = entry.before.status === 'cancelled' ? '예약취소' : '노쇼';
+        diffs.push({label: '상태', before: beforeLabel, after: '예약'});
         return diffs;
     }
 

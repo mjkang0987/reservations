@@ -97,7 +97,11 @@ export function AddressCustomerRow({
                         onStartEditing={onStartEditing}
                         onFinishEditing={onFinishEditing}
                     />
-                    <AddressCustomerRecharge customer={customer} />
+                    <AddressCustomerRecharge
+                        customer={customer}
+                        customerReservations={customerReservations}
+                        onReservationClick={onReservationClick}
+                    />
                     <AddressCustomerReservations
                         customerReservations={customerReservations}
                         designerColorMap={designerColorMap}

@@ -127,7 +127,6 @@ const StyledViewAllButton = styled.button`
     font-size: 9px;
     font-weight: 600;
     color: var(--dark-gray-color);
-    cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {

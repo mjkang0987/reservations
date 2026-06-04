@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import {createPortal} from 'react-dom';
 
@@ -20,7 +20,8 @@ import {
 
 import {getDesignerColor} from '../../../utils/designers';
 import {buildServiceColorMap, formatPrice} from '../../../utils/services';
-import {formatTel} from '../../../utils/customers';
+import {formatTel, toCustomerMap} from '../../../utils/customers';
+import type {Customer as CustomerType} from '../../../utils/customers';
 import {useCalendarStore} from '../../../store/calendarStore';
 import {CloseIconButton} from '../../ui/CloseIconButton';
 import {CustomerReservationCards} from '../../ui/CustomerReservationCards';
@@ -69,10 +70,14 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
     const [newTagText, setNewTagText] = useState('');
     const [selectedTagColor, setSelectedTagColor] = useState(MEMO_TAG_COLORS[0]);
     const [editError, setEditError] = useState('');
+    const [mergeHistories, setMergeHistories] = useState<Array<{id: string; sourceName: string; sourceTel: string; mergedAt: string}>>([]);
+    const [isUnmergeConfirm, setIsUnmergeConfirm] = useState(false);
+    const [isUnmerging, setIsUnmerging] = useState(false);
     const serviceCatalog = useCalendarStore((s) => s.serviceCatalog);
     const categoryBaseColorMap = useCalendarStore((s) => s.categoryBaseColorMap);
     const designers = useCalendarStore((s) => s.designers);
     const updateCustomer = useCalendarStore((s) => s.updateCustomer);
+    const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
     const modalRoot = document.getElementById('modal-root');
     const {layerId, layerDataId} = useLayerInstanceId('customer-detail');
     const dialogRef = useDialogAccessibility<HTMLDivElement>(onClose);
@@ -114,11 +119,63 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
     const visibleList = customerReservations.slice(0, visibleCount);
     const hasMore = visibleCount < customerReservations.length;
     const pointHistories = [...(customer.pointHistories ?? [])].reverse();
+    const allReservations = useMemo(() => Object.values(reservationMap).flat(), [reservationMap]);
+    const handlePointHistoryClick = (entry: PointHistoryEntry) => {
+        if (!entry.relatedReservationId || !onReservationClick) return;
+        const reservation = allReservations.find((r) => r.id === entry.relatedReservationId);
+        if (reservation) onReservationClick(reservation);
+    };
     const displayMemoTags = isEditing ? editForm.memoTags : (customer.memoTags ?? []);
     const today = useMemo(() => {
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetch(`/api/customers/merge-history?customerId=${customer.id}`)
+            .then((r) => r.ok ? r.json() : null)
+            .then((data) => {
+                if (!cancelled && data?.histories) {
+                    setMergeHistories(data.histories);
+                }
+            })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, [customer.id]);
+
+    const handleUnmerge = useCallback(async () => {
+        if (mergeHistories.length === 0 || isUnmerging) return;
+        setIsUnmerging(true);
+
+        try {
+            const resp = await fetch('/api/customers/unmerge', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({mergeHistoryIds: mergeHistories.map((h) => h.id)}),
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => null);
+                alert(err?.error || '분리에 실패했습니다.');
+                return;
+            }
+
+            // 고객 데이터 리로드
+            const custRes = await fetch('/api/customers');
+            if (custRes.ok) {
+                const custData = await custRes.json() as {customers: CustomerType[]};
+                setCustomerMap(toCustomerMap(custData.customers));
+            }
+
+            onClose();
+        } catch {
+            alert('분리 중 오류가 발생했습니다.');
+        } finally {
+            setIsUnmerging(false);
+            setIsUnmergeConfirm(false);
+        }
+    }, [mergeHistories, isUnmerging, setCustomerMap, onClose]);
 
     const handleFieldChange = (field: keyof Omit<CustomerEditForm, 'memoTags'>, value: string) => {
         setEditForm((prev) => ({...prev, [field]: value}));
@@ -211,8 +268,15 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                                                       onClick={handleSaveEdit}>저장</StyledHeaderActionButton>
                         </>
                     ) : (
-                        <StyledHeaderActionButton type="button"
-                                                  onClick={handleStartEdit}>수정</StyledHeaderActionButton>
+                        <>
+                            {mergeHistories.length > 0 && (
+                                <StyledHeaderActionButton type="button"
+                                                          $danger
+                                                          onClick={() => setIsUnmergeConfirm(true)}>분리</StyledHeaderActionButton>
+                            )}
+                            <StyledHeaderActionButton type="button"
+                                                      onClick={handleStartEdit}>수정</StyledHeaderActionButton>
+                        </>
                     )}
                     <StyledHeaderCloseButton onClick={onClose} />
                 </StyledHeaderActions>
@@ -317,7 +381,10 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                         <StyledEmptyText>적립금 이력이 없습니다.</StyledEmptyText>
                     ) : (
                         <StyledPointHistoryList>
-                            <StyledPointHistoryItem>
+                            <StyledPointHistoryItem
+                                $clickable={!!pointHistories[0].relatedReservationId}
+                                onClick={() => handlePointHistoryClick(pointHistories[0])}
+                            >
                                 <StyledPointHistoryTop>
                                     <strong>{POINT_HISTORY_LABELS[pointHistories[0].type]}</strong>
                                     <span>{pointHistories[0].delta > 0 ? '+' : ''}{formatPrice(pointHistories[0].delta)}</span>
@@ -359,7 +426,11 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                 <StyledPointHistoryModalContent>
                     <StyledPointHistoryList>
                         {pointHistories.map((history) => (
-                            <StyledPointHistoryItem key={history.id}>
+                            <StyledPointHistoryItem
+                                key={history.id}
+                                $clickable={!!history.relatedReservationId}
+                                onClick={() => handlePointHistoryClick(history)}
+                            >
                                 <StyledPointHistoryTop>
                                     <strong>{POINT_HISTORY_LABELS[history.type]}</strong>
                                     <span>{history.delta > 0 ? '+' : ''}{formatPrice(history.delta)}</span>
@@ -375,6 +446,39 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                 </StyledPointHistoryModalContent>
             </StyledPointHistoryModal>
         </StyledPointHistoryOverlay>
+    )}
+    {isUnmergeConfirm && mergeHistories.length > 0 && (
+        <StyledUnmergeOverlay onClick={() => setIsUnmergeConfirm(false)}>
+            <StyledUnmergeModal onClick={(e) => e.stopPropagation()}>
+                <StyledHeader>
+                    <h3>고객 병합 분리</h3>
+                    <CloseIconButton onClick={() => setIsUnmergeConfirm(false)} />
+                </StyledHeader>
+                <StyledUnmergeContent>
+                    <StyledUnmergeMessage>
+                        다음 고객이 <strong>{customer.name}</strong>에 병합되었습니다. 분리하면 원래 고객이 복원됩니다.
+                    </StyledUnmergeMessage>
+                    <StyledUnmergeList>
+                        {mergeHistories.map((h) => (
+                            <StyledUnmergeItem key={h.id}>
+                                <strong>{h.sourceName}</strong>
+                                <span>{h.sourceTel ? formatTel(h.sourceTel) : '연락처 없음'}</span>
+                                <span className="date">{h.mergedAt.slice(0, 10).replace(/-/g, '.')}</span>
+                            </StyledUnmergeItem>
+                        ))}
+                    </StyledUnmergeList>
+                </StyledUnmergeContent>
+                <StyledUnmergeFooter>
+                    <StyledHeaderActionButton type="button"
+                                              onClick={() => setIsUnmergeConfirm(false)}
+                                              disabled={isUnmerging}>취소</StyledHeaderActionButton>
+                    <StyledHeaderActionButton type="button"
+                                              $danger
+                                              onClick={handleUnmerge}
+                                              disabled={isUnmerging}>{isUnmerging ? '분리 중...' : '분리'}</StyledHeaderActionButton>
+                </StyledUnmergeFooter>
+            </StyledUnmergeModal>
+        </StyledUnmergeOverlay>
     )}
     </>, modalRoot);
 };
@@ -399,16 +503,20 @@ const StyledHeaderActions = styled.div`
     gap: 8px;
 `;
 
-const StyledHeaderActionButton = styled.button<{ $primary?: boolean }>`
+const StyledHeaderActionButton = styled.button<{ $primary?: boolean; $danger?: boolean }>`
     height: 30px;
     padding: 0 10px;
-    border: 1px solid ${props => props.$primary ? 'var(--blue-color)' : 'var(--light-gray-color)'};
+    border: 1px solid ${props => props.$danger ? 'var(--danger-color)' : props.$primary ? 'var(--blue-color)' : 'var(--light-gray-color)'};
     border-radius: 8px;
-    background: ${props => props.$primary ? 'var(--blue-color)' : 'var(--white-color)'};
-    color: ${props => props.$primary ? '#fff' : 'var(--dark-gray-color)'};
+    background: ${props => props.$danger ? 'var(--danger-color)' : props.$primary ? 'var(--blue-color)' : 'var(--white-color)'};
+    color: ${props => (props.$danger || props.$primary) ? '#fff' : 'var(--dark-gray-color)'};
     font-size: 12px;
     font-weight: 600;
-    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 `;
 
 const StyledHeaderCloseButton = styled(CloseIconButton)`
@@ -577,7 +685,6 @@ const StyledPointHistoryMoreButton = styled.button`
     font-size: 12px;
     color: var(--blue-color);
     font-weight: 600;
-    cursor: pointer;
     padding: 0;
 `;
 
@@ -666,7 +773,6 @@ const StyledTagRemoveButton = styled.button`
     color: inherit;
     font-size: 11px;
     font-weight: 700;
-    cursor: pointer;
 `;
 
 const StyledEditError = styled.p`
@@ -681,7 +787,7 @@ const StyledPointHistoryList = styled.ul`
     gap: 6px;
 `;
 
-const StyledPointHistoryItem = styled.li`
+const StyledPointHistoryItem = styled.li<{$clickable?: boolean}>`
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -689,6 +795,15 @@ const StyledPointHistoryItem = styled.li`
     border: 1px solid var(--light-gray-color);
     border-radius: 8px;
     background: var(--white-color);
+    cursor: ${(p) => p.$clickable ? 'pointer' : 'default'};
+
+    ${(p) => p.$clickable && `
+        @media (hover: hover) and (pointer: fine) {
+            &:hover {
+                background: var(--gray-color2);
+            }
+        }
+    `}
 `;
 
 const StyledPointHistoryTop = styled.div`
@@ -720,7 +835,7 @@ const StyledPointHistoryMeta = styled.div`
 const StyledEmptyText = styled.p`
     margin: 0;
     font-size: 12px;
-    color: var(--gray-color);
+    color: var(--dark-gray-color2);
 `;
 
 const StyledReservationScroll = styled.div`
@@ -739,16 +854,78 @@ const StyledMoreButton = styled.button`
     width: 100%;
     margin-top: 8px;
     padding: 8px;
-    border: 1px solid var(--light-gray-color);
+    border: 1px solid var(--dark-gray-color2);
     border-radius: 4px;
     background: none;
     font-size: 13px;
-    color: var(--gray-color);
-    cursor: pointer;
+    color: var(--dark-gray-color);
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
             background-color: var(--black-color-10);
         }
     }
+`;
+
+const StyledUnmergeOverlay = styled(StyledOverlay)`
+    z-index: ${OVERLAY_Z_INDEX.confirm};
+`;
+
+const StyledUnmergeModal = styled(StyledDetail)`
+    width: min(360px, 90vw);
+`;
+
+const StyledUnmergeContent = styled.div`
+    padding: 12px;
+`;
+
+const StyledUnmergeMessage = styled.p`
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--dark-gray-color);
+    word-break: keep-all;
+
+    strong {
+        color: #0f172a;
+    }
+`;
+
+const StyledUnmergeList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+`;
+
+const StyledUnmergeItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 8px;
+    background: var(--gray-color2);
+    font-size: 12px;
+
+    strong {
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    span {
+        color: var(--dark-gray-color2);
+    }
+
+    .date {
+        margin-left: auto;
+        font-size: 11px;
+    }
+`;
+
+const StyledUnmergeFooter = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 10px 14px 14px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
 `;

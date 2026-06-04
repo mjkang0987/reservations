@@ -1,10 +1,11 @@
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 
 import styled from 'styled-components';
 
 import {useCalendarStore} from '../../store/calendarStore';
 import type {PointHistoryEntry} from '../../utils/customers';
 import {formatTel} from '../../utils/customers';
+import type {Reservation} from '../../utils/reservations';
 import {formatPrice} from '../../utils/services';
 import {PageHero} from '../ui/PageHero';
 import {formControlStyle} from '../ui/FormControls';
@@ -27,6 +28,8 @@ export const PointManageSection = () => {
     const updateCustomer = useCalendarStore((s) => s.updateCustomer);
     const updateStorePointSettings = useCalendarStore((s) => s.updateStorePointSettings);
     const openCustomerDetail = useCalendarStore((s) => s.openCustomerDetail);
+    const openReservationDetailFromCustomer = useCalendarStore((s) => s.openReservationDetailFromCustomer);
+    const reservationMap = useCalendarStore((s) => s.reservationMap);
     const [search, setSearch] = useState('');
     const [amountByCustomer, setAmountByCustomer] = useState<Record<number, string>>({});
     const [isEditingPolicy, setIsEditingPolicy] = useState(false);
@@ -58,7 +61,26 @@ export const PointManageSection = () => {
             .sort((a, b) => (b.points ?? 0) - (a.points ?? 0) || a.name.localeCompare(b.name, 'ko')),
         [customers]
     );
+    useEffect(() => {
+        if (!isEditingPolicy) {
+            setPointSettingsDraft(storeSettings.pointSettings);
+        }
+    }, [storeSettings.pointSettings, isEditingPolicy]);
+
     const isPolicyDirty = JSON.stringify(pointSettingsDraft) !== JSON.stringify(storeSettings.pointSettings);
+
+    const allReservations = useMemo<Reservation[]>(
+        () => Object.values(reservationMap).flat(),
+        [reservationMap]
+    );
+
+    const handlePointHistoryClick = (entry: PointHistoryEntry) => {
+        console.log('[point-click] entry:', entry.type, 'relatedReservationId:', entry.relatedReservationId);
+        if (!entry.relatedReservationId) return;
+        const reservation = allReservations.find((r) => r.id === entry.relatedReservationId);
+        console.log('[point-click] found reservation:', reservation?.id, reservation?.date);
+        if (reservation) openReservationDetailFromCustomer(reservation);
+    };
 
     const applyPoints = (customerId: number, direction: 'add' | 'subtract') => {
         const raw = amountByCustomer[customerId] ?? '';
@@ -129,7 +151,11 @@ export const PointManageSection = () => {
                                         ) : (
                                             <StyledHistoryList>
                                                 {histories.map((history) => (
-                                                    <StyledHistoryItem key={history.id}>
+                                                    <StyledHistoryItem
+                                                        key={history.id}
+                                                        $clickable={!!history.relatedReservationId}
+                                                        onClick={() => handlePointHistoryClick(history)}
+                                                    >
                                                         <StyledHistoryTop>
                                                             <strong>{POINT_HISTORY_LABELS[history.type]}</strong>
                                                             <span>{history.delta > 0 ? '+' : ''}{formatPrice(history.delta)}</span>
@@ -220,7 +246,7 @@ export const PointManageSection = () => {
                             )}
                         </StyledPolicyHeader>
                         <StyledPolicyOptions>
-                            <StyledPolicyBlock>
+                            <StyledPolicyBlock $active={pointSettingsDraft.enableServiceRate}>
                                 <StyledPolicyOption htmlFor="point-enable-service-rate">
                                     <input
                                         id="point-enable-service-rate"
@@ -230,7 +256,7 @@ export const PointManageSection = () => {
                                         onChange={(e) => setPointSettingsDraft((prev) => ({...prev, enableServiceRate: e.target.checked}))}
                                     />
                                     <div>
-                                        <strong>시술 시 시술 금액 퍼센트 적립</strong>
+                                        <strong>서비스 금액 일정 퍼센트 적립</strong>
                                         <span>결제완료 시 적립금 결제를 제외한 금액 기준으로 자동 적립됩니다.</span>
                                     </div>
                                 </StyledPolicyOption>
@@ -257,7 +283,7 @@ export const PointManageSection = () => {
                                     </StyledPolicyBody>
                                 )}
                             </StyledPolicyBlock>
-                            <StyledPolicyBlock>
+                            <StyledPolicyBlock $active={pointSettingsDraft.enableRecharge}>
                                 <StyledPolicyOption htmlFor="point-enable-recharge">
                                     <input
                                         id="point-enable-recharge"
@@ -553,13 +579,22 @@ const StyledHistoryList = styled.ul`
     list-style: none;
 `;
 
-const StyledHistoryItem = styled.li`
+const StyledHistoryItem = styled.li<{$clickable?: boolean}>`
     display: flex;
     flex-direction: column;
     gap: 4px;
     padding: 10px 12px;
     border-radius: 10px;
     background: var(--gray-color2);
+    cursor: ${(p) => p.$clickable ? 'pointer' : 'default'};
+
+    ${(p) => p.$clickable && `
+        @media (hover: hover) and (pointer: fine) {
+            &:hover {
+                background: var(--light-gray-color);
+            }
+        }
+    `}
 `;
 
 const StyledHistoryTop = styled.div`
@@ -631,14 +666,16 @@ const StyledPolicyOptions = styled.div`
     gap: 10px;
 `;
 
-const StyledPolicyBlock = styled.div`
+const StyledPolicyBlock = styled.div<{$active?: boolean}>`
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 12px;
-    border: 1px solid var(--light-gray-color);
+    border: 1px solid ${(p) => p.$active ? 'rgba(45, 127, 249, 0.35)' : 'var(--light-gray-color)'};
     border-radius: 10px;
-    background: var(--gray-color2);
+    background: ${(p) => p.$active ? 'rgba(45, 127, 249, 0.06)' : 'var(--gray-color2)'};
+    opacity: ${(p) => p.$active ? 1 : 0.6};
+    transition: border-color 0.15s, background 0.15s, opacity 0.15s;
 `;
 
 const StyledPolicyOption = styled.label`
@@ -712,7 +749,7 @@ const StyledRechargeRow = styled.div`
     align-items: end;
 
     @media (max-width: 720px) {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr);
     }
 `;
 
@@ -729,6 +766,7 @@ const StyledRechargeField = styled.label`
 
 const StyledRechargePlus = styled.span`
     align-self: center;
+    justify-self: center;
     font-size: 16px;
     color: var(--dark-gray-color2);
 `;
@@ -741,7 +779,6 @@ const StyledAddRuleButton = styled.button`
     background: var(--white-color);
     font-size: 12px;
     font-weight: 600;
-    cursor: pointer;
 `;
 
 const StyledDeleteRuleButton = styled.button`
@@ -752,7 +789,10 @@ const StyledDeleteRuleButton = styled.button`
     background: var(--danger-bg);
     color: var(--danger-color);
     font-size: 12px;
-    cursor: pointer;
+
+    @media (max-width: 720px) {
+        grid-column: 1 / -1;
+    }
 `;
 
 const StyledRechargePercent = styled.span`
@@ -830,7 +870,6 @@ const StyledCustomerNameButton = styled.button`
     font-weight: 700;
     color: var(--black-color);
     text-align: left;
-    cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
@@ -863,5 +902,4 @@ const StyledActionButton = styled.button<{ $danger?: boolean }>`
     color: ${(props) => props.$danger ? 'var(--danger-color)' : 'var(--dark-gray-color)'};
     font-size: 12px;
     font-weight: 600;
-    cursor: pointer;
 `;

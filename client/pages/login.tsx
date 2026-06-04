@@ -320,7 +320,6 @@ const StyledButton = styled.button<{ $bg: string; $color: string; $border: strin
     color: ${(props) => props.$color};
     font-size: 15px;
     font-weight: 600;
-    cursor: pointer;
     transition: opacity 0.15s;
 
     @media (hover: hover) and (pointer: fine) {
@@ -363,5 +362,4 @@ const StyledSecondaryButton = styled.button`
     color: var(--black-color);
     font-size: 14px;
     font-weight: 600;
-    cursor: pointer;
 `;

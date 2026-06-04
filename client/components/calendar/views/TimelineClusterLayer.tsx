@@ -164,5 +164,4 @@ const StyledClusterCardButton = styled.button`
     background: transparent;
     font: inherit;
     text-align: left;
-    cursor: pointer;
 `;

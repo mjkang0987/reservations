@@ -176,7 +176,7 @@ export const MemberSection = () => {
             </StyledCard>
 
             <StyledCard>
-                <StyledCardTitle>활성 초대코드</StyledCardTitle>
+                <StyledCardTitle>사용 가능한 초대코드</StyledCardTitle>
                 {activeInvites.length > 0 ? (
                     <StyledList>
                         {activeInvites.map((inv) => (
@@ -307,7 +307,6 @@ const StyledPrimaryButton = styled.button`
     color: var(--white-color);
     font-size: 13px;
     font-weight: 600;
-    cursor: pointer;
     white-space: nowrap;
     transition: opacity 0.15s;
 
@@ -405,7 +404,6 @@ const StyledCopyButton = styled.button`
     color: var(--dark-gray-color);
     font-size: 11px;
     font-weight: 600;
-    cursor: pointer;
     transition: background-color 0.15s, border-color 0.15s;
 
     @media (hover: hover) and (pointer: fine) {
@@ -425,7 +423,6 @@ const StyledDeleteButton = styled.button`
     color: var(--danger-color);
     font-size: 11px;
     font-weight: 600;
-    cursor: pointer;
     transition: opacity 0.15s;
 
     @media (hover: hover) and (pointer: fine) {

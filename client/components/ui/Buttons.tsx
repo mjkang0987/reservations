@@ -58,12 +58,12 @@ const StyledReserveButton = styled.button <Props>`
     width: calc(100% - 10px);
     height: ${props => props.$height}px;
     max-height: ${props => props.$height}px;
-    background-color: ${props => props.$cancelled ? 'var(--cancelled-color)' : `${props.$color}12`};
-    border: 1px solid ${props => props.$cancelled ? 'var(--cancelled-color)' : props.$color};
+    background-color: ${props => `${props.$color}12`};
+    border: 1px solid ${props => props.$color};
     border-left-width: 4px;
     border-radius: var(--radius-sm);
     padding: 2px 6px;
-    color: ${props => props.$cancelled ? 'var(--white-color)' : 'var(--dark-gray-color)'};
+    color: ${props => 'var(--dark-gray-color)'};
     font-size: 12px;
     overflow: hidden;
     cursor: pointer;
@@ -184,7 +184,6 @@ const StyledAddButton = styled.button`
     color: var(--gray-color);
     font-size: 16px;
     line-height: 1;
-    cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {

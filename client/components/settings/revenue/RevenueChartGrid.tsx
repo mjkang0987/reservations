@@ -584,7 +584,6 @@ const StyledChartPointButton = styled.button<{ $active: boolean; $leftRatio: num
     background: ${(p) => p.$active ? 'var(--orange-color)' : 'var(--blue-color)'};
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
     transform: translate(-50%, -50%);
-    cursor: pointer;
 `;
 
 const StyledChartAxis = styled.div`
@@ -840,7 +839,6 @@ const StyledOperationCustomerButton = styled.button`
     font-weight: 600;
     color: var(--dark-gray-color);
     text-align: left;
-    cursor: pointer;
 `;
 
 const StyledOperationRate = styled.strong`

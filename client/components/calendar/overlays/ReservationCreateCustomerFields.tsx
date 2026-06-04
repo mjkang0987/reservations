@@ -144,7 +144,6 @@ const StyledCustomerModeButton = styled.button<{ $active: boolean }>`
   background: ${({$active}) => $active ? 'var(--blue-color)' : 'var(--white-color)'};
   color: ${({$active}) => $active ? '#fff' : 'var(--dark-gray-color)'};
   font-size: 12px;
-  cursor: pointer;
 `;
 
 const StyledNewCustomerFields = styled.div`

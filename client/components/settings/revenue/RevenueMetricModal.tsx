@@ -209,7 +209,6 @@ const StyledCustomerRow = styled.button`
         linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.96) 100%);
     box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
     text-align: left;
-    cursor: pointer;
     transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
 
     @media (hover: hover) and (pointer: fine) {

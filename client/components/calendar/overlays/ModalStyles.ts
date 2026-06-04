@@ -443,7 +443,6 @@ export const StyledActionButton = styled.button<{ $primary?: boolean; $danger?: 
     color: ${(props) => (props.$danger || props.$primary || props.$warning) ? 'var(--white-color)' : 'var(--dark-gray-color)'};
     font-size: var(--modal-button-font);
     font-weight: 600;
-    cursor: pointer;
     box-shadow: ${(props) => (props.$danger || props.$primary || props.$warning) ? '0 10px 20px rgba(15, 23, 42, 0.12)' : 'none'};
     transition: transform 0.14s ease, opacity 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
 

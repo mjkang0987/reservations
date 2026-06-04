@@ -156,7 +156,7 @@ export const NaverSyncConflictModal = ({
                     )}
                 </dd>
 
-                <dt>시술 {renderChangedTag('service', changedFields)}</dt>
+                <dt>서비스 {renderChangedTag('service', changedFields)}</dt>
                 <dd>
                     <StyledServiceChipList service={reservation.service}
                                            serviceColorMap={serviceColorMap}

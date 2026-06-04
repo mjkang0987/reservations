@@ -61,7 +61,14 @@ function loadSyncNotifications(): SyncNotification[] {
         const raw = localStorage.getItem(SYNC_NOTIFICATIONS_KEY);
         if (!raw) return [];
         const parsed = JSON.parse(raw) as Array<SyncNotification & {timestamp: string}>;
-        return parsed.map((n) => ({...n, timestamp: new Date(n.timestamp)}));
+        const seenIds = new Set<string>();
+        const deduped: SyncNotification[] = [];
+        for (const n of parsed) {
+            if (seenIds.has(n.id)) continue;
+            seenIds.add(n.id);
+            deduped.push({...n, timestamp: new Date(n.timestamp)});
+        }
+        return deduped;
     } catch {
         return [];
     }
@@ -189,6 +196,7 @@ export interface CalendarState {
     updateConflictNotificationStatus: (conflictKey: string, status: 'pending' | 'deferred' | 'confirmed') => void;
     replaceMockConflictNotifications: (items: SyncNotification[]) => void;
     clearSyncNotifications: () => void;
+    patchNotificationNames: () => void;
 }
 
 type ServiceSettingsState = Pick<CalendarState, 'serviceCatalog' | 'categoryBaseColorMap'>;
@@ -700,7 +708,28 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
     addSyncNotifications: (items) =>
         set((state) => {
-            const next = [...items, ...state.syncNotifications].slice(0, 50);
+            const existingIds = new Set(state.syncNotifications.map((n) => n.id));
+            const existingConflictKeys = new Set(
+                state.syncNotifications.filter((n) => n.conflictKey).map((n) => n.conflictKey)
+            );
+            const newItems = items.filter((item) => {
+                if (existingIds.has(item.id)) return false;
+                if (item.conflictKey && existingConflictKeys.has(item.conflictKey)) return false;
+                return true;
+            });
+            if (newItems.length === 0) return {};
+
+            // 취소 알림이 추가될 때, 같은 bookingId의 기존 확정 알림을 읽음 처리
+            const cancelledBookingIds = new Set(
+                newItems.filter((n) => n.type === 'cancel').map((n) => n.bookingId)
+            );
+            const existing = cancelledBookingIds.size > 0
+                ? state.syncNotifications.map((n) =>
+                    !n.type && cancelledBookingIds.has(n.bookingId) ? {...n, read: true} : n
+                )
+                : state.syncNotifications;
+
+            const next = [...newItems, ...existing].slice(0, 50);
             saveSyncNotifications(next);
             return {syncNotifications: next};
         }),
@@ -744,4 +773,31 @@ export const useCalendarStore = create<CalendarState>((set) => ({
         saveSyncNotifications([]);
         set({syncNotifications: []});
     },
+
+    patchNotificationNames: () =>
+        set((state) => {
+            const needsPatch = state.syncNotifications.some((n) =>
+                !n.customerName || !n.appointmentDate || !n.appointmentTime
+            );
+            if (!needsPatch) return {};
+
+            const allReservations = Object.values(state.reservationMap).flat();
+            let changed = false;
+            const next = state.syncNotifications.map((n) => {
+                if (n.customerName && n.appointmentDate && n.appointmentTime) return n;
+                const reservation = allReservations.find((r) => r.id === n.reservationId);
+                if (!reservation) return n;
+                const customer = state.customerMap[reservation.customerId];
+                const patch: Partial<typeof n> = {};
+                if (!n.customerName && customer?.name) patch.customerName = customer.name;
+                if (!n.appointmentDate && reservation.date) patch.appointmentDate = reservation.date;
+                if (!n.appointmentTime && reservation.startTime) patch.appointmentTime = reservation.startTime;
+                if (Object.keys(patch).length === 0) return n;
+                changed = true;
+                return {...n, ...patch};
+            });
+            if (!changed) return {};
+            saveSyncNotifications(next);
+            return {syncNotifications: next};
+        }),
 }));

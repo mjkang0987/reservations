@@ -4,7 +4,7 @@ import {Prisma} from '@prisma/client';
 
 import {prisma} from '../db/prisma';
 import {getApiSession, requireRole} from '../auth/api-session';
-import {getValidAccessToken} from './gmail/token-manager';
+import {getValidAccessTokenWithReason} from './gmail/token-manager';
 import {listNaverBookingEmails, listNaverCancellationEmails, getEmailContent} from './gmail/gmail-client';
 import {parseNaverBookingEmail, parseNaverCancellationEmail} from './gmail/naver-booking-parser';
 import type {NaverBookingData} from './gmail/naver-booking-parser';
@@ -51,10 +51,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const session = await getApiSession(req, res);
     if (!requireRole(session, 'manager', res)) return;
 
-    const accessToken = await getValidAccessToken(session.userId);
+    const {token: accessToken, reason: tokenFailReason} = await getValidAccessTokenWithReason(session.userId);
     if (!accessToken) {
         return res.status(200).json({
-            error: 'gmail_not_connected',
+            error: tokenFailReason === 'token_expired' ? 'gmail_token_expired' : 'gmail_not_connected',
             synced: [],
             cancelled: [],
             skipped: [],
@@ -108,6 +108,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }),
     ]);
 
+    // 취소 이메일이 예약 확정 쿼리에도 매칭되는 경우 제거
+    const cancelIdSet = new Set(cancelMessageIds);
+    const bookingMessageIds = messageIds.filter((id) => !cancelIdSet.has(id));
+
     const ctx: SyncContext = {
         storeId,
         existingBookingMap: new Map(
@@ -131,21 +135,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 이메일 본문을 배치로 병렬 fetch
     const [bookingContents, cancellationContents] = await Promise.all([
-        fetchEmailContentsInBatches(accessToken, messageIds),
+        fetchEmailContentsInBatches(accessToken, bookingMessageIds),
         fetchEmailContentsInBatches(accessToken, cancelMessageIds),
     ]);
 
     // 예약 이메일 처리 (DB 쓰기는 순차 유지)
-    for (let i = 0; i < messageIds.length; i++) {
+    for (let i = 0; i < bookingMessageIds.length; i++) {
         const html = bookingContents[i];
         if (!html) {
-            errors.push(`Failed to fetch email ${messageIds[i]}`);
+            errors.push(`Failed to fetch email ${bookingMessageIds[i]}`);
             continue;
         }
 
         const booking = parseNaverBookingEmail(html);
         if (!booking) {
-            errors.push(`Failed to parse email ${messageIds[i]}`);
+            errors.push(`Failed to parse email ${bookingMessageIds[i]}`);
             continue;
         }
 
@@ -164,7 +168,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 skipped.push(booking.bookingId);
             }
         } catch (err) {
-            errors.push(`Error processing email ${messageIds[i]}: ${String(err)}`);
+            errors.push(`Error processing email ${bookingMessageIds[i]}: ${String(err)}`);
         }
     }
 
@@ -227,10 +231,17 @@ function findByNameContains<T>(map: Map<string, T>, searchName: string): T | und
     if (!searchName) return undefined;
     const exact = map.get(searchName);
     if (exact) return exact;
+
+    // 부분 매칭 — 가장 긴 키 우선 (예: "김은지" > "김은")
+    let bestMatch: {key: string; value: T} | undefined;
     for (const [key, value] of map) {
-        if (key.includes(searchName)) return value;
+        if (key.includes(searchName) || searchName.includes(key)) {
+            if (!bestMatch || key.length > bestMatch.key.length) {
+                bestMatch = {key, value};
+            }
+        }
     }
-    return undefined;
+    return bestMatch?.value;
 }
 
 async function createReservationFromBooking(
@@ -271,7 +282,7 @@ async function createReservationFromBooking(
         designerMap.set(booking.designerName, designer);
     }
 
-    // 시술 매칭 — 메모리에서 처리
+    // 서비스 매칭 — 메모리에서 처리
     let totalDuration = 0;
     const serviceNames: string[] = [];
 
@@ -402,7 +413,7 @@ async function cancelReservationByBookingId(
         legacyId: reservation.legacyId!,
         appointmentDate: before.date,
         appointmentTime: before.startTime,
-        customerName: reservation.customer.name,
-        designerName: reservation.designer?.name ?? '미지정',
+        customerName: reservation.customer?.name || '고객',
+        designerName: reservation.designer?.name || '미지정',
     };
 }

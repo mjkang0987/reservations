@@ -575,7 +575,6 @@ const StyledDesignerColorInput = styled.input`
     border: 1px solid var(--light-gray-color);
     border-radius: var(--radius-md);
     background: var(--white-color);
-    cursor: pointer;
 `;
 
 const StyledDesignerNameInput = styled.input`

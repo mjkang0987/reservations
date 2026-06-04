@@ -30,7 +30,7 @@ import type {Reservation} from '../../../utils/reservations';
 import {hasCompletedPayment} from '../../../utils/reservations';
 
 const STATUS_LABELS: Record<string, string> = {
-    cancelled: '취소',
+    cancelled: '예약취소',
     noshow: '노쇼',
 };
 

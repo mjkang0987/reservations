@@ -54,7 +54,7 @@ export function ReservationViewSection({
                     {isCancelled && (
                         <>
                             <dt>상태</dt>
-                            <dd><StyledStatusBadge $variant="neutral">취소됨</StyledStatusBadge></dd>
+                            <dd><StyledStatusBadge $variant="neutral">예약취소</StyledStatusBadge></dd>
                         </>
                     )}
                     {isNoshow && (
@@ -73,7 +73,7 @@ export function ReservationViewSection({
                     <dd>{reservation.date}</dd>
                     <dt>시간</dt>
                     <dd>{reservation.startTime} ~ {reservation.endTime}</dd>
-                    <dt>시술</dt>
+                    <dt>서비스</dt>
                     <dd>
                         <StyledServiceChipList service={reservation.service}
                                               serviceColorMap={serviceColorMap}
@@ -211,7 +211,6 @@ const StyledCustomerButton = styled.button`
     padding: 0;
     font-size: 13px;
     color: #4285F4;
-    cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
@@ -235,7 +234,7 @@ const StyledPaymentLineList = styled.span`
 `;
 
 const StyledPaymentBadge = styled(LabelBadge).attrs<{ $completed: boolean }>((props) => ({
-    $tone: props.$completed ? 'success' : 'neutral',
+    $tone: props.$completed ? 'success' : 'warning',
     $shape: 'soft',
     $size: 'md',
 }))<{ $completed: boolean }>`
@@ -341,7 +340,6 @@ const StyledHistoryButton = styled.button`
     font-size: 12px;
     font-weight: 600;
     color: var(--dark-gray-color);
-    cursor: pointer;
     text-align: left;
 
     &::after {

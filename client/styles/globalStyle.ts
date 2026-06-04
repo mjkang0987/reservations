@@ -174,8 +174,6 @@ export const GlobalStyle = createGlobalStyle`
 
     button,
     a {
-        cursor: pointer;
-
         &:active {
             opacity: .6;
         }

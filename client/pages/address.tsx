@@ -106,9 +106,13 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history, stor
     const effectiveCustomers = storageMode === 'local'
         ? (localSnapshot?.customers ?? Object.values(storeCustomerMap))
         : customers;
-    const effectiveReservations = storageMode === 'local'
-        ? (localSnapshot?.reservations ?? Object.values(storeReservationMap).flat())
-        : reservations;
+    const effectiveReservations = useMemo(() => {
+        if (storageMode === 'local') {
+            return localSnapshot?.reservations ?? Object.values(storeReservationMap).flat();
+        }
+        const storeFlat = Object.values(storeReservationMap).flat();
+        return storeFlat.length > 0 ? storeFlat : reservations;
+    }, [storageMode, localSnapshot, storeReservationMap, reservations]);
     const effectiveHistory = storageMode === 'local'
         ? (localSnapshot?.history ?? history)
         : history;
@@ -117,7 +121,9 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history, stor
     const customerList = useMemo(
         () => storageMode === 'local'
             ? Object.values(storeCustomerMap)
-            : effectiveCustomers.map((customer) => storeCustomerMap[customer.id] ?? customer),
+            : Object.keys(storeCustomerMap).length > 0
+                ? Object.values(storeCustomerMap)
+                : effectiveCustomers,
         [storageMode, effectiveCustomers, storeCustomerMap]
     );
     const reservationMap = useMemo(() => groupByDate(effectiveReservations), [effectiveReservations]);
@@ -366,7 +372,9 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history, stor
             {selectedCustomerId !== null && storeCustomerMap[selectedCustomerId] && (
                 <CustomerDetail customer={storeCustomerMap[selectedCustomerId]}
                                 reservationMap={reservationMap}
-                                onReservationClick={openReservationDetailFromCustomer}
+                                onReservationClick={(reservation) => {
+                                    setSelectedReservations((prev) => [...prev, reservation]);
+                                }}
                                 onClose={() => setSelectedCustomerId(null)}/>
             )}
         </StyledSection>

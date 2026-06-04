@@ -79,7 +79,7 @@ export const ReservationFormFields = ({
 }: ReservationFormFieldsProps) => (
     <StyledForm>
         <StyledFieldRow role="group" aria-labelledby={`${idPrefix}-service-label`}>
-            <strong id={`${idPrefix}-service-label`}>시술</strong>
+            <strong id={`${idPrefix}-service-label`}>서비스</strong>
             <ServiceFields
                 idPrefix={idPrefix}
                 selectedServices={selectedServices}

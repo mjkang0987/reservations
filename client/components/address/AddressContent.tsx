@@ -174,7 +174,7 @@ export function AddressContent({
                     <strong>선택</strong>
                     <strong>이름</strong>
                     <strong>연락처</strong>
-                    <strong>최근 시술</strong>
+                    <strong>최근 서비스</strong>
                     <strong>적립금</strong>
                     <strong>예약현황</strong>
                 </StyledHeaderRow>
@@ -258,7 +258,6 @@ const StyledMergeButton = styled.button`
     color: #fff;
     font-size: var(--small-font);
     font-weight: 600;
-    cursor: pointer;
     white-space: nowrap;
 
     @media (hover: hover) and (pointer: fine) {
@@ -340,7 +339,6 @@ const StyledPreviewRadio = styled.input`
     flex-shrink: 0;
     width: 16px;
     height: 16px;
-    cursor: pointer;
 `;
 
 const StyledPreviewName = styled.strong`
@@ -376,5 +374,4 @@ const StyledPreviewCancel = styled.button`
     border-radius: var(--radius-md);
     background-color: #fff;
     font-size: var(--small-font);
-    cursor: pointer;
 `;

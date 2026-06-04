@@ -179,7 +179,7 @@ export const Aside = () => {
                     <StyledDivider />
                     <StyledInquiryLink href="/inquiry" onClick={closeMobile}>
                         <MenuIcon icon="inquiry" />
-                        <span>문의하기</span>
+                        <span>고객센터</span>
                     </StyledInquiryLink>
                     <StyledLogoutButton type="button"
                                         onClick={() => signOut({callbackUrl: '/login'})}>
@@ -332,6 +332,15 @@ const MenuIcon = ({icon}: { icon: string }) => {
             <StyledMenuIcon viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="3" y="5" width="18" height="14" rx="3" />
                 <path d="M3 7L12 13L21 7" />
+            </StyledMenuIcon>
+        );
+    }
+
+    if (icon === 'history') {
+        return (
+            <StyledMenuIcon viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7V12L15 15" />
             </StyledMenuIcon>
         );
     }
@@ -498,7 +507,6 @@ const StyledCreateButton = styled.button`
     text-decoration: none;
     color: var(--white-color);
     white-space: nowrap;
-    cursor: pointer;
     transition: opacity 0.1s, filter 0.1s;
 
     span {
@@ -527,7 +535,6 @@ const StyledAccordionToggle = styled.button`
     font-weight: 500;
     color: var(--aside-text);
     white-space: nowrap;
-    cursor: pointer;
     transition: opacity 0.1s, filter 0.1s;
 
     @media (hover: hover) and (pointer: fine) {
@@ -588,6 +595,36 @@ const StyledSubNavLink = styled(Link)<{ $active?: boolean }>`
     }
 `;
 
+
+const StyledLogoutButton = styled.button`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 0 16px 0 20px;
+    min-height: 36px;
+    flex-shrink: 0;
+    border: none;
+    text-align: left;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    box-sizing: border-box;
+    font-size: var(--small-font);
+    font-weight: 500;
+    color: var(--aside-text);
+    text-decoration: none;
+    white-space: nowrap;
+    opacity: 0.7;
+    transition: background-color 0.1s, opacity 0.1s, filter 0.1s;
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
+        opacity: 1;
+        filter: brightness(1.18);
+    }
+    }
+`;
+
 const StyledInquiryLink = styled(Link)`
     display: flex;
     align-items: center;
@@ -608,42 +645,11 @@ const StyledInquiryLink = styled(Link)`
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
-        opacity: 1;
-        filter: brightness(1.18);
-    }
-    }
-`;
-
-const StyledLogoutButton = styled.button`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 0 16px 0 20px;
-    min-height: 36px;
-    flex-shrink: 0;
-    border: none;
-    text-align: left;
-    border-radius: var(--radius-md);
-    background-color: transparent;
-    box-sizing: border-box;
-    font-size: var(--small-font);
-    font-weight: 500;
-    color: var(--aside-text);
-    text-decoration: none;
-    cursor: pointer;
-    white-space: nowrap;
-    opacity: 0.7;
-    transition: background-color 0.1s, opacity 0.1s, filter 0.1s;
-
-    @media (hover: hover) and (pointer: fine) {
-        &:hover {
-        opacity: 1;
-        filter: brightness(1.18);
-    }
+            opacity: 1;
+            filter: brightness(1.18);
+        }
     }
 `;
-
 
 const StyledToggleIcon = styled.span<{ $collapsed: boolean }>`
     display: inline-flex;

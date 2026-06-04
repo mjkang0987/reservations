@@ -39,7 +39,10 @@ export async function loadPageData(storeId: string) {
             where: {storeId},
             include: {
                 memoTags: true,
-                pointHistories: {orderBy: {createdAt: 'asc'}},
+                pointHistories: {
+                    orderBy: {createdAt: 'asc'},
+                    include: {relatedReservation: {select: {legacyId: true}}},
+                },
             },
         }),
         prisma.reservationHistory.findMany({

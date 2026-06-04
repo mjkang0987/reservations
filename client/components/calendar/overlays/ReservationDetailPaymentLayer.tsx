@@ -53,7 +53,7 @@ export function ReservationDetailPaymentLayer({
                         <StyledPointBalance type="button" onClick={onNavigateToPoints}>보유 적립금 {formatPrice(customerPoints)}</StyledPointBalance>
                     </StyledPaymentSummary>
                     <StyledExpectedAmount>
-                        <span>시술 금액 {formatPrice(totalPrice)}</span>
+                        <span>서비스 금액 {formatPrice(totalPrice)}</span>
                         {naverDeposit > 0 && (
                             <>
                                 <StyledNaverDeposit>네이버 예약금 -{formatPrice(naverDeposit)}</StyledNaverDeposit>
@@ -154,7 +154,6 @@ const StyledPointBalance = styled.button`
     color: #8a5a00;
     font-size: 12px;
     font-weight: 700;
-    cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
@@ -199,7 +198,6 @@ const StyledPaymentAddButton = styled.button`
     color: var(--dark-gray-color);
     font-size: 12px;
     font-weight: 600;
-    cursor: pointer;
 `;
 
 const StyledPaymentRemoveButton = styled.button`
@@ -211,7 +209,6 @@ const StyledPaymentRemoveButton = styled.button`
     background: var(--danger-bg);
     color: var(--danger-color);
     font-size: 12px;
-    cursor: pointer;
 `;
 
 const StyledPaymentError = styled.p`

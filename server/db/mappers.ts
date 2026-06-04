@@ -165,7 +165,7 @@ type DbCustomerRow = {
         balance: number;
         description: string;
         createdAt: Date;
-        relatedReservationId: string | null;
+        relatedReservation: { legacyId: number | null } | null;
     }>;
 };
 
@@ -184,6 +184,7 @@ export function dbCustomerToFrontend(row: DbCustomerRow): Customer {
             balance: h.balance,
             description: h.description,
             createdAt: h.createdAt.toISOString(),
+            ...(h.relatedReservation?.legacyId != null && {relatedReservationId: h.relatedReservation.legacyId}),
         })),
         ...(row.allergyNote !== null && {allergyNote: row.allergyNote}),
         ...(row.claimNote !== null && {claimNote: row.claimNote}),

@@ -1,3 +1,5 @@
+import {useMemo} from 'react';
+
 import styled from 'styled-components';
 import type {ReactNode} from 'react';
 
@@ -48,7 +50,8 @@ export function ServiceChipList({
     textAs = 'span',
     children,
 }: ServiceChipListProps) {
-    const names = serviceNames ?? parseServiceString(service ?? '');
+    const knownServiceNames = useMemo(() => new Set(Object.keys(serviceColorMap)), [serviceColorMap]);
+    const names = serviceNames ?? parseServiceString(service ?? '', knownServiceNames);
 
     return (
         <StyledServiceList className={className}>

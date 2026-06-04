@@ -5,9 +5,11 @@ import {createPortal} from 'react-dom';
 import styled from 'styled-components';
 
 import {useRouter} from 'next/router';
+import {signIn} from 'next-auth/react';
 
 import {useCalendarStore} from '../../store/calendarStore';
 import {useNaverBookingSync} from '../../hooks/useNaverBookingSync';
+import {useCustomerMergeSuggestion} from '../../hooks/useCustomerMergeSuggestion';
 import {splitDesignersByStatus} from '../../utils/designers';
 import {isCalendar} from '../../utils/router';
 import type {Reservation} from '../../utils/reservations';
@@ -15,25 +17,27 @@ import {formatTel} from '../../utils/customers';
 
 import {CalendarDirection} from '../calendar/CalendarDirection';
 import {CalendarHeading} from '../calendar/CalendarHeading';
+import {ReservationDetail} from '../calendar/overlays/ReservationDetail';
 import {NaverSyncNotification} from './NaverSyncNotification';
 import {NaverSyncConflictModal} from './NaverSyncConflictModal';
+import {CustomerMergeSuggestionModal} from './CustomerMergeSuggestionModal';
 import {formControlStyle} from '../ui/FormControls';
 import {scrollHintStyle, scrollContentStyle} from '../calendar/overlays/ModalStyles';
 import {CloseIconButton} from '../ui/CloseIconButton';
 
 const PAGE_TITLES: Record<string, string> = {
-    '/address': '고객명단',
-    '/mypage': '마이페이지',
+    '/address': '고객 명단',
+    '/mypage': '계정 정보',
     '/logout': '로그아웃',
 };
 
 const SETTINGS_TAB_TITLES: Record<string, string> = {
     revenue: '매출',
-    point: '적립금관리',
-    store: '매장관리',
-    service: '서비스관리',
-    designer: '디자이너관리',
-    member: '멤버관리',
+    point: '적립금 관리',
+    store: '매장 관리',
+    service: '서비스 관리',
+    designer: '디자이너 관리',
+    member: '멤버 관리',
 };
 
 export const Header = () => {
@@ -74,8 +78,27 @@ export const Header = () => {
         openConflictByKey,
         sync,
         syncing,
-        isActive
+        isActive,
+        gmailTokenExpired,
+        dismissGmailTokenExpired,
     } = useNaverBookingSync();
+
+    const {
+        currentSuggestion,
+        merging: mergeSuggestionMerging,
+        merge: mergeSuggestion,
+        skip: skipSuggestion,
+        dismiss: dismissSuggestions,
+        reservationMap: suggestionReservationMap,
+    } = useCustomerMergeSuggestion();
+
+    const customerMap = useCalendarStore((s) => s.customerMap);
+    const openCustomerDetail = useCalendarStore((s) => s.openCustomerDetail);
+    const [headerReservations, setHeaderReservations] = useState<Reservation[]>([]);
+
+    const handleHeaderReservationClick = useCallback((reservation: Reservation) => {
+        setHeaderReservations((prev) => [...prev, reservation]);
+    }, []);
 
     const handleConflictReservationClick = useCallback((reservation: Reservation) => {
         const dateReservations = reservationMap[reservation.date] ?? [];
@@ -248,7 +271,48 @@ export const Header = () => {
                                         onDismiss={dismissConflicts}
                                         onSelectReservation={handleConflictReservationClick} />
             )}
+            {!currentConflict && currentSuggestion && (
+                <CustomerMergeSuggestionModal suggestion={currentSuggestion}
+                                              reservationMap={suggestionReservationMap}
+                                              merging={mergeSuggestionMerging}
+                                              onMerge={mergeSuggestion}
+                                              onSkip={skipSuggestion}
+                                              onDismiss={dismissSuggestions}
+                                              onReservationClick={handleHeaderReservationClick} />
+            )}
+            {headerReservations.map((reservation) => (
+                <ReservationDetail key={`header-res-${reservation.id}`}
+                                   reservation={reservation}
+                                   customerMap={customerMap}
+                                   reservationMap={reservationMap}
+                                   history={[]}
+                                   onClose={() => setHeaderReservations((prev) => prev.filter((r) => r.id !== reservation.id))}
+                                   onCustomerClick={openCustomerDetail}
+                                   onUpdate={(_prev, updated) => {
+                                       setHeaderReservations((prev) => prev.map((r) => r.id === updated.id ? updated : r));
+                                   }}
+                                   onCancel={(res) => {
+                                       setHeaderReservations((prev) => prev.filter((r) => r.id !== res.id));
+                                   }}
+                                   onRestore={(res) => {
+                                       setHeaderReservations((prev) => prev.filter((r) => r.id !== res.id));
+                                   }} />
+            ))}
             {isSearchOpen && <SearchLayer onClose={() => setIsSearchOpen(false)} />}
+            {gmailTokenExpired && (
+                <StyledTokenExpiredToast>
+                    <span>Google 인증이 만료되었습니다.</span>
+                    <StyledTokenReconnect type="button" onClick={() => {
+                        dismissGmailTokenExpired();
+                        signIn('google');
+                    }}>
+                        재연결
+                    </StyledTokenReconnect>
+                    <StyledTokenClose type="button" onClick={dismissGmailTokenExpired}>
+                        ✕
+                    </StyledTokenClose>
+                </StyledTokenExpiredToast>
+            )}
         </StyledHeader>
     );
 };
@@ -309,7 +373,6 @@ const StyledAsideToggle = styled.button<{ $open: boolean }>`
     border: none;
     color: var(--dark-gray-color);
     flex-shrink: 0;
-    cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
@@ -381,7 +444,7 @@ const StyledDesignerFilter = styled.select`
             margin-right: 2px;
             border-radius: 50%;
             vertical-align: middle;
-            background-color: attr(data-bg-color type(< color >), transparent);
+            background-color: attr(data-bg-color type(<color>), transparent);
         }
     }
 
@@ -435,7 +498,6 @@ const StyledSyncButton = styled.button`
     border: none;
     color: var(--dark-gray-color);
     flex-shrink: 0;
-    cursor: pointer;
 
     &:disabled {
         cursor: default;
@@ -473,7 +535,6 @@ const StyledCustomerSearchButton = styled.button`
     border: none;
     color: var(--dark-gray-color);
     flex-shrink: 0;
-    cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
@@ -598,7 +659,6 @@ const StyledSearchInput = styled.input`
         height: 14px;
         margin-right: 4px;
         background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Ccircle cx='7' cy='7' r='7' fill='%23999'/%3E%3Cpath d='M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5' stroke='%23fff' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
-        cursor: pointer;
     }
 `;
 
@@ -638,4 +698,44 @@ const StyledNoResult = styled.li`
     font-size: 13px;
     color: var(--gray-color);
     text-align: center;
+`;
+
+const StyledTokenExpiredToast = styled.div`
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #1e293b;
+    color: #fff;
+    font-size: 13px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    white-space: nowrap;
+`;
+
+const StyledTokenReconnect = styled.button`
+    padding: 0;
+    border: none;
+    background: none;
+    color: #60a5fa;
+    font-size: 13px;
+    font-weight: 600;
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover { text-decoration: underline; }
+    }
+`;
+
+const StyledTokenClose = styled.button`
+    padding: 0;
+    border: none;
+    background: none;
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1;
 `;

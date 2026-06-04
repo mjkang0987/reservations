@@ -187,6 +187,7 @@ export const ReservationDetail = ({
         return acc;
     }, {0: '미지정'});
     const serviceColorMap = buildServiceColorMap(serviceCatalog, categoryBaseColorMap);
+    const knownServiceNames = useMemo(() => new Set(Object.keys(serviceColorMap)), [serviceColorMap]);
     const modalRoot = document.getElementById('modal-root');
     const {layerId, layerDataId} = useLayerInstanceId('reservation-detail');
     const getDefaultPointAwardAmount = (baseAmount: number) => Math.floor((baseAmount * storeSettings.pointSettings.serviceRate) / 100);
@@ -207,7 +208,7 @@ export const ReservationDetail = ({
     const [priceInputValue, setPriceInputValue] = useState(initialForm.price === 0 ? '' : String(initialForm.price));
     const [error, setError] = useState('');
     const [selectedServices, setSelectedServices] = useState<string[]>(
-        () => parseServiceString(sourceReservation.service)
+        () => parseServiceString(sourceReservation.service, knownServiceNames)
     );
     const [isEndTimeManual, setIsEndTimeManual] = useState(false);
     const [isPriceManual, setIsPriceManual] = useState(false);
@@ -228,7 +229,7 @@ export const ReservationDetail = ({
 
         setForm(nextForm);
         setPriceInputValue(nextForm.price === 0 ? '' : String(nextForm.price));
-        setSelectedServices(parseServiceString(sourceReservation.service));
+        setSelectedServices(parseServiceString(sourceReservation.service, knownServiceNames));
         setIsEndTimeManual(false);
         setIsPriceManual(false);
         setPaymentEntries(getPaymentEntryDrafts(sourceReservation, nextDisplayPrice, sourceReservation.naverDeposit ?? 0));
@@ -320,7 +321,7 @@ export const ReservationDetail = ({
 
     const validateForm = (): string => {
         if (activeDesigners.length > 0 && !form.designerId) return '디자이너를 선택해주세요.';
-        if (!form.service.trim()) return '시술을 선택해주세요.';
+        if (!form.service.trim()) return '서비스를 선택해주세요.';
         if (!form.date) return '날짜를 선택해주세요.';
         if (!form.startTime) return '시작 시간을 입력해주세요.';
         if (!form.endTime) return '종료 시간을 입력해주세요.';
@@ -426,7 +427,7 @@ export const ReservationDetail = ({
         const expectedAmount = displayPrice - (sourceReservation.naverDeposit ?? 0);
 
         if (paymentTotal !== expectedAmount) {
-            setError(`결제 금액 합계(${formatPrice(paymentTotal)})가 시술 금액(${formatPrice(expectedAmount)})과 일치하지 않습니다.`);
+            setError(`결제 금액 합계(${formatPrice(paymentTotal)})가 서비스 금액(${formatPrice(expectedAmount)})과 일치하지 않습니다.`);
             return;
         }
 
@@ -490,7 +491,7 @@ export const ReservationDetail = ({
 
         setForm(nextForm);
         setPriceInputValue(nextForm.price === 0 ? '' : String(nextForm.price));
-        setSelectedServices(parseServiceString(sourceReservation.service));
+        setSelectedServices(parseServiceString(sourceReservation.service, knownServiceNames));
         setIsEndTimeManual(false);
         setIsPriceManual(false);
         setIsHistoryOpen(false);
@@ -616,7 +617,7 @@ export const ReservationDetail = ({
                     message="이 예약을 취소하시겠습니까?"
                     color="var(--danger-color)"
                     items={[
-                        {label: '시술', value: reservation.service},
+                        {label: '서비스', value: reservation.service},
                         {label: '날짜', value: reservation.date},
                         {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
                         {label: '고객명', value: customer?.name ?? '-'},
@@ -629,7 +630,7 @@ export const ReservationDetail = ({
                     message="이 예약을 완료 처리하시겠습니까?"
                     color="var(--blue-color)"
                     items={[
-                        {label: '시술', value: reservation.service},
+                        {label: '서비스', value: reservation.service},
                         {label: '날짜', value: reservation.date},
                         {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
                         {label: '고객명', value: customer?.name ?? '-'},
@@ -690,7 +691,7 @@ export const ReservationDetail = ({
                     message="이 예약을 노쇼 처리하시겠습니까?"
                     color="var(--warning-color)"
                     items={[
-                        {label: '시술', value: reservation.service},
+                        {label: '서비스', value: reservation.service},
                         {label: '날짜', value: reservation.date},
                         {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
                         {label: '고객명', value: customer?.name ?? '-'},
@@ -760,7 +761,7 @@ export const ReservationDetail = ({
                 <StyledRestoreBody>
                     <StyledRestoreMessage>취소된 예약을 되돌리시겠습니까?</StyledRestoreMessage>
                     <dl>
-                        <dt>시술</dt>
+                        <dt>서비스</dt>
                         <dd>{reservation.service}</dd>
                         <dt>날짜</dt>
                         <dd>{reservation.date}</dd>

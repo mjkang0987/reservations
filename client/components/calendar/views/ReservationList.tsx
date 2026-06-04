@@ -19,7 +19,12 @@ interface ReservationListProps {
     hideViewAll?: boolean;
 }
 
-export const ReservationList = ({reservations: rawReservations, variant, onViewAll, hideViewAll}: ReservationListProps) => {
+export const ReservationList = ({
+                                    reservations: rawReservations,
+                                    variant,
+                                    onViewAll,
+                                    hideViewAll
+                                }: ReservationListProps) => {
     const reservations = useMemo(
         () => [...rawReservations].sort((a, b) => a.startTime.localeCompare(b.startTime)),
         [rawReservations]
@@ -65,7 +70,8 @@ export const ReservationList = ({reservations: rawReservations, variant, onViewA
                                                  textAs="strong" />
                             </StyledServiceName>
                             <StyledMeta>
-                                {isNewCustomerVisit(customer?.firstVisitDate, r.date) && <NewCustomerBadge>N</NewCustomerBadge>}
+                                {isNewCustomerVisit(customer?.firstVisitDate, r.date) &&
+                                    <NewCustomerBadge>N</NewCustomerBadge>}
                                 <span>{customer?.name ?? ''}</span>
                             </StyledMeta>
                         </StyledItem>
@@ -114,14 +120,13 @@ const StyledItem = styled.button<{ $color: string; $inactive?: boolean }>`
     background-color: ${(p) => `${p.$color}12`};
     color: var(--dark-gray-color);
     font-size: 11px;
-    cursor: pointer;
     text-align: left;
-    ${(p) => p.$inactive && 'filter: grayscale(.5); opacity: 0.5;'}
+    ${(p) => p.$inactive && 'filter: grayscale(.5); opacity: 0.5;'};
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
-        background-color: ${(p) => `${p.$color}1d`};
-    }
+            background-color: ${(p) => `${p.$color}1d`};
+        }
     }
 
     strong {
@@ -157,12 +162,11 @@ const StyledViewAllButton = styled.button<{ $variant: 'date' | 'month' }>`
     font-size: ${(props) => props.$variant === 'date' ? '9px' : '10px'};
     font-weight: 600;
     color: var(--dark-gray-color);
-    cursor: pointer;
     flex-shrink: 0;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
-        background-color: var(--light-gray-color);
-    }
+            background-color: var(--light-gray-color);
+        }
     }
 `;

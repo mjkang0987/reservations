@@ -7,7 +7,6 @@ export const actionButtonStyle = css`
     border-radius: var(--radius-md);
     font-size: 12px;
     font-weight: 500;
-    cursor: pointer;
     transition: opacity 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease,
                 border-color 0.15s ease, background-color 0.15s ease;
 

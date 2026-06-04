@@ -59,7 +59,7 @@ export const DesignerOffDayMoveConfirmModal = ({
                 </StyledHeader>
                 <StyledConfirmContent>
                     <dl>
-                        <dt>시술</dt>
+                        <dt>서비스</dt>
                         <dd>{reservation.service}</dd>
                         {customerName && (
                             <>

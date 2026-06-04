@@ -5,13 +5,34 @@ import {getApiSession} from '../auth/api-session';
 import {sendInquiryEmail} from './mail/send-inquiry';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'POST') {
-        res.setHeader('Allow', ['POST']);
-        return res.status(405).end(`Method ${req.method} Not Allowed`);
-    }
-
     const session = await getApiSession(req, res);
     const storeId = session?.storeId ?? null;
+
+    if (req.method === 'GET') {
+        if (!storeId) {
+            return res.status(200).json({inquiries: []});
+        }
+
+        const inquiries = await prisma.inquiry.findMany({
+            where: {storeId},
+            orderBy: {createdAt: 'desc'},
+        });
+
+        return res.status(200).json({
+            inquiries: inquiries.map((i) => ({
+                id: i.id,
+                name: i.name,
+                email: i.email,
+                content: i.content,
+                createdAt: i.createdAt.toISOString(),
+            })),
+        });
+    }
+
+    if (req.method !== 'POST') {
+        res.setHeader('Allow', ['GET', 'POST']);
+        return res.status(405).end(`Method ${req.method} Not Allowed`);
+    }
 
     const {name, email, content} = req.body ?? {};
 

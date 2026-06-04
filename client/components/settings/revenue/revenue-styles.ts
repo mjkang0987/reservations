@@ -141,7 +141,6 @@ export const StyledInlineCustomerButton = styled.button`
     padding: 0;
     background: transparent;
     text-align: left;
-    cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: normal;

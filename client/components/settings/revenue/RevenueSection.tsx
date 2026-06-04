@@ -19,6 +19,7 @@ import type {PaymentMethod, Reservation, ReservationMap} from '../../../utils/re
 import {toDateKey} from '../../../utils/reservations';
 import type {CustomerMap} from '../../../utils/customers';
 
+import {exportRevenueToExcel} from '../../../utils/revenue-export';
 import {RevenueFilters, type RevenueViewTab} from './RevenueFilters';
 import {RevenueKpiGrid, type RevenueMetricKey} from './RevenueKpiGrid';
 import {RevenueChartGrid, type ChartDetailKey} from './RevenueChartGrid';
@@ -502,6 +503,15 @@ export const RevenueSection = ({
                 setRevenueViewTab={setRevenueViewTab}
                 revenueFilterMode={revenueFilterMode}
                 setRevenueFilterMode={setRevenueFilterMode}
+                onExport={() => exportRevenueToExcel({
+                    reservationMap,
+                    customerMap,
+                    designers,
+                    startDateKey: fromDateKey,
+                    endDateKey: toDateKeyValue,
+                    designerId: selectedDesignerId,
+                    filterMode: revenueFilterMode,
+                })}
             />
 
             {(revenueViewTab === 'all' || revenueViewTab === 'chart') && (

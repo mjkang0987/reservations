@@ -48,11 +48,11 @@ const ServiceEditModal = ({item, serviceCatalog, onSave, onDelete, onClose}: Ser
     const handleSave = () => {
         const nextName = name.trim();
         if (!nextName) {
-            setError('시술명을 입력해 주세요.');
+            setError('서비스명을 입력해 주세요.');
             return;
         }
         if (serviceCatalog.some((s) => s.name === nextName && s.name !== item.name)) {
-            setError(`"${nextName}" 시술은 이미 등록되어 있습니다.`);
+            setError(`"${nextName}" 서비스는 이미 등록되어 있습니다.`);
             return;
         }
         onSave(item, {
@@ -76,25 +76,25 @@ const ServiceEditModal = ({item, serviceCatalog, onSave, onDelete, onClose}: Ser
             onClick={onClose}
             role="dialog"
             aria-modal="true"
-            aria-label="시술 수정"
+            aria-label="서비스 수정"
             id={layerId}
             data-layer-id={layerDataId}
         >
             <StyledServiceModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <h3>시술 수정</h3>
+                    <h3>서비스 수정</h3>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledModalBody>
                     <StyledForm>
                         <StyledFieldRow>
-                            <strong>시술명</strong>
+                            <strong>서비스명</strong>
                             <label htmlFor="service-edit-name">
                                 <input
                                     id="service-edit-name"
                                     value={name}
                                     onChange={(e) => { setName(e.target.value); setError(''); }}
-                                    placeholder="시술명"
+                                    placeholder="서비스명"
                                 />
                             </label>
                         </StyledFieldRow>
@@ -169,11 +169,11 @@ const ServiceAddModal = ({categories, serviceCatalog, onAdd, onClose}: ServiceAd
             return;
         }
         if (!itemName) {
-            setError('시술명을 입력해 주세요.');
+            setError('서비스명을 입력해 주세요.');
             return;
         }
         if (serviceCatalog.some((s) => s.name === itemName)) {
-            setError(`"${itemName}" 시술은 이미 등록되어 있습니다.`);
+            setError(`"${itemName}" 서비스는 이미 등록되어 있습니다.`);
             return;
         }
 
@@ -192,13 +192,13 @@ const ServiceAddModal = ({categories, serviceCatalog, onAdd, onClose}: ServiceAd
             onClick={onClose}
             role="dialog"
             aria-modal="true"
-            aria-label="시술 추가"
+            aria-label="서비스 추가"
             id={layerId}
             data-layer-id={layerDataId}
         >
             <StyledServiceModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <h3>시술 추가</h3>
+                    <h3>서비스 추가</h3>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledModalBody>
@@ -231,13 +231,13 @@ const ServiceAddModal = ({categories, serviceCatalog, onAdd, onClose}: ServiceAd
                             )}
                         </StyledFieldRow>
                         <StyledFieldRow>
-                            <strong>시술명</strong>
+                            <strong>서비스명</strong>
                             <label htmlFor="service-add-name">
                                 <input
                                     id="service-add-name"
                                     value={form.name}
                                     onChange={(e) => { setForm({...form, name: e.target.value}); setError(''); }}
-                                    placeholder="시술명"
+                                    placeholder="서비스명"
                                 />
                             </label>
                         </StyledFieldRow>
@@ -403,7 +403,7 @@ export const ServiceManageSection = () => {
 
     return (
         <>
-            <PageHero eyebrow="SERVICE" title="서비스 관리" subtitle="시술 카테고리와 메뉴를 등록하고 가격을 설정합니다." />
+            <PageHero eyebrow="SERVICE" title="서비스 관리" subtitle="서비스 카테고리와 메뉴를 등록하고 가격을 설정합니다." />
             <StyledServiceBody>
                 {grouped.size === 0 && <StyledEmpty>내역이 없습니다.</StyledEmpty>}
                 {Array.from(grouped.entries()).map(([category, items]) => (
@@ -513,7 +513,7 @@ export const ServiceManageSection = () => {
             {manageError && <StyledManageNotice>{manageError}</StyledManageNotice>}
 
             <StyledServiceFooter>
-                <StyledAddButton type="button" onClick={() => setShowAddModal(true)}>+ 시술 추가</StyledAddButton>
+                <StyledAddButton type="button" onClick={() => setShowAddModal(true)}>+ 서비스 추가</StyledAddButton>
             </StyledServiceFooter>
 
             {editingItem && (
@@ -562,8 +562,6 @@ const StyledModalBody = styled.div`
 
 
 const StyledServiceBody = styled.div`
-    overflow-y: auto;
-    overscroll-behavior: auto;
 `;
 
 const StyledGroup = styled.div<{ $isCategoryDragging: boolean; $isCategoryDragOver: boolean }>`
@@ -620,7 +618,7 @@ const StyledCategoryHeader = styled.summary`
     font-size: var(--xsmall-font);
     font-weight: 600;
     color: var(--dark-gray-color);
-    padding: 6px 16px;
+    padding: 6px 0;
     position: sticky;
     top: 0;
     z-index: 2;
@@ -742,18 +740,16 @@ const StyledCategoryDragHandle = styled.span`
 `;
 
 const StyledCategoryColorInput = styled.input`
-    width: 24px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
     padding: 0;
     border: 1px solid var(--light-gray-color);
     border-radius: 4px;
     background: none;
-    cursor: pointer;
 `;
 
 const StyledItem = styled.div<{ $isDragging: boolean; $isDragOver: boolean }>`
     position: relative;
-    padding: 0 16px;
     border-bottom: 1px solid var(--light-gray-color);
     opacity: ${(p) => p.$isDragging ? 0.5 : 1};
     background-color: ${(p) => p.$isDragOver ? 'var(--gray-color2)' : 'transparent'};

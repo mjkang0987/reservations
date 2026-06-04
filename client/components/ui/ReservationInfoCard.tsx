@@ -30,7 +30,7 @@ type ReservationInfoCardProps = {
 };
 
 function getReservationState(reservation: Reservation, today?: string) {
-    if (reservation.status === 'cancelled') return {type: 'cancelled', label: '취소'};
+    if (reservation.status === 'cancelled') return {type: 'cancelled', label: '예약취소'};
     if (reservation.status === 'noshow') return {type: 'noshow', label: '노쇼'};
     if (hasCompletedPayment(reservation)) return {type: 'paid', label: '결제완료'};
     return {type: 'booked', label: '예약'};
@@ -178,7 +178,6 @@ const StyledCard = styled.div<{
     box-sizing: border-box;
     text-align: left;
     font: inherit;
-    cursor: ${(props) => props.$clickable ? 'pointer' : 'default'};
     transition: border-color 0.14s ease, background-color 0.14s ease, box-shadow 0.14s ease;
 
     @media (hover: hover) and (pointer: fine) {
@@ -190,11 +189,6 @@ const StyledCard = styled.div<{
 
     @media (max-width: 640px) {
         flex-wrap: wrap;
-    }
-
-    &.inactive {
-        filter: grayscale(.5);
-        opacity: 0.5;
     }
 `;
 

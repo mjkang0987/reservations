@@ -316,7 +316,6 @@ const StyledTimelineBackground = styled.button`
     background: transparent;
     padding: 0;
     margin: 0;
-    cursor: pointer;
     z-index: 0;
 `;
 

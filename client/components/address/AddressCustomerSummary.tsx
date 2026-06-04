@@ -61,7 +61,7 @@ export function AddressCustomerSummary({customer, stats, serviceColorMap, checke
                 )}
                 <StyledTel><StyledTelLink href={`tel:${customer.tel}`} onClick={(e) => e.stopPropagation()}>{formatTel(customer.tel)}</StyledTelLink></StyledTel>
                 <StyledRecentService>
-                    <StyledRecentServiceLabel>최근시술</StyledRecentServiceLabel>
+                    <StyledRecentServiceLabel>최근 서비스</StyledRecentServiceLabel>
                     {stats?.recentService && stats.recentService !== '-'
                         ? <ServiceChipList service={stats.recentService} serviceColorMap={serviceColorMap} keyPrefix={customer.id} />
                         : '-'}
@@ -72,7 +72,7 @@ export function AddressCustomerSummary({customer, stats, serviceColorMap, checke
                 <StyledPrice><StyledPriceLabel>적립금</StyledPriceLabel>{formatPrice(customer.points ?? 0)}</StyledPrice>
                 <StyledStatusCounts>
                     <StyledStatusBadge $type="booked">예약({stats?.booked || 0})</StyledStatusBadge>
-                    <StyledStatusBadge $type="cancelled">취소({stats?.cancelled || 0})</StyledStatusBadge>
+                    <StyledStatusBadge $type="cancelled">예약취소({stats?.cancelled || 0})</StyledStatusBadge>
                     <StyledStatusBadge $type="completed">완료({stats?.completed || 0})</StyledStatusBadge>
                     <StyledStatusBadge $type="noshow">노쇼({stats?.noshow || 0})</StyledStatusBadge>
                 </StyledStatusCounts>
@@ -85,7 +85,6 @@ const StyledNameButton = styled.button`
     all: unset;
     font-size: var(--font);
     font-weight: 500;
-    cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -109,7 +108,6 @@ const StyledTelLink = styled.a`
 const StyledCheckbox = styled.input`
     width: 16px;
     height: 16px;
-    cursor: pointer;
     flex-shrink: 0;
 `;
 
@@ -135,7 +133,8 @@ const StyledSummaryRow = styled.div`
     padding: 10px 0;
     padding-right: 16px;
     cursor: pointer;
-    position: relative;
+    position: sticky;
+    top: 52px;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover strong,
