@@ -341,6 +341,7 @@ async function createReservationFromBooking(
             id: created.id,
             naverBookingUrl: booking.bookingUrl || null,
             serviceSummary,
+            designerId: designer?.id ?? null,
         });
 
         return {status: 'created', legacyId: resLegacyId};
