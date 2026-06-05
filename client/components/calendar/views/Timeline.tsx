@@ -12,7 +12,7 @@ import {
     ViewType,
 } from '../../../utils/constants';
 
-import {getDesignerColor} from '../../../utils/designers';
+import {buildDesignerColorMap} from '../../../utils/designers';
 import {isNewCustomerVisit} from '../../../utils/customers';
 import {buildServiceColorMap} from '../../../utils/services';
 
@@ -59,13 +59,7 @@ export const Timeline = ({
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
         [serviceCatalog, categoryBaseColorMap]
     );
-    const designerColorMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, designer) => {
-            acc[designer.id] = getDesignerColor(designer);
-            return acc;
-        }, {}),
-        [designers]
-    );
+    const designerColorMap = useMemo(() => buildDesignerColorMap(designers), [designers]);
     const designerNameById = (designerId?: number) => (
         designerId
             ? (designers.find((designer) => designer.id === designerId)?.name ?? '미지정')

@@ -10,7 +10,7 @@ import type {PaymentEntry, PaymentMethod, Reservation, ReservationHistoryEntry, 
 import {findOverlap, hasCompletedPayment} from '../../../utils/reservations';
 import {isNewCustomerVisit} from '../../../utils/customers';
 import type {CustomerMap} from '../../../utils/customers';
-import {getDesignerAvailabilityError, getDesignerColor, splitDesignersByStatus} from '../../../utils/designers';
+import {buildDesignerNameMap, getDesignerAvailabilityError, getDesignerColor, splitDesignersByStatus} from '../../../utils/designers';
 import {
     parseServiceString,
     joinServiceNames,
@@ -182,10 +182,7 @@ export const ReservationDetail = ({
     const currentDesigner = sourceReservation.designerId
         ? designers.find((designer) => designer.id === sourceReservation.designerId) ?? null
         : null;
-    const designerNameMap = designers.reduce<Record<number, string>>((acc, designer) => {
-        acc[designer.id] = designer.name;
-        return acc;
-    }, {0: '미지정'});
+    const designerNameMap = buildDesignerNameMap(designers, true);
     const serviceColorMap = buildServiceColorMap(serviceCatalog, categoryBaseColorMap);
     const knownServiceNames = useMemo(() => new Set(Object.keys(serviceColorMap)), [serviceColorMap]);
     const modalRoot = document.getElementById('modal-root');

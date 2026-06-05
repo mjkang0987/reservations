@@ -170,6 +170,22 @@ export function sortDesigners<T extends { name: string }>(list: T[]): T[] {
     return [...list].sort((a, b) => compareDesignerName(a.name, b.name));
 }
 
+export function buildDesignerNameMap(designers: Designer[], includeUnassigned?: boolean): Record<number, string> {
+    const map: Record<number, string> = includeUnassigned ? {0: '미지정'} : {};
+    for (const designer of designers) {
+        map[designer.id] = designer.name;
+    }
+    return map;
+}
+
+export function buildDesignerColorMap(designers: Designer[]): Record<number, string> {
+    const map: Record<number, string> = {};
+    for (const designer of designers) {
+        map[designer.id] = getDesignerColor(designer);
+    }
+    return map;
+}
+
 export const DEFAULT_DESIGNERS: Designer[] = [
     {
         id: 1,

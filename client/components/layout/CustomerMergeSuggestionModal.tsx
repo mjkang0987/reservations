@@ -3,7 +3,7 @@ import {createPortal} from 'react-dom';
 
 import styled from 'styled-components';
 
-import {getDesignerColor} from '../../features/designers/model';
+import {buildDesignerColorMap, buildDesignerNameMap} from '../../features/designers/model';
 import {buildServiceColorMap} from '../../features/services/model';
 import type {MergeSuggestion} from '../../hooks/useCustomerMergeSuggestion';
 import {countReservations} from '../../hooks/useCustomerMergeSuggestion';
@@ -82,21 +82,8 @@ export const CustomerMergeSuggestionModal = ({
         [serviceCatalog, categoryBaseColorMap],
     );
 
-    const designerColorMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, d) => {
-            acc[d.id] = getDesignerColor(d);
-            return acc;
-        }, {}),
-        [designers],
-    );
-
-    const designerNameMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, d) => {
-            acc[d.id] = d.name;
-            return acc;
-        }, {0: '미지정'}),
-        [designers],
-    );
+    const designerColorMap = useMemo(() => buildDesignerColorMap(designers), [designers]);
+    const designerNameMap = useMemo(() => buildDesignerNameMap(designers, true), [designers]);
 
     const modalRoot = typeof document !== 'undefined' ? document.getElementById('modal-root') : null;
     if (!modalRoot) return null;

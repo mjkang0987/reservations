@@ -10,7 +10,7 @@ import type {Customer} from '../utils/customers';
 import {toCustomerMap} from '../utils/customers';
 import type {Reservation, ReservationHistoryEntry} from '../utils/reservations';
 import {groupByDate} from '../utils/reservations';
-import {getDesignerColor} from '../utils/designers';
+import {buildDesignerColorMap, buildDesignerNameMap} from '../utils/designers';
 import {buildServiceColorMap} from '../utils/services';
 
 import {ReservationDetail} from '../components/calendar/overlays/ReservationDetail';
@@ -131,20 +131,8 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history, stor
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
         [serviceCatalog, categoryBaseColorMap]
     );
-    const designerColorMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, designer) => {
-            acc[designer.id] = getDesignerColor(designer);
-            return acc;
-        }, {}),
-        [designers]
-    );
-    const designerNameMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, designer) => {
-            acc[designer.id] = designer.name;
-            return acc;
-        }, {}),
-        [designers]
-    );
+    const designerColorMap = useMemo(() => buildDesignerColorMap(designers), [designers]);
+    const designerNameMap = useMemo(() => buildDesignerNameMap(designers), [designers]);
 
     const reservationsByCustomer = useMemo(() => {
         const map: Record<number, Reservation[]> = {};

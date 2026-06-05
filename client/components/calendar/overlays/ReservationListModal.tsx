@@ -7,7 +7,7 @@ import styled from 'styled-components';
 import {useCalendarStore} from '../../../store/calendarStore';
 
 import {isNewCustomerVisit} from '../../../utils/customers';
-import {getDesignerColor} from '../../../utils/designers';
+import {buildDesignerColorMap, buildDesignerNameMap} from '../../../utils/designers';
 import {buildServiceColorMap} from '../../../utils/services';
 
 import {
@@ -53,20 +53,8 @@ export const ReservationListModal = () => {
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
         [serviceCatalog, categoryBaseColorMap]
     );
-    const designerNameMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, designer) => {
-            acc[designer.id] = designer.name;
-            return acc;
-        }, {0: '미지정'}),
-        [designers]
-    );
-    const designerColorMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, designer) => {
-            acc[designer.id] = getDesignerColor(designer);
-            return acc;
-        }, {}),
-        [designers]
-    );
+    const designerNameMap = useMemo(() => buildDesignerNameMap(designers, true), [designers]);
+    const designerColorMap = useMemo(() => buildDesignerColorMap(designers), [designers]);
 
     const today = useMemo(() => {
         const d = new Date();

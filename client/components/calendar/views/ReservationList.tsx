@@ -6,7 +6,7 @@ import {useCalendarStore} from '../../../store/calendarStore';
 
 import {NewCustomerBadge} from '../../ui/NewCustomerBadge';
 import {isNewCustomerVisit} from '../../../utils/customers';
-import {getDesignerColor} from '../../../utils/designers';
+import {buildDesignerColorMap} from '../../../utils/designers';
 import {buildServiceColorMap} from '../../../utils/services';
 import {ServiceChipList} from '../../ui/ServiceChip';
 
@@ -39,13 +39,7 @@ export const ReservationList = ({
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
         [serviceCatalog, categoryBaseColorMap]
     );
-    const designerColorMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, designer) => {
-            acc[designer.id] = getDesignerColor(designer);
-            return acc;
-        }, {}),
-        [designers]
-    );
+    const designerColorMap = useMemo(() => buildDesignerColorMap(designers), [designers]);
 
     return (<>
         <StyledList $variant={variant}>

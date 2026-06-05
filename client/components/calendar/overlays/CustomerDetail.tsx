@@ -18,7 +18,7 @@ import {
     scrollContentStyle,
 } from './ModalStyles';
 
-import {getDesignerColor} from '../../../utils/designers';
+import {buildDesignerColorMap, buildDesignerNameMap} from '../../../utils/designers';
 import {buildServiceColorMap, formatPrice} from '../../../utils/services';
 import {formatTel, toCustomerMap} from '../../../utils/customers';
 import type {Customer as CustomerType} from '../../../utils/customers';
@@ -85,20 +85,8 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
         [serviceCatalog, categoryBaseColorMap]
     );
-    const designerColorMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, designer) => {
-            acc[designer.id] = getDesignerColor(designer);
-            return acc;
-        }, {}),
-        [designers]
-    );
-    const designerNameMap = useMemo(
-        () => designers.reduce<Record<number, string>>((acc, designer) => {
-            acc[designer.id] = designer.name;
-            return acc;
-        }, {}),
-        [designers]
-    );
+    const designerColorMap = useMemo(() => buildDesignerColorMap(designers), [designers]);
+    const designerNameMap = useMemo(() => buildDesignerNameMap(designers), [designers]);
 
     const customerReservations = useMemo(() => {
         const list: Reservation[] = [];
