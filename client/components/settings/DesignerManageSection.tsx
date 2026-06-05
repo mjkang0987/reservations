@@ -541,8 +541,8 @@ const StyledDesignerHeaderActions = styled.div`
 
 const StyledDesignerMetaGrid = styled.div`
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) 80px;
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) 32px;
+    gap: 4px;
     border-radius: 8px;
     background: rgba(248, 250, 252, 0.92);
 
@@ -569,7 +569,7 @@ const StyledDesignerMetaLabel = styled.label`
 `;
 
 const StyledDesignerColorInput = styled.input`
-    width: 100%;
+    width: 32px;
     height: 32px;
     padding: 2px;
     border: 1px solid var(--light-gray-color);

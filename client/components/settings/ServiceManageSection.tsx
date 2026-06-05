@@ -503,7 +503,7 @@ export const ServiceManageSection = () => {
                         </StyledCategoryToggle>
                         {editingCategory !== category && (
                             <StyledCategoryActions>
-                                <StyledEditBtn type="button" onClick={() => startCategoryEdit(category)}>이름수정</StyledEditBtn>
+                                <StyledEditBtn type="button" onClick={() => startCategoryEdit(category)}>수정</StyledEditBtn>
                             </StyledCategoryActions>
                         )}
                     </StyledGroup>
