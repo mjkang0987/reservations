@@ -434,6 +434,37 @@ export const StyledFooter = styled.div`
     }
 `;
 
+export const StyledConfirmOverlay = styled(StyledOverlay)`
+    z-index: ${OVERLAY_Z_INDEX.confirm};
+`;
+
+export const StyledConfirmModal = styled(StyledDetail)`
+    width: min(360px, 90vw);
+`;
+
+export const StyledChangeRow = styled.span`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+`;
+
+export const StyledArrow = styled.span`
+    font-size: 12px;
+    color: var(--dark-gray-color2);
+`;
+
+export const StyledNewTime = styled.span`
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-md);
+    background: rgba(0, 169, 230, 0.08);
+    border: 1px solid rgba(0, 169, 230, 0.2);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--blue-color);
+`;
+
 export const StyledActionButton = styled.button<{ $primary?: boolean; $danger?: boolean; $warning?: boolean }>`
     min-height: var(--modal-button-height);
     padding: 0 var(--modal-button-padding-x);

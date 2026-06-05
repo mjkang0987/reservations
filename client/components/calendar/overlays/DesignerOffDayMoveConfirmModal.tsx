@@ -5,13 +5,15 @@ import styled from 'styled-components';
 import type {Reservation} from '../../../utils/reservations';
 
 import {
-    OVERLAY_Z_INDEX,
     StyledActionButton,
-    StyledDetail,
+    StyledArrow,
+    StyledChangeRow,
+    StyledConfirmModal,
+    StyledConfirmOverlay,
     StyledFooter,
     StyledHeader,
     StyledHeaderTitleGroup,
-    StyledOverlay,
+    StyledNewTime,
     useDialogAccessibility,
     useLayerInstanceId,
 } from './ModalStyles';
@@ -102,14 +104,6 @@ export const DesignerOffDayMoveConfirmModal = ({
     );
 };
 
-const StyledConfirmOverlay = styled(StyledOverlay)`
-    z-index: ${OVERLAY_Z_INDEX.confirm};
-`;
-
-const StyledConfirmModal = styled(StyledDetail)`
-    width: min(360px, 90vw);
-`;
-
 const StyledConfirmContent = styled.div`
     padding: var(--modal-body-padding);
     display: flex;
@@ -133,29 +127,6 @@ const StyledConfirmContent = styled.div`
         margin: 0;
         font-size: 13px;
     }
-`;
-
-const StyledChangeRow = styled.span`
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-`;
-
-const StyledArrow = styled.span`
-    font-size: 12px;
-    color: var(--dark-gray-color2);
-`;
-
-const StyledNewTime = styled.span`
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: var(--radius-md);
-    background: rgba(0, 169, 230, 0.08);
-    border: 1px solid rgba(0, 169, 230, 0.2);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--blue-color);
 `;
 
 const StyledWarningMessage = styled.p`

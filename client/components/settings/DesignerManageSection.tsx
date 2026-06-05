@@ -5,7 +5,7 @@ import styled, {css} from 'styled-components';
 
 import {useCalendarStore} from '../../store/calendarStore';
 import {PageHero} from '../ui/PageHero';
-import {StyledOverlay, StyledDetail, StyledHeader, StyledFooter, StyledActionButton, StyledModalMessage, useDialogAccessibility, useLayerInstanceId, OVERLAY_Z_INDEX} from '../calendar/overlays/ModalStyles';
+import {StyledConfirmOverlay, StyledDetail, StyledHeader, StyledFooter, StyledActionButton, StyledModalMessage, useDialogAccessibility, useLayerInstanceId} from '../calendar/overlays/ModalStyles';
 import type {Designer, DesignerStatus} from '../../utils/designers';
 import {WEEKDAY_LABELS, getDesignerColor, getDesignerStatus, getDesignerStatusMeta, splitDesignersByStatus, sortDesigners} from '../../utils/designers';
 import {Dot} from '../ui/Dot';
@@ -409,10 +409,6 @@ export const DesignerManageSection = () => {
         </>
     );
 };
-
-const StyledConfirmOverlay = styled(StyledOverlay)`
-    z-index: ${OVERLAY_Z_INDEX.confirm};
-`;
 
 const StyledConfirmBody = styled.div`
     padding: 16px 20px;
