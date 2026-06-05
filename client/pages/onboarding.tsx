@@ -128,7 +128,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     if (!session) {
         return {redirect: {destination: '/login', permanent: false}};
     }
-    if (session.user.onboarded) {
+    if (session.onboarded) {
         return {redirect: {destination: '/', permanent: false}};
     }
 
@@ -138,12 +138,12 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 /* ── Styles ── */
 
 const StyledPage = styled.div`
-    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 100%;
     padding: 24px 16px;
-    background: var(--bg-color);
+    box-sizing: border-box;
 `;
 
 const StyledCard = styled.div`
@@ -154,9 +154,8 @@ const StyledCard = styled.div`
     gap: 28px;
     padding: 36px 32px;
     background: var(--white-color);
-    border: 1px solid var(--light-gray-color);
-    border-radius: 16px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
 
     @media (max-width: 480px) {
         padding: 28px 20px;
@@ -239,7 +238,7 @@ const StyledTypeCard = styled.button<{$selected: boolean}>`
     gap: 4px;
     padding: 16px 8px;
     border: 2px solid ${(p) => p.$selected ? 'var(--blue-color)' : 'var(--light-gray-color)'};
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     background: ${(p) => p.$selected ? 'rgba(45, 127, 249, 0.06)' : 'var(--white-color)'};
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s;
@@ -282,7 +281,7 @@ const StyledError = styled.p`
 
 const StyledSubmitBtn = styled.button`
     height: 48px;
-    border: none;
+    border: 1px solid var(--blue-color);
     border-radius: var(--radius-md);
     background: var(--blue-color);
     font-size: 15px;
