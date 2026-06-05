@@ -9,7 +9,9 @@ import {listNaverBookingEmails, listNaverCancellationEmails, getEmailContent} fr
 import {parseNaverBookingEmail, parseNaverCancellationEmail} from './gmail/naver-booking-parser';
 import type {NaverBookingData} from './gmail/naver-booking-parser';
 import {dbReservationToFrontend} from '../db/mappers';
+import {reservationIncludeWithNames} from '../db/prisma-includes';
 import {calcEndTime, getLastNaverSyncTimestamp} from './gmail/helpers';
+import {findByNameContains} from '../utils/string-matching';
 
 const DEFAULT_DURATION = 30;
 const EMAIL_FETCH_CONCURRENCY = 10;
@@ -227,22 +229,6 @@ async function fetchEmailContentsInBatches(
     return results;
 }
 
-function findByNameContains<T>(map: Map<string, T>, searchName: string): T | undefined {
-    if (!searchName) return undefined;
-    const exact = map.get(searchName);
-    if (exact) return exact;
-
-    // 부분 매칭 — 가장 긴 키 우선 (예: "김은지" > "김은")
-    let bestMatch: {key: string; value: T} | undefined;
-    for (const [key, value] of map) {
-        if (key.includes(searchName) || searchName.includes(key)) {
-            if (!bestMatch || key.length > bestMatch.key.length) {
-                bestMatch = {key, value};
-            }
-        }
-    }
-    return bestMatch?.value;
-}
 
 async function createReservationFromBooking(
     ctx: SyncContext,
@@ -367,19 +353,13 @@ async function createReservationFromBooking(
     }
 }
 
-const reservationInclude = {
-    paymentEntries: true,
-    customer: {select: {legacyId: true, name: true}},
-    designer: {select: {legacyId: true, name: true}},
-} as const;
-
 async function cancelReservationByBookingId(
     storeId: string,
     bookingId: string,
 ): Promise<{status: 'cancelled'; legacyId: number; appointmentDate: string; appointmentTime: string; customerName: string; designerName: string} | {status: 'skipped'}> {
     const reservation = await prisma.reservation.findFirst({
         where: {storeId, naverBookingId: bookingId},
-        include: reservationInclude,
+        include: reservationIncludeWithNames,
     });
 
     if (!reservation) return {status: 'skipped'};
@@ -401,7 +381,7 @@ async function cancelReservationByBookingId(
     const updatedReservation = await prisma.reservation.update({
         where: {id: reservation.id},
         data: {status: 'cancelled'},
-        include: reservationInclude,
+        include: reservationIncludeWithNames,
     });
 
     const after = dbReservationToFrontend(updatedReservation);

@@ -3,10 +3,9 @@ import type {NextApiRequest, NextApiResponse} from 'next';
 import {prisma} from '../db/prisma';
 import {getApiSession, requireRole} from '../auth/api-session';
 import {getValidAccessTokenWithReason} from './gmail/token-manager';
-import {getEmailContent} from './gmail/gmail-client';
+import {getEmailContent, GMAIL_API} from './gmail/gmail-client';
 import {parseNaverBookingEmail} from './gmail/naver-booking-parser';
-
-const GMAIL_API = 'https://www.googleapis.com/gmail/v1/users/me';
+import {findByNameContains} from '../utils/string-matching';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'POST') {
@@ -130,20 +129,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(200).json({fixed, errors});
-}
-
-function findByNameContains<T>(map: Map<string, T>, searchName: string): T | undefined {
-    if (!searchName) return undefined;
-    const exact = map.get(searchName);
-    if (exact) return exact;
-
-    let bestMatch: {key: string; value: T} | undefined;
-    for (const [key, value] of map) {
-        if (key.includes(searchName) || searchName.includes(key)) {
-            if (!bestMatch || key.length > bestMatch.key.length) {
-                bestMatch = {key, value};
-            }
-        }
-    }
-    return bestMatch?.value;
 }

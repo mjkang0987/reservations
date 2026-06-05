@@ -9,14 +9,9 @@ import {
     frontendPaymentMethodToDb,
     frontendChannelToDb,
 } from '../db/mappers';
+import {reservationInclude} from '../db/prisma-includes';
 import type {Reservation, ReservationStatus} from '../../client/features/reservations/model';
 import {hasCompletedPayment} from '../../client/features/reservations/model';
-
-const reservationInclude = {
-    paymentEntries: true,
-    customer: {select: {legacyId: true}},
-    designer: {select: {legacyId: true}},
-} as const;
 
 async function resolveCustomerCuid(storeId: string, legacyId: number): Promise<string | null> {
     const customer = await prisma.customer.findUnique({

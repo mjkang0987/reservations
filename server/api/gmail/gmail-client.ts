@@ -1,4 +1,4 @@
-const GMAIL_API = 'https://www.googleapis.com/gmail/v1/users/me';
+export const GMAIL_API = 'https://www.googleapis.com/gmail/v1/users/me';
 
 let rateLimitUntil = 0;
 
