@@ -111,7 +111,14 @@ export const Header = () => {
         openReservationDetail(reservation);
     }, [reservationMap, setReservationMap, openReservationDetail]);
 
+    const unresolvedConflicts = visibleNotifications.filter(
+        (n) => n.type === 'conflict' && n.conflictStatus !== 'confirmed',
+    );
+    const conflictCount = unresolvedConflicts.length;
+    const firstConflictKey = unresolvedConflicts[0]?.conflictKey;
+
     return (
+        <>
         <StyledHeader>
             <StyledAsideToggle type="button"
                                $open={aside.isVisible}
@@ -314,8 +321,44 @@ export const Header = () => {
                 </StyledTokenExpiredToast>
             )}
         </StyledHeader>
+        {conflictCount > 0 && firstConflictKey && (
+            <StyledConflictBanner type="button" onClick={() => openConflictByKey(firstConflictKey)}>
+                <span>중복예약 <strong>{conflictCount}건</strong>이 있습니다</span>
+                <span>확인하기 →</span>
+            </StyledConflictBanner>
+        )}
+        </>
     );
 };
+
+const StyledConflictBanner = styled.button`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 14px;
+    height: 34px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    border: none;
+    border-bottom: 1px solid var(--danger-border);
+    background: var(--danger-bg);
+    color: var(--danger-color);
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+
+    strong { font-weight: 700; }
+
+    span:last-child {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover { filter: brightness(0.97); }
+    }
+`;
 
 const StyledHeader = styled.header`
     position: relative;
