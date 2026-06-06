@@ -224,8 +224,9 @@ interface ModalProps {
 const NotificationModal = ({notifications, designers, reservationMap, markRead, markAllRead, onSelectReservation, onSelectConflict, onClose}: ModalProps) => {
     const dialogRef = useDialogAccessibility<HTMLDivElement>(onClose);
 
-    const unreadNotifications = notifications.filter((n) => !n.read);
-    const readNotifications = notifications.filter((n) => n.read);
+    const conflictNotifications = notifications.filter((n) => n.type === 'conflict');
+    const unreadNotifications = notifications.filter((n) => !n.read && n.type !== 'conflict');
+    const readNotifications = notifications.filter((n) => n.read && n.type !== 'conflict');
 
     const handleClick = (n: SyncNotification) => {
         markRead(n.id);
@@ -240,6 +241,51 @@ const NotificationModal = ({notifications, designers, reservationMap, markRead, 
             onSelectReservation(reservation);
         }
     };
+
+    const renderConflictItem = (n: SyncNotification) => (
+        <StyledModalItem key={n.id}
+                         $unread={n.conflictStatus !== 'confirmed'}
+                         onClick={() => handleClick(n)}>
+            <StyledConflictItemText>
+                <span className="message">
+                    <span className="date">{formatDate(n.appointmentDate)}</span>{' '}
+                    <span className="time">{n.appointmentTime}</span>{' '}
+                    <span className="name">{n.customerName || '고객'}</span>{' '}
+                    <span className="suffix">고객님</span>{' '}
+                    <span className="name">{n.designerName || '미지정'}</span>{' '}
+                    <span className="suffix">디자이너로 중복 예약 발생했습니다.</span>{' '}
+                    <StyledConflictTag>중복예약</StyledConflictTag>{' '}
+                    <StyledStatusTag $status={n.conflictStatus}>{getConflictStatusLabel(n.conflictStatus)}</StyledStatusTag>
+                </span>
+            </StyledConflictItemText>
+            <StyledDesignerMeta>
+                <span>디자이너</span>
+                <DesignerLabel color={getDesignerColor(n.designerName, designers)} name={n.designerName} />
+            </StyledDesignerMeta>
+        </StyledModalItem>
+    );
+
+    const renderRegularItem = (n: SyncNotification, flag: string) => (
+        <StyledModalItem key={n.id}
+                         $unread={!n.read}
+                         onClick={() => handleClick(n)}>
+            <StyledItemText>
+                <span className="date">{formatDate(n.appointmentDate)}</span>
+                <span className="time">{n.appointmentTime}</span>
+                <span className="name">{n.customerName}</span>
+                <span className="suffix">고객님</span>
+                {n.type === 'cancel'
+                    ? <StyledCancelTag>예약취소</StyledCancelTag>
+                    : <><StyledNaverTag>네이버예약</StyledNaverTag><span className="suffix">확정</span></>
+                }
+            </StyledItemText>
+            <StyledDesignerMeta>
+                <span>디자이너</span>
+                <DesignerLabel color={getDesignerColor(n.designerName, designers)} name={n.designerName} />
+            </StyledDesignerMeta>
+            <StyledFlag>{flag}</StyledFlag>
+        </StyledModalItem>
+    );
 
     const modalRoot = typeof document !== 'undefined'
         ? document.getElementById('modal-root')
@@ -262,89 +308,26 @@ const NotificationModal = ({notifications, designers, reservationMap, markRead, 
                         {notifications.length === 0 && (
                             <StyledEmpty>알림이 없습니다</StyledEmpty>
                         )}
-                        {unreadNotifications.length > 0 && (
-                            <>
-                                <StyledSectionLabel>미확인 알림</StyledSectionLabel>
-                                {unreadNotifications.map((n) => (
-                                    <StyledModalItem key={n.id}
-                                                     $unread
-                                                     onClick={() => handleClick(n)}>
-                                        {n.type === 'conflict' ? (
-                                            <StyledConflictItemText>
-                                                <span className="message">
-                                                    <span className="date">{formatDate(n.appointmentDate)}</span>{' '}
-                                                    <span className="time">{n.appointmentTime}</span>{' '}
-                                                    <span className="name">{n.customerName || '고객'}</span>{' '}
-                                                    <span className="suffix">고객님</span>{' '}
-                                                    <span className="name">{n.designerName || '미지정'}</span>{' '}
-                                                    <span className="suffix">디자이너로 중복 예약 발생했습니다.</span>{' '}
-                                                    <StyledConflictTag>중복예약</StyledConflictTag>{' '}
-                                                    <StyledStatusTag $status={n.conflictStatus}>{getConflictStatusLabel(n.conflictStatus)}</StyledStatusTag>
-                                                </span>
-                                            </StyledConflictItemText>
-                                        ) : (
-                                            <StyledItemText>
-                                                <span className="date">{formatDate(n.appointmentDate)}</span>
-                                                <span className="time">{n.appointmentTime}</span>
-                                                <span className="name">{n.customerName}</span>
-                                                <span className="suffix">고객님</span>
-                                                {n.type === 'cancel'
-                                                    ? <StyledCancelTag>예약취소</StyledCancelTag>
-                                                    : <><StyledNaverTag>네이버예약</StyledNaverTag><span className="suffix">확정</span></>
-                                                }
-                                            </StyledItemText>
-                                        )}
-                                        <StyledDesignerMeta>
-                                            <span>디자이너</span>
-                                            <DesignerLabel color={getDesignerColor(n.designerName, designers)}
-                                                           name={n.designerName} />
-                                        </StyledDesignerMeta>
-                                        <StyledFlag>안읽음</StyledFlag>
-                                    </StyledModalItem>
-                                ))}
-                            </>
+
+                        {conflictNotifications.length > 0 && (
+                            <StyledSection>
+                                <StyledSectionLabel>중복예약</StyledSectionLabel>
+                                {conflictNotifications.map(renderConflictItem)}
+                            </StyledSection>
                         )}
+
+                        {unreadNotifications.length > 0 && (
+                            <StyledSection>
+                                <StyledSectionLabel>미확인 알람</StyledSectionLabel>
+                                {unreadNotifications.map((n) => renderRegularItem(n, '안읽음'))}
+                            </StyledSection>
+                        )}
+
                         {readNotifications.length > 0 && (
-                            <>
-                                <StyledSectionLabel>확인한 알림</StyledSectionLabel>
-                                {readNotifications.map((n) => (
-                                    <StyledModalItem key={n.id}
-                                                     $unread={false}
-                                                     onClick={() => handleClick(n)}>
-                                        {n.type === 'conflict' ? (
-                                            <StyledConflictItemText>
-                                                <span className="message">
-                                                    <span className="date">{formatDate(n.appointmentDate)}</span>{' '}
-                                                    <span className="time">{n.appointmentTime}</span>{' '}
-                                                    <span className="name">{n.customerName || '고객'}</span>{' '}
-                                                    <span className="suffix">고객님</span>{' '}
-                                                    <span className="name">{n.designerName || '미지정'}</span>{' '}
-                                                    <span className="suffix">디자이너로 중복 예약 발생했습니다.</span>{' '}
-                                                    <StyledConflictTag>중복예약</StyledConflictTag>{' '}
-                                                    <StyledStatusTag $status={n.conflictStatus}>{getConflictStatusLabel(n.conflictStatus)}</StyledStatusTag>
-                                                </span>
-                                            </StyledConflictItemText>
-                                        ) : (
-                                            <StyledItemText>
-                                                <span className="date">{formatDate(n.appointmentDate)}</span>
-                                                <span className="time">{n.appointmentTime}</span>
-                                                <span className="name">{n.customerName}</span>
-                                                <span className="suffix">고객님</span>
-                                                {n.type === 'cancel'
-                                                    ? <StyledCancelTag>예약취소</StyledCancelTag>
-                                                    : <><StyledNaverTag>네이버예약</StyledNaverTag><span className="suffix">확정</span></>
-                                                }
-                                            </StyledItemText>
-                                        )}
-                                        <StyledDesignerMeta>
-                                            <span>디자이너</span>
-                                            <DesignerLabel color={getDesignerColor(n.designerName, designers)}
-                                                           name={n.designerName} />
-                                        </StyledDesignerMeta>
-                                        <StyledFlag>읽음</StyledFlag>
-                                    </StyledModalItem>
-                                ))}
-                            </>
+                            <StyledSection>
+                                <StyledSectionLabel>확인 알람</StyledSectionLabel>
+                                {readNotifications.map((n) => renderRegularItem(n, '읽음'))}
+                            </StyledSection>
                         )}
                     </StyledModalBodyInner>
                 </StyledBody>
@@ -450,16 +433,19 @@ const StyledPanelBody = styled.div`
     min-height: 0;
 `;
 
+const StyledSection = styled.div``;
+
 const StyledSectionLabel = styled.div`
     position: sticky;
     top: 0;
+    z-index: 1;
     padding: 6px 12px;
     font-size: 11px;
     font-weight: 700;
     color: var(--dark-gray-color2);
     letter-spacing: 0.02em;
-    background: rgba(255, 255, 255, .1); /* 살짝만 흰색 */
-    backdrop-filter: var(--sticky-backdrop);
+    background: var(--white-color);
+    border-bottom: 1px solid var(--gray-color2);
 `;
 
 const StyledUnreadDot = styled.span`
