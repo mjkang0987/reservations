@@ -90,13 +90,14 @@ function restoreConflictsFromPairs(): ConflictInfo[] {
     if (pairs.length === 0) return [];
 
     const reservationMap = useCalendarStore.getState().reservationMap;
-    const allReservations = Object.values(reservationMap).flat();
+    const activeReservations = Object.values(reservationMap).flat()
+        .filter((r) => r.status !== 'cancelled' && r.status !== 'noshow');
     const conflicts: ConflictInfo[] = [];
 
     for (const stored of pairs) {
-        // 예약이 아직 존재하는지 확인
-        const newExists = allReservations.some((r) => r.id === stored.newReservation.id);
-        const existingExists = allReservations.some((r) => r.id === stored.existingReservation.id);
+        // 취소·노쇼가 아닌 예약이 여전히 존재하는지 확인
+        const newExists = activeReservations.some((r) => r.id === stored.newReservation.id);
+        const existingExists = activeReservations.some((r) => r.id === stored.existingReservation.id);
         if (newExists && existingExists) {
             // 원본 스냅샷을 유지 (변경 비교용)
             conflicts.push({
@@ -151,6 +152,16 @@ export function useNaverBookingSync() {
 
         // 새 conflict 감지 + 이전에 저장된 미해결 conflict 복원
         const detected = detectConflictsFromStore();
+        const detectedKeys = new Set(detected.map(conflictKey));
+
+        // 실제로 더 이상 겹치지 않는 pending/deferred conflict 알림을 자동 confirmed 처리
+        const {syncNotifications: currentNotifications, updateConflictNotificationStatus: autoConfirm} = useCalendarStore.getState();
+        for (const n of currentNotifications) {
+            if (n.type === 'conflict' && n.conflictStatus !== 'confirmed' && n.conflictKey && !detectedKeys.has(n.conflictKey)) {
+                autoConfirm(n.conflictKey, 'confirmed');
+            }
+        }
+
         const restored = restoreConflictsFromPairs();
 
         // 합치기 (중복 제거)
@@ -369,6 +380,7 @@ export function useNaverBookingSync() {
         if (currentConflict) {
             const key = conflictKey(currentConflict);
             updateConflictNotificationStatus(key, 'confirmed');
+            removeActiveConflictPair(key);
             // 확인 시 해당 알림 읽음 처리
             const notification = notifications.find((n) => n.type === 'conflict' && n.conflictKey === key);
             if (notification) markSyncNotificationRead(notification.id);
