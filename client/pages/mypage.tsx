@@ -285,17 +285,18 @@ const StyledContainer = styled.div`
 
 const StyledCard = styled.div`
     margin-top: 8px;
-    padding: 10px;
-    border: 1px solid #e5e7eb;
+    padding: 14px;
+    border: 1px solid var(--light-gray-color);
     border-radius: var(--card-radius);
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    background: var(--white-color);
+    box-shadow: var(--shadow-sm);
 `;
 
 const StyledCardTitle = styled.h2`
     margin: 0 0 14px;
-    font-size: 18px;
-    color: #111827;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-gray-color);
 `;
 
 const StyledRow = styled.div`
@@ -303,7 +304,7 @@ const StyledRow = styled.div`
     justify-content: space-between;
     gap: 16px;
     padding: 10px 0;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--black-color-10);
 
     &:first-of-type {
         border-top: none;
@@ -312,14 +313,14 @@ const StyledRow = styled.div`
 `;
 
 const StyledLabel = styled.span`
-    color: #6b7280;
-    font-size: 14px;
+    font-size: 13px;
+    color: var(--dark-gray-color2);
 `;
 
 const StyledValue = styled.span`
-    color: #111827;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
+    color: var(--black-color);
     text-align: right;
     word-break: break-word;
 `;
@@ -335,63 +336,66 @@ const buttonLikeStyle = `
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 140px;
-    height: 42px;
-    padding: 0 16px;
-    border-radius: 8px;
-    font-size: 14px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
     font-weight: 600;
-    text-decoration: none;
     cursor: pointer;
+    transition: opacity 0.15s;
     box-sizing: border-box;
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover { opacity: 0.85; }
+    }
 `;
 
 const StyledActionButton = styled.button`
     ${buttonLikeStyle}
-    border: none;
-    background: #111827;
-    color: #fff;
+    border: 1px solid var(--light-gray-color);
+    background: var(--black-color);
+    color: var(--white-color);
 `;
 
 const StyledGrid = styled.div`
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
 `;
 
 const StyledMetric = styled.div`
-    padding: 16px 12px;
-    border-radius: 10px;
-    background: #f8fafc;
+    padding: 14px 10px;
+    border-radius: var(--radius-lg);
+    background: var(--gray-color2);
     text-align: center;
 
     strong {
         display: block;
-        font-size: 24px;
-        color: #111827;
+        font-size: 22px;
+        color: var(--black-color);
     }
 
     span {
         display: block;
-        margin-top: 6px;
+        margin-top: 4px;
         font-size: 12px;
-        color: #6b7280;
+        color: var(--dark-gray-color2);
     }
 `;
 
 const StyledHint = styled.p`
-    margin: 14px 0 0;
-    color: #6b7280;
+    margin: 10px 0 0;
     font-size: 13px;
+    color: var(--dark-gray-color2);
     line-height: 1.6;
 `;
 
 const StyledDangerButton = styled.button`
     margin-top: 14px;
     ${buttonLikeStyle}
-    border: 1px solid #fecaca;
-    background: #fff1f2;
-    color: #be123c;
+    border: 1px solid var(--danger-border);
+    background: var(--danger-bg);
+    color: var(--danger-color);
 `;
 
 const StyledSyncStatus = styled.div<{$connected: boolean}>`
@@ -440,12 +444,12 @@ const StyledGoogleButton = styled.button`
     gap: 8px;
     height: 42px;
     padding: 0 16px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--light-gray-color);
     border-radius: var(--radius-md);
     background: var(--white-color);
     font-size: 14px;
     font-weight: 600;
-    color: #333;
+    color: var(--black-color);
     cursor: pointer;
     transition: opacity 0.15s;
 
