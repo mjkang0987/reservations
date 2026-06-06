@@ -433,7 +433,7 @@ const StyledAsideToggle = styled.button<{ $open: boolean }>`
         border-radius: 50%;
         background-color: var(--aside-bg);
         color: var(--aside-text);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        box-shadow: var(--shadow-md);
         opacity: .8;
         transition: left 0.25s ease, background-color 0.1s;
 
@@ -495,7 +495,7 @@ const StyledDesignerFilter = styled.select`
     &::picker(select) {
         appearance: base-select;
         align-items: center;
-        border: 1px solid #e0e0e0;
+        border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
         margin-top: 4px;
         @media (max-width: 640px) {
@@ -523,7 +523,7 @@ const StyledSyncToast = styled.span`
     padding: 4px 10px;
     border-radius: var(--radius-md);
     background-color: var(--black-color);
-    color: #fff;
+    color: var(--white-color);
     font-size: var(--tiny-font);
     white-space: nowrap;
     pointer-events: none;
@@ -665,7 +665,7 @@ const StyledSearchOverlay = styled.div`
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.45);
     box-sizing: border-box;
 `;
 
@@ -675,9 +675,9 @@ const StyledSearchModal = styled.div`
     max-height: 70vh;
     display: flex;
     flex-direction: column;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    background-color: var(--white-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
     overflow: hidden;
 `;
 
@@ -753,10 +753,10 @@ const StyledTokenExpiredToast = styled.div`
     gap: 12px;
     padding: 12px 16px;
     border-radius: 10px;
-    background: #1e293b;
-    color: #fff;
+    background: var(--toast-bg);
+    color: var(--white-color);
     font-size: 13px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--modal-shadow);
     z-index: 10000;
     white-space: nowrap;
 `;
@@ -765,7 +765,7 @@ const StyledTokenReconnect = styled.button`
     padding: 0;
     border: none;
     background: none;
-    color: #60a5fa;
+    color: var(--link-color-light);
     font-size: 13px;
     font-weight: 600;
 
@@ -778,7 +778,7 @@ const StyledTokenClose = styled.button`
     padding: 0;
     border: none;
     background: none;
-    color: #94a3b8;
+    color: var(--muted-text);
     font-size: 14px;
     line-height: 1;
 `;

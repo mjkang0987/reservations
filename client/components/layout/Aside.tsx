@@ -387,7 +387,7 @@ const StyledBrandLink = styled(Link)`
     box-sizing: border-box;
     font-size: 16px;
     font-weight: 700;
-    color: #fff;
+    color: var(--aside-text);
     letter-spacing: 1px;
     white-space: nowrap;
     text-decoration: none;
@@ -422,7 +422,7 @@ const StyledUserInfoLink = styled(Link)`
 const StyledUserName = styled.span`
     font-size: var(--small-font);
     font-weight: 600;
-    color: #fff;
+    color: var(--aside-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -466,13 +466,13 @@ const StyledNavLink = styled(Link)<{ $active?: boolean }>`
     height: 36px;
     padding: 0 8px;
     box-sizing: border-box;
-    background-color: ${(props) => props.$active ? '#6526d9' : 'transparent'};
+    background-color: ${(props) => props.$active ? 'var(--brand-color)' : 'transparent'};
     border: none;
     border-radius: var(--radius-md);
     font-size: var(--small-font);
     font-weight: 500;
     text-decoration: none;
-    color: ${(props) => props.$active ? '#ffffff' : 'var(--aside-text)'};
+    color: ${(props) => props.$active ? 'var(--white-color)' : 'var(--aside-text)'};
     white-space: nowrap;
     opacity: ${(props) => props.$active ? 1 : 0.8};
     transition: background-color 0.1s, color 0.1s, opacity 0.1s, filter 0.1s;
@@ -577,14 +577,14 @@ const StyledSubNavLink = styled(Link)<{ $active?: boolean }>`
     font-size: var(--small-font);
     font-weight: 500;
     text-decoration: none;
-    color: ${(props) => props.$active ? '#6526d9' : 'var(--aside-text)'};
+    color: ${(props) => props.$active ? 'var(--brand-color)' : 'var(--aside-text)'};
     white-space: nowrap;
     opacity: ${(props) => props.$active ? 1 : 0.8};
-    background-color: ${(props) => props.$active ? '#6526d9' : 'transparent'};
+    background-color: ${(props) => props.$active ? 'var(--brand-color)' : 'transparent'};
     transition: background-color 0.1s, color 0.1s, opacity 0.1s, filter 0.1s;
 
     ${StyledMenuContent} {
-        color: ${(props) => props.$active ? '#ffffff' : 'inherit'};
+        color: ${(props) => props.$active ? 'var(--white-color)' : 'inherit'};
     }
 
     @media (hover: hover) and (pointer: fine) {

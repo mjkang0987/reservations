@@ -30,7 +30,7 @@ function formatDate(dateStr: string): string {
 
 function getDesignerColor(designerName: string, designers: Designer[]): string {
     const designer = designers.find((d) => d.name === designerName);
-    return designer?.color ?? '#8E8E93';
+    return designer?.color ?? 'var(--unassigned-color)';
 }
 
 function getConflictStatusLabel(status?: SyncNotification['conflictStatus']): string {
@@ -401,7 +401,7 @@ const StyledBadge = styled.span`
     padding: 0 4px;
     box-sizing: border-box;
     border-radius: 999px;
-    color: #fff;
+    color: var(--white-color);
     background: var(--danger-color);
     font-size: 10px;
     font-weight: 700;
@@ -499,13 +499,13 @@ const StyledItem = styled.div`
     flex-direction: column;
     gap: 4px;
     padding: 10px 12px;
-    background-color: #f0f8ff;
+    background-color: var(--notification-unread-bg);
     border-bottom: 1px solid var(--gray-color2);
     cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
-            background-color: #e3f1fc;
+            background-color: var(--notification-unread-bg-hover);
         }
     }
 
@@ -556,7 +556,7 @@ const StyledConflictItemText = styled.div`
 
     .date {
         font-weight: 800;
-        color: #111827;
+        color: var(--notification-text);
     }
 
     .time {
@@ -565,7 +565,7 @@ const StyledConflictItemText = styled.div`
 
     .name {
         font-weight: 700;
-        color: #111827;
+        color: var(--notification-text);
     }
 
     .suffix {
@@ -654,13 +654,13 @@ const StyledModalItem = styled.div<{ $unread: boolean }>`
     width: 100%;
     box-sizing: border-box;
     padding: 4px 8px;
-    background-color: ${(props) => props.$unread ? '#f0f8ff' : 'transparent'};
+    background-color: ${(props) => props.$unread ? 'var(--notification-unread-bg)' : 'transparent'};
     border-bottom: 1px solid var(--gray-color2);
     cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
-            background-color: ${(props) => props.$unread ? '#e3f1fc' : 'var(--gray-color2)'};
+            background-color: ${(props) => props.$unread ? 'var(--notification-unread-bg-hover)' : 'var(--gray-color2)'};
         }
     }
 

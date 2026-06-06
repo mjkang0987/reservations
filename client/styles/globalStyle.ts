@@ -23,14 +23,44 @@ export const GlobalStyle = createGlobalStyle`
         --white-color-60: hsla(0, 0%, 100%, .6);
         --white-color-40: hsla(0, 0%, 100%, .4);
 
+        --brand-color: #6526d9;
+
         --danger-color: #c93a30;
         --danger-bg: #fef2f2;
         --danger-border: #fecaca;
         --warning-color: #EA4335;
         --warning-bg: #FCE8E6;
         --warning-border: #f5c6c2;
+        --warning-text: #92400E;
+        --warning-bg-soft: #FEF3C7;
+        --warning-border-soft: #FCD34D;
         --success-color: #24753a;
+        --success-text: #15803d;
+        --success-bg: rgba(34, 197, 94, 0.12);
+        --success-border: rgba(34, 197, 94, 0.2);
         --caution-color: #a88417;
+
+        --neutral-text: #475569;
+        --neutral-bg: rgba(241, 245, 249, 0.92);
+        --neutral-border: rgba(203, 213, 225, 0.95);
+
+        --info-color: #2d7ff9;
+        --info-bg: rgba(45, 127, 249, 0.1);
+        --info-border: rgba(45, 127, 249, 0.2);
+
+        --naver-color: #2DB400;
+        --naver-color-dark: #269900;
+
+        --new-customer-bg: #ffd651;
+        --unassigned-color: #8E8E93;
+
+        --notification-unread-bg: #f0f8ff;
+        --notification-unread-bg-hover: #e3f1fc;
+        --notification-text: #111827;
+
+        --toast-bg: #1e293b;
+        --link-color-light: #60a5fa;
+        --muted-text: #94a3b8;
 
         --radius-sm: 4px;
         --radius-md: 6px;
