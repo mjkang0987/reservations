@@ -91,7 +91,7 @@ const MyPage: NextPage<MyPageProps> = ({linkedProvider}) => {
                     <StyledCardTitle>사용 상태</StyledCardTitle>
                     <StyledRow>
                         <StyledLabel>세션 상태</StyledLabel>
-                        <StyledValue>{status}</StyledValue>
+                        <StyledValue>{{ authenticated: '로그인됨', unauthenticated: '미로그인', loading: '확인 중' }[status] ?? status}</StyledValue>
                     </StyledRow>
                     <StyledRow>
                         <StyledLabel>별명</StyledLabel>
