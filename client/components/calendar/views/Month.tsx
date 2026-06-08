@@ -76,13 +76,15 @@ export const Month = ({
                                      onViewAll={() => setReservationListFilter({type: 'date', dateKey})}
                                      hideViewAll/>
                 )}
-                <StyledViewAllButton type="button"
-                                     onClick={(e) => {
-                                         e.stopPropagation();
-                                         setReservationListFilter({type: 'date', dateKey});
-                                     }}>
-                    전체 ({dateReservations.length})
-                </StyledViewAllButton>
+                {dateReservations.length > 0 && (
+                    <StyledViewAllButton type="button"
+                                         onClick={(e) => {
+                                             e.stopPropagation();
+                                             setReservationListFilter({type: 'date', dateKey});
+                                         }}>
+                        전체 ({dateReservations.length})
+                    </StyledViewAllButton>
+                )}
             </StyledDate>);
         })}
     </>);
