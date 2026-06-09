@@ -137,6 +137,8 @@ export interface CalendarState {
     serviceCatalog: ServiceItem[];
     categoryBaseColorMap: Record<string, string>;
     designers: Designer[];
+    storeName: string;
+    shopType: string | null;
     storeSettings: StoreSettings;
     syncNotifications: SyncNotification[];
 
@@ -169,6 +171,7 @@ export interface CalendarState {
     setServiceCatalog: (catalog: ServiceItem[]) => void;
     setCategoryBaseColorMap: (colorMap: Record<string, string>) => void;
     setDesigners: (designers: Designer[]) => void;
+    setStoreInfo: (name: string, type: string | null) => void;
     setStoreSettings: (storeSettings: StoreSettings) => void;
     updateStoreBusinessHours: (hours: Partial<StoreSettings['businessHours']>) => void;
     updateStorePointSettings: (pointSettings: Partial<StoreSettings['pointSettings']>) => void;
@@ -254,6 +257,8 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     serviceCatalog: SERVICE_CATALOG,
     categoryBaseColorMap: CATEGORY_BASE_COLOR_MAP,
     designers: DEFAULT_DESIGNERS,
+    storeName: '',
+    shopType: null,
     storeSettings: DEFAULT_STORE_SETTINGS,
     syncNotifications: [],
 
@@ -402,6 +407,7 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     setServiceCatalog: (serviceCatalog) => set({serviceCatalog}),
     setCategoryBaseColorMap: (categoryBaseColorMap) => set({categoryBaseColorMap}),
     setDesigners: (designers) => set({designers}),
+    setStoreInfo: (storeName, shopType) => set({storeName, shopType}),
     setStoreSettings: (storeSettings) => set({storeSettings}),
 
     updateStoreBusinessHours: (hours) =>

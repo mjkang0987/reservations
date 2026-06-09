@@ -19,6 +19,9 @@ export interface LocalDbSnapshot {
     categoryBaseColors: Record<string, string>;
     designers: Designer[];
     storeSettings: StoreSettings;
+    onboarded?: boolean;
+    storeName?: string;
+    shopType?: string;
 }
 
 function cloneSnapshot(snapshot: LocalDbSnapshot): LocalDbSnapshot {
@@ -71,6 +74,10 @@ export function loadLocalDbSnapshot(): LocalDbSnapshot {
 
     try {
         const parsed = JSON.parse(raw) as Partial<LocalDbSnapshot>;
+        // 하위호환: onboarded 필드가 없는 기존 데이터는 이미 사용 중이므로 true로 간주
+        const onboarded = typeof parsed.onboarded === 'boolean'
+            ? parsed.onboarded
+            : true;
         return {
             ...createDefaultLocalDbSnapshot(),
             ...parsed,
@@ -81,6 +88,7 @@ export function loadLocalDbSnapshot(): LocalDbSnapshot {
             customers: Array.isArray(parsed.customers) ? parsed.customers : [],
             reservations: Array.isArray(parsed.reservations) ? parsed.reservations : [],
             history: Array.isArray(parsed.history) ? parsed.history : [],
+            onboarded,
         };
     } catch {
         const snapshot = createDefaultLocalDbSnapshot();

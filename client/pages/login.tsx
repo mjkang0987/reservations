@@ -130,7 +130,7 @@ export default function LoginPage({providerIds, isDatabaseConfigured, loginError
                         로그인 제공자가 설정되지 않았습니다. `AUTH_*` 환경변수를 확인해 주세요.
                     </StyledEmptyState>
                 )}
-                <StyledSecondaryButton type="button" onClick={() => router.push('/')}>
+                <StyledSecondaryButton type="button" onClick={() => router.push('/onboarding?mode=guest')}>
                     <span>게스트로 사용하기</span>
                 </StyledSecondaryButton>
                 {!isDatabaseConfigured && (

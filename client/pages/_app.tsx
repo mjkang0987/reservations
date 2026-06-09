@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 
 import Head from 'next/head';
 import Link from 'next/link';
-import Router from 'next/router';
+import Router, {useRouter} from 'next/router';
 
 import type {
     AppContext,
@@ -19,7 +19,7 @@ import type {Designer} from '../utils/designers';
 import type {StoreSettings} from '../utils/storeSettings';
 import {groupByDate} from '../utils/reservations';
 import {toCustomerMap} from '../utils/customers';
-import {loadLocalDbSnapshot, setAuthenticated} from '../lib/local-db';
+import {loadLocalDbSnapshot, setAuthenticated, shouldUseLocalDb} from '../lib/local-db';
 
 import LayoutComponent from '../components/layout/LayoutComponent';
 
@@ -27,9 +27,11 @@ type AppContentProps = Pick<AppProps, 'Component' | 'pageProps'>;
 
 function AppContent({Component, pageProps}: AppContentProps) {
     const {data: session, status} = useSession();
+    const router = useRouter();
     const setServiceCatalog = useCalendarStore((s) => s.setServiceCatalog);
     const setCategoryBaseColorMap = useCalendarStore((s) => s.setCategoryBaseColorMap);
     const setDesigners = useCalendarStore((s) => s.setDesigners);
+    const setStoreInfo = useCalendarStore((s) => s.setStoreInfo);
     const setStoreSettings = useCalendarStore((s) => s.setStoreSettings);
     const setReservationMap = useCalendarStore((s) => s.setReservationMap);
     const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
@@ -60,6 +62,25 @@ function AppContent({Component, pageProps}: AppContentProps) {
     useEffect(() => {
         setAuthenticated(hasApiAccess);
     }, [hasApiAccess]);
+
+    useEffect(() => {
+        if (status === 'loading') return;
+        if (!shouldUseLocalDb()) return;
+        if (router.pathname.startsWith('/onboarding') || router.pathname.startsWith('/login')) return;
+
+        if (typeof window === 'undefined') return;
+        const raw = window.localStorage.getItem('takeaseat.local-db.v1');
+        if (!raw) return;
+
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed.onboarded === false) {
+                router.replace('/onboarding?mode=guest');
+            }
+        } catch {
+            // ignore
+        }
+    }, [status, router]);
 
     useEffect(() => {
         if (status === 'unauthenticated' || (status === 'authenticated' && !hasApiAccess)) {
@@ -121,6 +142,7 @@ function AppContent({Component, pageProps}: AppContentProps) {
     useEffect(() => {
         if (status === 'unauthenticated' || (status === 'authenticated' && !hasApiAccess)) {
             const localDb = loadLocalDbSnapshot();
+            setStoreInfo(localDb.storeName ?? '', localDb.shopType ?? null);
             setStoreSettings(localDb.storeSettings);
             setReservationMap(groupByDate(localDb.reservations));
             setCustomerMap(toCustomerMap(localDb.customers));
@@ -143,7 +165,7 @@ function AppContent({Component, pageProps}: AppContentProps) {
                 if (!customersRes.ok) throw new Error('Failed to load customers');
 
                 return Promise.all([
-                    storeRes.json() as Promise<StoreSettings>,
+                    storeRes.json() as Promise<StoreSettings & {storeName?: string; shopType?: string | null}>,
                     reservationsRes.json() as Promise<{
                         reservations: Array<Parameters<typeof groupByDate>[0][number]>;
                         history: Parameters<typeof setReservationHistory>[0];
@@ -152,6 +174,7 @@ function AppContent({Component, pageProps}: AppContentProps) {
                 ]);
             })
             .then(([storeData, reservationsData, customersData]) => {
+                setStoreInfo(storeData.storeName ?? '', storeData.shopType ?? null);
                 if (storeData && typeof storeData === 'object' && storeData.businessHours && Array.isArray(storeData.closedDates)) {
                     const rawPointSettings = storeData.pointSettings as StoreSettings['pointSettings'] & {mode?: string} | undefined;
                     setStoreSettings({
@@ -193,7 +216,7 @@ function AppContent({Component, pageProps}: AppContentProps) {
             .catch(() => {
                 // Keep the current in-memory data if loading fails.
             });
-    }, [hasApiAccess, status, setStoreSettings, setReservationMap, setCustomerMap, setReservationHistory]);
+    }, [hasApiAccess, status, setStoreInfo, setStoreSettings, setReservationMap, setCustomerMap, setReservationHistory]);
 
     return (
         <>

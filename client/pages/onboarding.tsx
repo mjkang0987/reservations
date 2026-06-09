@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 
 import type {GetServerSideProps, NextPage} from 'next';
 import {useRouter} from 'next/router';
@@ -7,8 +7,10 @@ import Head from 'next/head';
 import styled from 'styled-components';
 
 import {getPageSession} from '../lib/page-data';
-
-type ShopType = 'hair' | 'nail' | 'waxing' | 'lash' | 'skin';
+import {DEFAULT_SERVICES, SHOP_CATEGORY_COLOR_MAP} from '../features/services/default-services';
+import type {ShopType} from '../features/services/default-services';
+import {createDefaultSchedule, getDesignerColor} from '../utils/designers';
+import {loadLocalDbSnapshot, saveLocalDbSnapshot} from '../lib/local-db';
 
 const SHOP_TYPES: {type: ShopType; label: string; emoji: string; desc: string}[] = [
     {type: 'hair', label: '헤어샵', emoji: '✂️', desc: '커트·펌·염색·클리닉'},
@@ -18,12 +20,22 @@ const SHOP_TYPES: {type: ShopType; label: string; emoji: string; desc: string}[]
     {type: 'skin', label: '피부관리실', emoji: '🧴', desc: '기본·스페셜·클렌징'},
 ];
 
-const OnboardingPage: NextPage = () => {
+const OnboardingPage: NextPage<{guest?: boolean}> = ({guest}) => {
     const router = useRouter();
     const [shopName, setShopName] = useState('');
     const [shopType, setShopType] = useState<ShopType | null>(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!guest) return;
+        // 게스트 온보딩 진입 시 onboarded: false 기록 → 가드가 미완료 상태를 감지할 수 있도록
+        const snapshot = loadLocalDbSnapshot();
+        if (snapshot.onboarded !== false) {
+            snapshot.onboarded = false;
+            saveLocalDbSnapshot(snapshot);
+        }
+    }, [guest]);
 
     const handleSubmit = async () => {
         if (!shopName.trim()) {
@@ -37,6 +49,27 @@ const OnboardingPage: NextPage = () => {
 
         setLoading(true);
         setError('');
+
+        if (guest) {
+            const snapshot = loadLocalDbSnapshot();
+            snapshot.storeName = shopName.trim();
+            snapshot.shopType = shopType;
+            snapshot.services = DEFAULT_SERVICES[shopType];
+            snapshot.categoryBaseColors = SHOP_CATEGORY_COLOR_MAP[shopType];
+            snapshot.designers = [{
+                id: 1,
+                name: '원장',
+                schedule: createDefaultSchedule(),
+                status: '재직',
+                phone: '',
+                note: '',
+                color: getDesignerColor({id: 1}),
+            }];
+            snapshot.onboarded = true;
+            saveLocalDbSnapshot(snapshot);
+            router.replace('/');
+            return;
+        }
 
         try {
             const res = await fetch('/api/onboarding', {
@@ -123,6 +156,10 @@ const OnboardingPage: NextPage = () => {
 export default OnboardingPage;
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
+    if (ctx.query.mode === 'guest') {
+        return {props: {guest: true}};
+    }
+
     const session = await getPageSession(ctx);
 
     if (!session) {
@@ -281,9 +318,9 @@ const StyledError = styled.p`
 
 const StyledSubmitBtn = styled.button`
     height: 48px;
-    border: 1px solid var(--blue-color);
+    border: none;
     border-radius: var(--radius-md);
-    background: var(--blue-color);
+    background: var(--brand-color);
     font-size: 15px;
     font-weight: 600;
     color: var(--white-color);
