@@ -16,14 +16,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
         if (!requireRole(session, 'staff', res)) return;
 
-        const [businessHours, closedDates, pointSettings] = await Promise.all([
+        const [store, businessHours, closedDates, pointSettings] = await Promise.all([
+            prisma.store.findUnique({where: {id: session.storeId}, select: {name: true, shopType: true}}),
             prisma.storeBusinessHour.findMany({where: {storeId: session.storeId}, orderBy: {dayIndex: 'asc'}}),
             prisma.storeClosedDate.findMany({where: {storeId: session.storeId}}),
             prisma.storePointSettings.findUnique({where: {storeId: session.storeId}}),
         ]);
 
         const result = dbStoreToFrontend({businessHours, closedDates, pointSettings});
-        return res.status(200).json(result);
+        return res.status(200).json({
+            ...result,
+            storeName: store?.name ?? '',
+            shopType: store?.shopType ?? null,
+        });
     }
 
     if (req.method === 'PUT') {

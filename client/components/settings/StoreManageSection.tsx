@@ -12,7 +12,17 @@ interface StoreManageSectionProps {
     formatDateLabel: (dateKey: string) => string;
 }
 
+const SHOP_TYPE_LABELS: Record<string, string> = {
+    hair: '헤어샵',
+    nail: '네일샵',
+    waxing: '왁싱샵',
+    lash: '속눈썹샵',
+    skin: '피부관리실',
+};
+
 export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) => {
+    const storeName = useCalendarStore((s) => s.storeName);
+    const shopType = useCalendarStore((s) => s.shopType);
     const storeSettings = useCalendarStore((s) => s.storeSettings);
     const updateStoreBusinessHours = useCalendarStore((s) => s.updateStoreBusinessHours);
     const updateStoreClosedDates = useCalendarStore((s) => s.updateStoreClosedDates);
@@ -61,6 +71,14 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
     return (
         <StyledStoreSection>
             <PageHero eyebrow="STORE" title="매장 관리" subtitle="영업시간과 휴업일을 설정합니다." />
+            {(storeName || shopType) && (
+                <StyledStoreInfoCard>
+                    {storeName && <StyledStoreInfoName>{storeName}</StyledStoreInfoName>}
+                    {shopType && (
+                        <StyledStoreInfoType>{SHOP_TYPE_LABELS[shopType] ?? shopType}</StyledStoreInfoType>
+                    )}
+                </StyledStoreInfoCard>
+            )}
             <StyledStoreCard>
                 <StyledStoreCardHeader>
                     <StyledStoreCardTitle>영업시간</StyledStoreCardTitle>
@@ -178,6 +196,32 @@ const StyledStoreSection = styled.div`
     @media (max-width: 640px) {
         grid-template-columns: 1fr;
     }
+`;
+
+const StyledStoreInfoCard = styled.div`
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 10px;
+    background: var(--white-color);
+`;
+
+const StyledStoreInfoName = styled.strong`
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--black-color);
+`;
+
+const StyledStoreInfoType = styled.span`
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--blue-color);
+    background: rgba(45, 127, 249, 0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
 `;
 
 const StyledStoreCard = styled.div`
