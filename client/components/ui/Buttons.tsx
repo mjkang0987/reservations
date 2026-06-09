@@ -42,8 +42,10 @@ const StyledCircleButton = styled.button <Props>`
     height: 20px;
     border: 1px solid var(--border-color);
     background-color: var(--white-color);
-    border-radius: 20px;
+    border-radius: 50%;
     box-shadow: var(--shadow-sm);
+    font-size: 14px;
+    color: var(--dark-gray-color);
 `;
 
 export const ButtonCircle: React.FC<Props> = ({children, ...props}) => {
@@ -62,9 +64,9 @@ const StyledReserveButton = styled.button <Props>`
     border: 1px solid ${props => props.$color};
     border-left-width: 4px;
     border-radius: var(--radius-sm);
-    padding: 2px 6px;
+    padding: 4px 6px;
     color: ${props => 'var(--dark-gray-color)'};
-    font-size: 12px;
+    font-size: 11px;
     overflow: hidden;
     cursor: pointer;
     box-sizing: border-box;

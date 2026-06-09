@@ -49,49 +49,56 @@ export const TimelineTitle = () => {
 };
 
 const StyledTimelineTitle = styled.div`
-  flex-shrink: 0;
-  width: var(--timeline-col);
-  border-right: 1px solid var(--light-gray-color);
-  box-sizing: border-box;
+    flex-shrink: 0;
+    width: var(--timeline-col);
+    border-right: 1px solid var(--light-gray-color);
+    box-sizing: border-box;
 `;
 
 const StyledTimes = styled.ul`
-  display: flex;
-  flex-direction: column;
-  margin: 30px 0 60px;
+    display: flex;
+    flex-direction: column;
+    margin: 30px 0 60px;
 `;
 
 const StyledTime = styled.li`
-  display: flex;
-  justify-content: center;
-  position: relative;
+    display: flex;
+    justify-content: center;
+    position: relative;
 
-  &:after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: calc(100% - 6px);
-    width: 100vw;
-    height: 1px;
-    background-color: var(--light-gray-color);
-  }
+    &:after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: calc(100% - 6px);
+        width: 100vw;
+        height: 1px;
+        background-color: var(--light-gray-color);
+    }
 `;
 
 const StyledNum = styled.span`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 40px;
-  padding: 0 10px;
-  font-size: var(--tiny-font);
-  color: var(--gray-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+    padding: 0 10px;
+    font-size: var(--tiny-font);
+    color: var(--gray-color);
 
-  .compact { display: none; }
+    .compact {
+        display: none;
+    }
 
-  @media (max-width: 640px) {
-    padding: 0 4px;
-    .full { display: none; }
-    .compact { display: block; }
-  }
+    @media (max-width: 640px) {
+        padding: 0 4px;
+        .full {
+            display: none;
+        }
+
+        .compact {
+            display: block;
+        }
+    }
 `;

@@ -93,15 +93,4 @@ const StyledNumWrap = styled.span`
     background: rgba(255, 255, 255, .1);
     backdrop-filter: var(--sticky-backdrop);
     z-index: 13;
-
-    &:after {
-        content: "";
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        height: 50px;
-        background: linear-gradient(0deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, .8) 100%);
-        pointer-events: none;
-    }
 `;
