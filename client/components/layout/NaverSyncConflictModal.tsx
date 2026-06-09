@@ -23,7 +23,7 @@ import {
     useLayerInstanceId,
 } from '../calendar/overlays/ModalStyles';
 import {CloseIconButton} from '../ui/CloseIconButton';
-import {DesignerLabel, StyledDesignerLabel} from '../ui/DesignerLabel';
+import {DesignerLabel} from '../ui/DesignerLabel';
 import {LabelBadge} from '../ui/LabelBadge';
 import {ServiceChipList} from '../ui/ServiceChip';
 

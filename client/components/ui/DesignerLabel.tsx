@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import {Dot} from './Dot';
+import {ColorTag} from './ColorTag';
 
 interface DesignerLabelProps {
     color: string;
@@ -9,17 +9,10 @@ interface DesignerLabelProps {
 
 export function DesignerLabel({color, name, className}: DesignerLabelProps) {
     return (
-        <StyledDesignerLabel className={className}>
-            <StyledDesignerDot color={color} size={10} />
-            <span>{name}</span>
+        <StyledDesignerLabel $color={color} className={className}>
+            {name}
         </StyledDesignerLabel>
     );
 }
 
-export const StyledDesignerLabel = styled.span`
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-`;
-
-export const StyledDesignerDot = styled(Dot)``;
+export const StyledDesignerLabel = styled(ColorTag)``;

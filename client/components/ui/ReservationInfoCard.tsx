@@ -4,7 +4,7 @@ import type {KeyboardEvent} from 'react';
 import type {Reservation} from '../../utils/reservations';
 import {RESERVATION_STATUS_BADGE_STYLES, hasCompletedPayment} from '../../utils/reservations';
 import {formatPrice} from '../../utils/services';
-import {DesignerLabel, StyledDesignerLabel} from './DesignerLabel';
+import {DesignerLabel} from './DesignerLabel';
 import {LabelBadge} from './LabelBadge';
 import {NewCustomerBadge} from './NewCustomerBadge';
 import {ServiceChipList} from './ServiceChip';
@@ -245,9 +245,6 @@ const StyledDesignerMeta = styled.span`
     min-width: 0;
     color: var(--dark-gray-color);
 
-    ${StyledDesignerLabel} {
-        gap: 4px;
-    }
 `;
 
 const StyledCustomerMeta = styled.span`

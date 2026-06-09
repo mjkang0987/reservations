@@ -7,7 +7,7 @@ import type {SyncNotification} from '../../hooks/useNaverBookingSync';
 import type {Reservation} from '../../utils/reservations';
 import type {ReservationMap} from '../../features/reservations/model';
 import type {Designer} from '../../utils/designers';
-import {DesignerLabel, StyledDesignerLabel} from '../ui/DesignerLabel';
+import {DesignerLabel} from '../ui/DesignerLabel';
 import {LabelBadge} from '../ui/LabelBadge';
 
 interface Props {
@@ -499,18 +499,15 @@ const StyledItem = styled.div`
     flex-direction: column;
     gap: 4px;
     padding: 10px 12px;
+    border-radius: var(--radius-md);
     background-color: var(--notification-unread-bg);
-    border-bottom: 1px solid var(--gray-color2);
+    margin-bottom: 4px;
     cursor: pointer;
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
             background-color: var(--notification-unread-bg-hover);
         }
-    }
-
-    &:last-child {
-        border-bottom: none;
     }
 `;
 
@@ -612,9 +609,6 @@ const StyledDesignerMeta = styled.span`
     font-size: 11px;
     color: var(--dark-gray-color2);
 
-    ${StyledDesignerLabel} {
-        gap: 4px;
-    }
 `;
 
 const StyledPanelFooter = styled.div`
