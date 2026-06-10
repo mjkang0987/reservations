@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 
 import styled from 'styled-components';
 
-import {StyledEditBtn, StyledDeleteBtn, StyledSaveBtn, StyledCancelBtn, StyledEmpty} from './settings-styles';
+import {EMPTY_TEXT, StyledEditBtn, StyledDeleteBtn, StyledSaveBtn, StyledCancelBtn, StyledEmpty} from './settings-styles';
 
 import {useCalendarStore} from '../../store/calendarStore';
 import {PageHero} from '../ui/PageHero';
@@ -13,17 +13,9 @@ interface StoreManageSectionProps {
     formatDateLabel: (dateKey: string) => string;
 }
 
-const SHOP_TYPE_LABELS: Record<string, string> = {
-    hair: '헤어샵',
-    nail: '네일샵',
-    waxing: '왁싱샵',
-    lash: '속눈썹샵',
-    skin: '피부관리실',
-};
 
 export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) => {
     const storeName = useCalendarStore((s) => s.storeName);
-    const shopType = useCalendarStore((s) => s.shopType);
     const storeSettings = useCalendarStore((s) => s.storeSettings);
     const updateStoreInfo = useCalendarStore((s) => s.updateStoreInfo);
     const updateStoreBusinessHours = useCalendarStore((s) => s.updateStoreBusinessHours);
@@ -36,7 +28,6 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
     const [isEditingClosedDates, setIsEditingClosedDates] = useState(false);
     const [isEditingStoreInfo, setIsEditingStoreInfo] = useState(false);
     const [editStoreName, setEditStoreName] = useState(storeName);
-    const [editShopType, setEditShopType] = useState<string | null>(shopType);
     const [storeInfoError, setStoreInfoError] = useState('');
 
     useEffect(() => {
@@ -46,15 +37,14 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
 
     useEffect(() => {
         setEditStoreName(storeName);
-        setEditShopType(shopType);
-    }, [storeName, shopType]);
+    }, [storeName]);
 
     const handleSaveStoreInfo = () => {
         if (!editStoreName.trim()) {
             setStoreInfoError('매장 이름을 입력해 주세요.');
             return;
         }
-        updateStoreInfo(editStoreName.trim(), editShopType);
+        updateStoreInfo(editStoreName.trim(), null);
         setIsEditingStoreInfo(false);
         setStoreInfoError('');
     };
@@ -114,36 +104,14 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
                                     }}
                                     placeholder="매장 이름을 입력하세요"
                                 />
+                                <FieldError variant="inline">{storeInfoError}</FieldError>
                             </StyledRangeInputWrap>
                         </StyledStoreFieldGrid>
-                        <StyledShopTypeGrid>
-                            {Object.entries(SHOP_TYPE_LABELS).map(([type, label]) => {
-                                const types = (editShopType ?? '').split(',').filter(Boolean);
-                                const selected = types.includes(type);
-                                return (
-                                    <StyledShopTypeBtn
-                                        key={type}
-                                        type="button"
-                                        $selected={selected}
-                                        onClick={() => {
-                                            const next = selected
-                                                ? types.filter((t) => t !== type)
-                                                : [...types, type];
-                                            setEditShopType(next.length > 0 ? next.join(',') : null);
-                                        }}
-                                    >
-                                        {label}
-                                    </StyledShopTypeBtn>
-                                );
-                            })}
-                        </StyledShopTypeGrid>
-                        <FieldError variant="inline">{storeInfoError}</FieldError>
                         <StyledStoreActionRow>
                             <StyledCancelBtn
                                 type="button"
                                 onClick={() => {
                                     setEditStoreName(storeName);
-                                    setEditShopType(shopType);
                                     setStoreInfoError('');
                                     setIsEditingStoreInfo(false);
                                 }}
@@ -156,9 +124,6 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
                 ) : (
                     <StyledStoreInfoRow>
                         <StyledStoreInfoName>{storeName || <StyledInfoPlaceholder>매장 이름 없음</StyledInfoPlaceholder>}</StyledStoreInfoName>
-                        {shopType && shopType.split(',').map((t) => t.trim()).filter(Boolean).map((t) => (
-                            <StyledStoreInfoType key={t}>{SHOP_TYPE_LABELS[t] ?? t}</StyledStoreInfoType>
-                        ))}
                     </StyledStoreInfoRow>
                 )}
             </StyledStoreCard>
@@ -232,7 +197,7 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
                     </>
                 )}
                 {closedDates.length === 0 ? (
-                    <StyledEmpty>등록된 휴업일 없음</StyledEmpty>
+                    <StyledEmpty>{EMPTY_TEXT}</StyledEmpty>
                 ) : (
                     <StyledClosedDateList>
                         {closedDates.map((date) => (
@@ -302,33 +267,6 @@ const StyledInfoPlaceholder = styled.span`
     font-size: 13px;
     font-weight: 400;
     color: var(--dark-gray-color2);
-`;
-
-const StyledStoreInfoType = styled.span`
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--blue-color);
-    background: rgba(45, 127, 249, 0.08);
-    padding: 2px 8px;
-    border-radius: 4px;
-`;
-
-const StyledShopTypeGrid = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-`;
-
-const StyledShopTypeBtn = styled.button<{$selected: boolean}>`
-    padding: 4px 10px;
-    border: 1px solid ${(p) => p.$selected ? 'var(--blue-color)' : 'var(--light-gray-color)'};
-    border-radius: 16px;
-    background: ${(p) => p.$selected ? 'rgba(45, 127, 249, 0.08)' : 'var(--white-color)'};
-    color: ${(p) => p.$selected ? 'var(--blue-color)' : 'var(--dark-gray-color)'};
-    font-size: 12px;
-    font-weight: ${(p) => p.$selected ? '600' : '400'};
-    cursor: pointer;
-    transition: border-color 0.12s, background 0.12s;
 `;
 
 const StyledStoreCard = styled.div`
