@@ -81,6 +81,9 @@ const OnboardingPage: NextPage<{guest?: boolean}> = ({guest}) => {
     const [editingDesignerId, setEditingDesignerId] = useState<number | null>(null);
     const [step3Error, setStep3Error] = useState('');
 
+    // ── Step 5 ──
+    const [finalError, setFinalError] = useState('');
+
     // ── Computed ──
     const realShopTypes = shopTypes.filter((t): t is ShopType => t !== 'etc');
     const skipServiceStep = realShopTypes.length === 0;
@@ -189,10 +192,6 @@ const OnboardingPage: NextPage<{guest?: boolean}> = ({guest}) => {
     };
 
     const handleRemoveDesigner = (id: number) => {
-        if (localDesigners.length <= 1) {
-            setStep3Error('최소 1명의 디자이너가 필요합니다.');
-            return;
-        }
         setLocalDesigners((prev) => prev.filter((d) => d.id !== id));
         setStep3Error('');
     };
@@ -250,15 +249,13 @@ const OnboardingPage: NextPage<{guest?: boolean}> = ({guest}) => {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                setStep1Error(data.error ?? '오류가 발생했습니다.');
-                setStep(1);
+                setFinalError(data.error ?? '오류가 발생했습니다.');
                 return;
             }
 
             router.replace('/');
         } catch {
-            setStep1Error('네트워크 오류가 발생했습니다.');
-            setStep(1);
+            setFinalError('네트워크 오류가 발생했습니다.');
         } finally {
             setLoading(false);
         }
@@ -507,6 +504,8 @@ const OnboardingPage: NextPage<{guest?: boolean}> = ({guest}) => {
                             ))}
                         </StyledDesignerList>
 
+                        {!showAddDesigner && <FieldError variant="inline">{step3Error}</FieldError>}
+
                         {showAddDesigner ? (
                             <StyledAddForm>
                                 <StyledAddFormRow>
@@ -593,7 +592,7 @@ const OnboardingPage: NextPage<{guest?: boolean}> = ({guest}) => {
                             </StyledCompleteSummary>
                         </StyledCompleteSection>
 
-                        <FieldError>{step1Error}</FieldError>
+                        <FieldError>{finalError}</FieldError>
 
                         <StyledNavRow $centered>
                             <StyledBackBtn type="button" onClick={() => { clearErrors(); setStep(prevStep()); }}>← 이전</StyledBackBtn>
