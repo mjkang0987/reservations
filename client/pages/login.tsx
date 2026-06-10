@@ -93,8 +93,9 @@ export default function LoginPage({providerIds, isDatabaseConfigured, loginError
                     </StyledLoginError>
                 )}
                 <StyledInviteSection>
-                    <StyledInviteLabel>초대코드 (신규 등록 시)</StyledInviteLabel>
+                    <StyledInviteLabel htmlFor="invite-code">초대코드 (신규 등록 시)</StyledInviteLabel>
                     <StyledInviteInput
+                        id="invite-code"
                         type="text"
                         value={inviteCode}
                         onChange={(e) => setInviteCode(e.target.value.toUpperCase().slice(0, 6))}

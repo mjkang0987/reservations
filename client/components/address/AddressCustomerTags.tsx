@@ -69,6 +69,8 @@ export function AddressCustomerTags({
                     </StyledPalette>
                     <StyledTagInputRow>
                         <StyledMemoInput
+                            id={`customer-${customerId}-memo`}
+                            aria-label="메모 태그 입력"
                             value={tagInput}
                             onChange={(e) => onTagInputChange(e.target.value)}
                             onKeyDown={(e) => {

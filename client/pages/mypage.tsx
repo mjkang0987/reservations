@@ -142,12 +142,13 @@ const MyPage: NextPage<MyPageProps> = ({linkedProvider}) => {
                         <StyledValue>{{ authenticated: '로그인됨', unauthenticated: '미로그인', loading: '확인 중' }[status] ?? status}</StyledValue>
                     </StyledRow>
                     <StyledRow>
-                        <StyledLabel>별명</StyledLabel>
+                        <StyledLabel as="label" htmlFor="mypage-nickname">별명</StyledLabel>
                         {!isLocalMode && session?.user ? (
                             isEditingNickname ? (
                                 <StyledNicknameBlock>
                                     <StyledNicknameEditRow>
                                         <StyledNicknameInput
+                                            id="mypage-nickname"
                                             type="text"
                                             value={nicknameInput}
                                             onChange={(e) => {

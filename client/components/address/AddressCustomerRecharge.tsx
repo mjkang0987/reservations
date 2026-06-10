@@ -97,6 +97,8 @@ export function AddressCustomerRecharge({customer, customerReservations, onReser
                     </StyledRechargeHeader>
                     <StyledRechargeControls>
                         <StyledRechargeSelect
+                            id="recharge-amount"
+                            aria-label="충전 금액 선택"
                             value={selectedValue}
                             onChange={(e) => setSelectedValue(e.target.value)}
                         >
@@ -107,10 +109,12 @@ export function AddressCustomerRecharge({customer, customerReservations, onReser
                         </StyledRechargeSelect>
                         {selectedValue === CUSTOM_OPTION && (
                             <StyledCustomAmountInput
+                                id="recharge-custom-amount"
                                 type="text"
                                 inputMode="numeric"
                                 value={customAmount}
                                 placeholder="충전금액"
+                                aria-label="직접 입력 충전금액"
                                 onChange={(e) => setCustomAmount(e.target.value)}
                             />
                         )}

@@ -37,6 +37,7 @@ function AppContent({Component, pageProps}: AppContentProps) {
     const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
     const setReservationHistory = useCalendarStore((s) => s.setReservationHistory);
     const initSyncNotifications = useCalendarStore((s) => s.initSyncNotifications);
+    const clearSyncNotifications = useCalendarStore((s) => s.clearSyncNotifications);
     const hasApiAccess = status === 'authenticated' && !!session?.user?.role && !!session.user?.storeId;
 
     const [sessionExpired, setSessionExpired] = useState(false);
@@ -48,6 +49,14 @@ function AppContent({Component, pageProps}: AppContentProps) {
         }
         initSyncNotifications();
     }, [initSyncNotifications]);
+
+    // 게스트·미인증 사용자는 네이버 동기화를 사용할 수 없으므로 알림 초기화
+    useEffect(() => {
+        if (status === 'loading') return;
+        if (!hasApiAccess) {
+            clearSyncNotifications();
+        }
+    }, [status, hasApiAccess, clearSyncNotifications]);
 
     useEffect(() => {
         if (status === 'authenticated') {

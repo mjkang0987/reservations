@@ -162,6 +162,8 @@ export const MemberSection = () => {
                 <StyledCardTitle>초대코드 생성</StyledCardTitle>
                 <StyledCreateRow>
                     <StyledSelect
+                        id="member-role"
+                        aria-label="역할 선택"
                         value={newRole}
                         onChange={(e) => setNewRole(e.target.value)}
                     >

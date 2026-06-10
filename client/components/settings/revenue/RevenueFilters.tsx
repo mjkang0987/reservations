@@ -62,12 +62,12 @@ export const RevenueFilters = ({
                     <StyledRangeNavButton type="button" onClick={() => onMoveRange('prev')} aria-label="이전 기간">
                         <DirectionIcon direction="left" />
                     </StyledRangeNavButton>
-                    <StyledRangeInputWrap>
-                        <StyledDateInput type="date" value={startDateKey} onChange={(e) => setStartDateKey(e.target.value)} />
+                    <StyledRangeInputWrap htmlFor="revenue-start-date">
+                        <StyledDateInput id="revenue-start-date" type="date" value={startDateKey} onChange={(e) => setStartDateKey(e.target.value)} />
                     </StyledRangeInputWrap>
                     <StyledRangeDivider>~</StyledRangeDivider>
-                    <StyledRangeInputWrap>
-                        <StyledDateInput type="date" value={endDateKey} onChange={(e) => setEndDateKey(e.target.value)} />
+                    <StyledRangeInputWrap htmlFor="revenue-end-date">
+                        <StyledDateInput id="revenue-end-date" type="date" value={endDateKey} onChange={(e) => setEndDateKey(e.target.value)} />
                     </StyledRangeInputWrap>
                     <StyledRangeNavButton type="button" onClick={() => onMoveRange('next')} aria-label="다음 기간">
                         <DirectionIcon direction="right" />
