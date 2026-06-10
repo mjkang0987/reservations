@@ -102,9 +102,10 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
                 {isEditingStoreInfo ? (
                     <>
                         <StyledStoreFieldGrid>
-                            <StyledRangeInputWrap>
+                            <StyledRangeInputWrap htmlFor="store-edit-name">
                                 <span>매장 이름</span>
                                 <StyledDateInput
+                                    id="store-edit-name"
                                     type="text"
                                     value={editStoreName}
                                     onChange={(e) => {
@@ -116,16 +117,25 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
                             </StyledRangeInputWrap>
                         </StyledStoreFieldGrid>
                         <StyledShopTypeGrid>
-                            {Object.entries(SHOP_TYPE_LABELS).map(([type, label]) => (
-                                <StyledShopTypeBtn
-                                    key={type}
-                                    type="button"
-                                    $selected={editShopType === type}
-                                    onClick={() => setEditShopType(type)}
-                                >
-                                    {label}
-                                </StyledShopTypeBtn>
-                            ))}
+                            {Object.entries(SHOP_TYPE_LABELS).map(([type, label]) => {
+                                const types = (editShopType ?? '').split(',').filter(Boolean);
+                                const selected = types.includes(type);
+                                return (
+                                    <StyledShopTypeBtn
+                                        key={type}
+                                        type="button"
+                                        $selected={selected}
+                                        onClick={() => {
+                                            const next = selected
+                                                ? types.filter((t) => t !== type)
+                                                : [...types, type];
+                                            setEditShopType(next.length > 0 ? next.join(',') : null);
+                                        }}
+                                    >
+                                        {label}
+                                    </StyledShopTypeBtn>
+                                );
+                            })}
                         </StyledShopTypeGrid>
                         <FieldError variant="inline">{storeInfoError}</FieldError>
                         <StyledStoreActionRow>
@@ -146,9 +156,9 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
                 ) : (
                     <StyledStoreInfoRow>
                         <StyledStoreInfoName>{storeName || <StyledInfoPlaceholder>매장 이름 없음</StyledInfoPlaceholder>}</StyledStoreInfoName>
-                        {shopType && (
-                            <StyledStoreInfoType>{SHOP_TYPE_LABELS[shopType] ?? shopType}</StyledStoreInfoType>
-                        )}
+                        {shopType && shopType.split(',').map((t) => t.trim()).filter(Boolean).map((t) => (
+                            <StyledStoreInfoType key={t}>{SHOP_TYPE_LABELS[t] ?? t}</StyledStoreInfoType>
+                        ))}
                     </StyledStoreInfoRow>
                 )}
             </StyledStoreCard>
@@ -160,18 +170,20 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
                     )}
                 </StyledStoreCardHeader>
                 <StyledStoreFieldGrid>
-                    <StyledRangeInputWrap>
+                    <StyledRangeInputWrap htmlFor="store-bh-start">
                         <span>오픈</span>
                         <StyledDateInput
+                            id="store-bh-start"
                             type="time"
                             value={businessHours.start}
                             disabled={!isEditingBusinessHours}
                             onChange={(e) => setBusinessHours((prev) => ({...prev, start: e.target.value}))}
                         />
                     </StyledRangeInputWrap>
-                    <StyledRangeInputWrap>
+                    <StyledRangeInputWrap htmlFor="store-bh-end">
                         <span>마감</span>
                         <StyledDateInput
+                            id="store-bh-end"
                             type="time"
                             value={businessHours.end}
                             disabled={!isEditingBusinessHours}
@@ -206,6 +218,7 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
                     <>
                         <StyledClosedDateAddRow>
                             <StyledDateInput
+                                id="store-closed-date"
                                 type="date"
                                 value={closedDateInput}
                                 onChange={(e) => {
