@@ -63,7 +63,7 @@ hair_reservations/
 | `designers/model.ts` | `Designer` | id, name, schedule(7일), status[^6], color, phone |
 | `services/model.ts` | `ServiceItem` | name, durationMinutes, category, price |
 | `store-settings/model.ts` | `StoreSettings` | businessHours, closedDates, pointSettings(적립률, 충전규칙) |
-| `local-db/storage.ts` | - | 테스트/오프라인 모드용 로컬 스냅샷 데이터 |
+| `local-db/storage.ts` | - | 게스트 모드용 로컬 스냅샷 데이터. SNS 연동 시 `_app.tsx`에서 서버로 자동 마이그레이션 |
 
 [^4]: status: `active` · `completed` · `cancelled` · `noshow`
 [^5]: channel: `네이버예약` · `현장방문` · `전화예약`
@@ -107,7 +107,7 @@ hair_reservations/
 | `utils/calendarDerived.ts` | 캘린더 파생 상태 |
 | `utils/timeRound.ts` | 시간 반올림 |
 | `lib/page-data.ts` | SSR 페이지 데이터 로딩 |
-| `lib/local-db.ts` | 테스트 모드 로컬 DB |
+| `lib/local-db.ts` | 게스트 모드 로컬 DB (re-export from features) |
 | `lib/authz.ts` | 권한 관리 |
 | `lib/seo.ts` | SEO 상수 (`SITE_URL`, `SITE_TITLE`, OG/Twitter 메타값) |
 
@@ -117,6 +117,10 @@ NextAuth 5.0 설정. Google·Kakao·Naver OAuth 지원.
 - Google: `openid email profile gmail.readonly` 스코프 (Gmail API용)
 - JWT 세션 전략
 - 로그인 시 `syncAuthUser()`로 DB 사용자 동기화 + 초대 코드 처리
+- 초대코드 없이 신규가입 시 새 매장(owner) 자동 생성 (`onboarded: true`)
+- `authorized` 콜백: `loginError='no-account'` 시 `/login`으로 리다이렉트
+- JWT userId backfill: `providerSub` 기반 DB 조회로 커스텀 필드 복구
+- `session` 콜백: async DB fallback으로 userId 보장
 
 ---
 
@@ -163,7 +167,7 @@ NextAuth 5.0 설정. Google·Kakao·Naver OAuth 지원.
 |------|------|
 | `api-session.ts` | API 요청에서 세션 추출 (`getApiSession`), 역할 검증 (`requireRole`) |
 | `roles.ts` | 역할 우선순위: owner > manager > staff |
-| `sync-auth-user.ts` | OAuth 로그인 후 DB User/AuthAccount 동기화 |
+| `sync-auth-user.ts` | OAuth 로그인 후 DB User/AuthAccount 동기화. 초대코드 없이 신규가입 시 매장+owner 자동 생성 |
 | `invite.ts` | 초대 코드 생성·검증·사용 |
 | `resolve-user-membership.ts` | 사용자의 매장 멤버십 해석 (복수 매장 시 우선순위) |
 
@@ -243,6 +247,18 @@ useCustomerMergeSuggestion.ts (동명이인 감지)
   → /api/customers/merge (병합 실행)
     └─ 트랜잭션: 예약·포인트·태그 이전 + 이력 기록 + 원본 삭제
   → /api/customers/unmerge (병합 해제 가능)
+```
+
+### 게스트 → SNS 연동
+
+```
+게스트 온보딩 완료 (localStorage에 데이터 저장)
+  → /settings/sns → "연결하기" 클릭
+  → signIn(provider) → OAuth 콜백
+  → syncAuthUser() step 3: 새 User + Store(onboarded: true) + owner 생성
+  → 리다이렉트 → _app.tsx에서 localStorage 데이터 감지
+  → POST /api/onboarding (서비스, 디자이너, 매장명 동기화)
+  → localStorage onboarded 플래그 해제 (중복 방지)
 ```
 
 ### 적립금
