@@ -160,6 +160,7 @@ export async function syncAuthUser({account, user, inviteCode, linkUserId, displ
     const provider = account.provider;
     const providerSub = account.providerAccountId;
 
+
     // 0. Account linking: attach new provider to existing user
     if (linkUserId) {
         const existingUser = await prisma.user.findUnique({
@@ -243,33 +244,26 @@ export async function syncAuthUser({account, user, inviteCode, linkUserId, displ
         return createdUser;
     }
 
-    // 3. Bootstrap: if no memberships exist at all, first user becomes owner
-    const membershipCount = await prisma.membership.count();
+    // 3. No account, no invite → create new user with new store (owner)
+    const storeName = process.env.STORE_NAME || '내 매장';
 
-    if (membershipCount === 0) {
-        const storeName = process.env.STORE_NAME || '내 매장';
+    const createdUser = await prisma.$transaction(async (tx) => {
+        const newUser = await createUserWithNickname({email, image, provider, providerSub, displayName}, tx);
 
-        const createdUser = await prisma.$transaction(async (tx) => {
-            const newUser = await createUserWithNickname({email, image, provider, providerSub, displayName}, tx);
-
-            const store = await tx.store.create({
-                data: {name: storeName},
-            });
-
-            await tx.membership.create({
-                data: {
-                    userId: newUser.id,
-                    storeId: store.id,
-                    role: 'owner',
-                },
-            });
-
-            return newUser;
+        const store = await tx.store.create({
+            data: {name: storeName, onboarded: true},
         });
 
-        return createdUser;
-    }
+        await tx.membership.create({
+            data: {
+                userId: newUser.id,
+                storeId: store.id,
+                role: 'owner',
+            },
+        });
 
-    // 4. No account, no invite, not bootstrap → block
-    return null;
+        return newUser;
+    });
+
+    return createdUser;
 }
