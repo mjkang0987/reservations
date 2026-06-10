@@ -1,6 +1,6 @@
 # Take a Seat (TAS) - 프로젝트 인덱스
 
-> 헤어살롱 예약 관리 시스템. Next.js 16 + React 19 + Prisma + PostgreSQL + Zustand
+> 헤어살롱 예약 관리 시스템. Next.js 16 + React 19 + Prisma 7 + PostgreSQL + Zustand
 
 ---
 
@@ -175,14 +175,19 @@ NextAuth 5.0 설정. Google·Kakao·Naver OAuth 지원.
 
 | 파일 | 역할 |
 |------|------|
-| `prisma.ts` | Prisma 클라이언트 싱글턴 |
+| `prisma.ts` | Prisma 클라이언트 싱글턴 (PrismaPg driver adapter 사용) |
 | `mappers.ts` | DB ↔ 프론트엔드 변환 함수[^13] |
 
 [^13]: `dbReservationToFrontend()`, `dbCustomerToFrontend()`, `dbDesignerToFrontend()`, `dbServiceToFrontend()`, `dbStoreToFrontend()` 등. legacyId(number) ↔ CUID(string) 변환 포함
 
 ---
 
-## DB 스키마 (`client/prisma/schema.prisma`)
+## DB 스키마 (`client/prisma/schema.prisma`) + Prisma 설정
+
+- **Prisma 7**: `prisma-client` generator, `./generated/prisma` output, driver adapter 필수
+- **`client/prisma.config.ts`**: datasource URL, migration 경로, seed 명령 설정 (dotenv로 환경변수 로드)
+- **`@prisma/adapter-pg`**: PostgreSQL driver adapter (`server/db/prisma.ts`에서 `PrismaPg` 사용)
+- import 경로: `../../client/prisma/generated/prisma/client` (generated 클라이언트)
 
 ### 핵심 모델 관계
 
@@ -279,5 +284,6 @@ StorePointSettings (적립률, 충전규칙)
 |------|------|
 | `.env.local` | 환경변수 (DATABASE_URL, AUTH_SECRET, OAuth 키) |
 | `next.config.mjs` | URL 리라이트(/day/\*/week/\* → /), styled-components, Turbopack |
+| `client/prisma.config.ts` | Prisma 7 설정 (datasource URL, migration, seed) |
 | `tsconfig.json` | ES2017, strict, path aliases |
 | `package.json` | dev/build 스크립트, 의존성 |
