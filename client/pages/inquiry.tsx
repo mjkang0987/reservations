@@ -208,8 +208,7 @@ const StyledStickyHeader = styled.div`
     position: sticky;
     top: 0;
     z-index: 12;
-    margin: 0 -8px;
-    padding: 10px 8px;
+    padding: 10px 0;
     border-bottom: 1px solid var(--light-gray-color);
     backdrop-filter: var(--sticky-backdrop);
 `;
