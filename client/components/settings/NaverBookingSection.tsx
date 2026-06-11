@@ -50,8 +50,8 @@ export function NaverBookingSection() {
                     <StyledIcon $ok={hasRole}>{hasRole ? '✅' : '❌'}</StyledIcon>
                     <StyledCheckText>
                         {hasRole
-                            ? '연동 가능한 권한(소유자 또는 매니저)입니다.'
-                            : '소유자 또는 매니저 권한이 필요합니다.'
+                            ? '연동 가능한 권한(소유자 또는 멤버)입니다.'
+                            : '소유자 또는 멤버 권한이 필요합니다.'
                         }
                     </StyledCheckText>
                 </StyledCheckRow>

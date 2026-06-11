@@ -1,6 +1,6 @@
 import styled, {css} from 'styled-components';
 
-type LabelBadgeTone = 'neutral' | 'brand' | 'info' | 'warning' | 'danger' | 'success';
+export type LabelBadgeTone = 'neutral' | 'brand' | 'purple' | 'info' | 'warning' | 'danger' | 'success';
 type LabelBadgeShape = 'soft' | 'pill';
 type LabelBadgeSize = 'sm' | 'md';
 
@@ -14,6 +14,11 @@ const toneStyles: Record<LabelBadgeTone, ReturnType<typeof css>> = {
         background: var(--naver-color);
         border-color: var(--naver-color-dark);
         color: var(--white-color);
+    `,
+    purple: css`
+        background: var(--brand-color-bg);
+        border-color: var(--brand-color-border);
+        color: var(--brand-color);
     `,
     info: css`
         background: var(--info-bg);

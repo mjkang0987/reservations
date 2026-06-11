@@ -3,9 +3,9 @@ import {useCallback, useEffect, useState} from 'react';
 import {useSession} from 'next-auth/react';
 
 import styled from 'styled-components';
-import {LabelBadge} from '../ui/LabelBadge';
+import {LabelBadge, type LabelBadgeTone} from '../ui/LabelBadge';
 import {PageHero} from '../ui/PageHero';
-import {EMPTY_TEXT, StyledEmpty, StyledSettingsCard, StyledSettingsCardTitle, StyledSettingsHint} from './settings-styles';
+import {EMPTY_TEXT, StyledEmpty, StyledSettingsCard, StyledSettingsCardTitle, StyledSettingsHint, StyledSaveBtn, StyledSelect} from './settings-styles';
 import {FieldError} from '../ui/FieldError';
 import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledFooter, StyledActionButton} from '../calendar/overlays/ModalStyles';
 import {useToastStore} from '../../store/toastStore';
@@ -30,14 +30,20 @@ type Member = {
 };
 
 const ROLE_OPTIONS = [
-    {value: 'manager', label: '매니저'},
+    {value: 'manager', label: '멤버'},
     {value: 'staff', label: '스태프'},
 ] as const;
 
 const ROLE_LABELS: Record<string, string> = {
     owner: '오너',
-    manager: '매니저',
+    manager: '멤버',
     staff: '스태프',
+};
+
+const ROLE_TONE: Record<string, LabelBadgeTone> = {
+    owner: 'purple',
+    manager: 'info',
+    staff: 'neutral',
 };
 
 function formatExpiry(expiresAt: string): string {
@@ -146,7 +152,7 @@ export const MemberSection = () => {
                     <StyledGuestTitle>게스트 모드</StyledGuestTitle>
                     <StyledGuestDesc>
                         멤버 관리 기능은 로그인 후 이용할 수 있습니다.
-                        매장 오너 또는 매니저 권한이 있는 계정으로 로그인하면
+                        매장 오너 또는 멤버 권한이 있는 계정으로 로그인하면
                         초대코드 생성, 멤버 조회 등의 기능을 사용할 수 있습니다.
                     </StyledGuestDesc>
                 </StyledGuestCard>
@@ -158,7 +164,7 @@ export const MemberSection = () => {
         return (
             <StyledContainer>
                 <PageHero eyebrow="MEMBER" title="멤버 관리" subtitle="초대코드를 생성하고 매장 멤버를 관리합니다." />
-                <StyledSettingsHint>멤버 관리는 오너 또는 매니저만 가능합니다.</StyledSettingsHint>
+                <StyledSettingsHint>멤버 관리는 오너 또는 멤버만 가능합니다.</StyledSettingsHint>
             </StyledContainer>
         );
     }
@@ -180,9 +186,9 @@ export const MemberSection = () => {
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
                     </StyledSelect>
-                    <StyledPrimaryButton type="button" onClick={createInvite} disabled={creating}>
+                    <StyledSaveBtn type="button" onClick={createInvite} disabled={creating}>
                         {creating ? '생성 중...' : '코드 생성'}
-                    </StyledPrimaryButton>
+                    </StyledSaveBtn>
                 </StyledCreateRow>
                 <FieldError>{error}</FieldError>
             </StyledSettingsCard>
@@ -195,7 +201,7 @@ export const MemberSection = () => {
                             <StyledInviteItem key={inv.id}>
                                 <StyledCodeBlock>
                                     <StyledCode>{inv.code}</StyledCode>
-                                    <StyledBadge>{ROLE_LABELS[inv.role] ?? inv.role}</StyledBadge>
+                                    <StyledBadge $tone={ROLE_TONE[inv.role] ?? 'neutral'}>{ROLE_LABELS[inv.role] ?? inv.role}</StyledBadge>
                                 </StyledCodeBlock>
                                 <StyledInviteActions>
                                     <StyledExpiry>{formatExpiry(inv.expiresAt)}</StyledExpiry>
@@ -221,7 +227,7 @@ export const MemberSection = () => {
                                 <StyledMemberName>{m.user.nickname}</StyledMemberName>
                                 <StyledMemberMeta>
                                     {m.user.email && <StyledMemberEmail>{m.user.email}</StyledMemberEmail>}
-                                    <StyledBadge>{ROLE_LABELS[m.role] ?? m.role}</StyledBadge>
+                                    <StyledBadge $tone={ROLE_TONE[m.role] ?? 'neutral'}>{ROLE_LABELS[m.role] ?? m.role}</StyledBadge>
                                 </StyledMemberMeta>
                             </StyledMemberItem>
                         ))}
@@ -239,7 +245,7 @@ export const MemberSection = () => {
                             <StyledInviteItem key={inv.id} $dimmed>
                                 <StyledCodeBlock>
                                     <StyledCode $dimmed>{inv.code}</StyledCode>
-                                    <StyledBadge>{ROLE_LABELS[inv.role] ?? inv.role}</StyledBadge>
+                                    <StyledBadge $tone={ROLE_TONE[inv.role] ?? 'neutral'}>{ROLE_LABELS[inv.role] ?? inv.role}</StyledBadge>
                                 </StyledCodeBlock>
                                 <StyledExpiry>
                                     {inv.usedAt
@@ -292,48 +298,6 @@ const StyledCreateRow = styled.div`
     }
 `;
 
-const StyledSelect = styled.select`
-    height: 36px;
-    padding: 0 10px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    font-size: 13px;
-    background: var(--white-color);
-    color: var(--black-color);
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.15s;
-
-    &:focus {
-        border-color: var(--blue-color);
-        box-shadow: 0 0 0 3px rgba(0, 169, 230, 0.14);
-    }
-`;
-
-const StyledPrimaryButton = styled.button`
-    height: 36px;
-    padding: 0 16px;
-    border: none;
-    border-radius: var(--radius-md);
-    background: var(--blue-color);
-    color: var(--white-color);
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    transition: opacity 0.15s;
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: default;
-    }
-
-    @media (hover: hover) and (pointer: fine) {
-        &:hover:not(:disabled) {
-            opacity: 0.85;
-        }
-    }
-`;
-
 
 const StyledList = styled.div`
     display: flex;
@@ -348,8 +312,8 @@ const StyledInviteItem = styled.div<{$dimmed?: boolean}>`
     gap: 10px;
     padding: 10px 12px;
     border-radius: var(--radius-md);
-    background: ${(p) => p.$dimmed ? 'var(--gray-color2)' : 'rgba(0, 169, 230, 0.06)'};
-    border: 1px solid ${(p) => p.$dimmed ? 'var(--border-color)' : 'rgba(0, 169, 230, 0.18)'};
+    background: ${(p) => p.$dimmed ? 'var(--gray-color2)' : 'var(--brand-color-bg)'};
+    border: 1px solid ${(p) => p.$dimmed ? 'var(--border-color)' : 'var(--brand-color-border)'};
     opacity: ${(p) => p.$dimmed ? 0.65 : 1};
 
     @media (max-width: 640px) {
@@ -370,12 +334,11 @@ const StyledCode = styled.span<{$dimmed?: boolean}>`
     font-size: 17px;
     font-weight: 700;
     letter-spacing: 3px;
-    color: ${(p) => p.$dimmed ? 'var(--dark-gray-color2)' : 'var(--blue-color)'};
+    color: ${(p) => p.$dimmed ? 'var(--dark-gray-color2)' : 'var(--brand-color)'};
     user-select: all;
 `;
 
 const StyledBadge = styled(LabelBadge).attrs({
-    $tone: 'neutral',
     $shape: 'soft',
     $size: 'sm',
 })``;
