@@ -65,10 +65,14 @@ export default function LoginPage({providerIds, isDatabaseConfigured, loginError
     const authError = typeof router.query.error === 'string' ? router.query.error : null;
 
     useEffect(() => {
-        if (hasAccess && !authError) {
+        if (!authError && hasAccess) {
             router.replace(monthEntryPath);
+            return;
         }
-    }, [hasAccess, monthEntryPath, router, authError]);
+        if (authError && status === 'authenticated') {
+            router.replace(`/settings/sns?error=${authError}`);
+        }
+    }, [hasAccess, monthEntryPath, router, authError, status]);
 
     if (hasAccess && !authError) {
         return null;

@@ -1,5 +1,7 @@
 import {useCallback, useEffect, useState} from 'react';
 
+import {useRouter} from 'next/router';
+
 import {signIn, signOut, useSession} from 'next-auth/react';
 
 import styled from 'styled-components';
@@ -28,14 +30,29 @@ const PROVIDERS: ProviderConfig[] = [
     {id: 'naver', label: 'Naver', bg: '#03C75A', color: '#fff', border: '#03C75A'},
 ];
 
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+    Configuration: '로그인 처리 중 오류가 발생했습니다. 다시 시도해 주세요.',
+    OAuthAccountNotLinked: '이미 다른 계정에 연결된 SNS입니다.',
+    'sync-error': '계정 동기화 중 오류가 발생했습니다. 다시 시도해 주세요.',
+};
+
 export function SNSLinkingSection() {
     const {status} = useSession();
+    const router = useRouter();
     const isGuest = status === 'unauthenticated';
     const [linked, setLinked] = useState<LinkedAccount[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [error, setError] = useState('');
     const [unlinkTarget, setUnlinkTarget] = useState<string | null>(null);
+
+    useEffect(() => {
+        const authError = typeof router.query.error === 'string' ? router.query.error : null;
+        if (authError) {
+            setError(AUTH_ERROR_MESSAGES[authError] ?? '연동 중 오류가 발생했습니다.');
+            router.replace('/settings/sns', undefined, {shallow: true});
+        }
+    }, [router]);
 
     const fetchLinked = useCallback(async () => {
         try {
