@@ -181,6 +181,7 @@ export const Timeline = ({
                         blockTop={blockTop}
                         blockHeight={blockHeight}
                         designerColorMap={designerColorMap}
+                        designerNameById={designerNameById}
                         onToggle={() => setOpenClusterState({dateKey, cluster})}
                     />
                 );
