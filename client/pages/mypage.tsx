@@ -1,6 +1,7 @@
 import {useEffect, useMemo, useState} from 'react';
 
 import type {GetServerSideProps, NextPage} from 'next';
+import Link from 'next/link';
 
 import {signIn, signOut, useSession} from 'next-auth/react';
 
@@ -333,26 +334,26 @@ const MyPage: NextPage<MyPageProps> = ({linkedProviders}) => {
                     <StyledCard>
                         <StyledCardTitle>게스트 저장 데이터</StyledCardTitle>
                         <StyledGrid>
-                            <StyledMetric>
+                            <StyledMetricLink href="/address">
                                 <strong className="value">{localSummary.customers}</strong>
                                 <span className="label">고객</span>
-                            </StyledMetric>
-                            <StyledMetric>
+                            </StyledMetricLink>
+                            <StyledMetricLink href="/">
                                 <strong className="value">{localSummary.reservations}</strong>
                                 <span className="label">예약</span>
-                            </StyledMetric>
-                            <StyledMetric>
+                            </StyledMetricLink>
+                            <StyledMetricLink href="/">
                                 <strong className="value">{localSummary.history}</strong>
                                 <span className="label">이력</span>
-                            </StyledMetric>
-                            <StyledMetric>
+                            </StyledMetricLink>
+                            <StyledMetricLink href="/settings/service">
                                 <strong className="value">{localSummary.services}</strong>
                                 <span className="label">서비스</span>
-                            </StyledMetric>
-                            <StyledMetric>
+                            </StyledMetricLink>
+                            <StyledMetricLink href="/settings/designer">
                                 <strong className="value">{localSummary.designers}</strong>
                                 <span className="label">디자이너</span>
-                            </StyledMetric>
+                            </StyledMetricLink>
                         </StyledGrid>
                         <StyledDangerButton type="button" onClick={resetGuestData}>
                             게스트 데이터 초기화
@@ -503,11 +504,14 @@ const StyledGrid = styled.div`
     gap: 8px;
 `;
 
-const StyledMetric = styled.div`
+const StyledMetricLink = styled(Link)`
+    display: block;
     padding: 14px 10px;
     border-radius: var(--radius-lg);
     background: var(--gray-color2);
     text-align: center;
+    text-decoration: none;
+    transition: background 0.15s;
 
     .value {
         display: block;
@@ -520,6 +524,10 @@ const StyledMetric = styled.div`
         margin-top: 4px;
         font-size: 12px;
         color: var(--dark-gray-color2);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover { background: var(--light-gray-color); }
     }
 `;
 
