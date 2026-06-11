@@ -104,6 +104,9 @@ export const Aside = () => {
     const activeReservationType = router.asPath.split('?')[0].split('/')[1] || '';
     const activeSettingsTab = typeof router.query.tab === 'string' ? router.query.tab : 'revenue';
     const isSettingsPage = router.pathname === '/settings' || router.pathname === '/settings/[tab]';
+    const userRole = session?.user?.role;
+    const isOwner = userRole === 'owner';
+    const isLoggedInStaff = !!session?.user && !isOwner;
 
     return (<StyledAside $isVisible={aside.isVisible}>
             <StyledBrandLink href="/"
@@ -180,36 +183,56 @@ export const Aside = () => {
                         <ButtonText a11y={false}>고객추가</ButtonText>
                     </StyledCreateButton>
                     <StyledDivider />
-                    <StyledAccordionToggle type="button"
-                                           onClick={() => setSettingsOpen(!settingsOpen)}>
-                        <StyledMenuContent>
-                            <MenuIcon icon="settings" />
-                            <span>설정</span>
-                        </StyledMenuContent>
-                        <StyledToggleIcon $collapsed={!settingsOpen}
-                                          aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M9 6L15 12L9 18" />
-                            </svg>
-                        </StyledToggleIcon>
-                    </StyledAccordionToggle>
-                    <StyledAccordionContent $open={settingsOpen}>
-                        {SETTINGS_SUBMENU.filter((item) => !isGuest || item.tab !== 'member').map((item) =>
-                            <StyledSubNavLink href={item.href}
-                                              $active={item.tab === 'my'
-                                                  ? router.pathname === '/mypage'
-                                                  : item.tab === 'customers'
-                                                      ? router.pathname === '/address'
-                                                      : isSettingsPage && activeSettingsTab === item.tab}
-                                              key={item.tab}
-                                              onClick={closeMobile}>
-                                <StyledMenuContent>
-                                    <MenuIcon icon={item.icon} />
-                                    <span>{item.label}</span>
-                                </StyledMenuContent>
-                            </StyledSubNavLink>
-                        )}
-                    </StyledAccordionContent>
+                    {isLoggedInStaff && (<>
+                        <StyledSubNavLink href="/address"
+                                          $active={router.pathname === '/address'}
+                                          onClick={closeMobile}>
+                            <StyledMenuContent>
+                                <MenuIcon icon="customers" />
+                                <span>고객 명단</span>
+                            </StyledMenuContent>
+                        </StyledSubNavLink>
+                        <StyledSubNavLink href="/mypage"
+                                          $active={router.pathname === '/mypage'}
+                                          onClick={closeMobile}>
+                            <StyledMenuContent>
+                                <MenuIcon icon="account" />
+                                <span>계정 관리</span>
+                            </StyledMenuContent>
+                        </StyledSubNavLink>
+                    </>)}
+                    {(isOwner || isGuest) && (<>
+                        <StyledAccordionToggle type="button"
+                                               onClick={() => setSettingsOpen(!settingsOpen)}>
+                            <StyledMenuContent>
+                                <MenuIcon icon="settings" />
+                                <span>설정</span>
+                            </StyledMenuContent>
+                            <StyledToggleIcon $collapsed={!settingsOpen}
+                                              aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M9 6L15 12L9 18" />
+                                </svg>
+                            </StyledToggleIcon>
+                        </StyledAccordionToggle>
+                        <StyledAccordionContent $open={settingsOpen}>
+                            {SETTINGS_SUBMENU.filter((item) => !isGuest || item.tab !== 'member').map((item) =>
+                                <StyledSubNavLink href={item.href}
+                                                  $active={item.tab === 'my'
+                                                      ? router.pathname === '/mypage'
+                                                      : item.tab === 'customers'
+                                                          ? router.pathname === '/address'
+                                                          : isSettingsPage && activeSettingsTab === item.tab}
+                                                  key={item.tab}
+                                                  onClick={closeMobile}>
+                                    <StyledMenuContent>
+                                        <MenuIcon icon={item.icon} />
+                                        <span>{item.label}</span>
+                                    </StyledMenuContent>
+                                </StyledSubNavLink>
+                            )}
+                        </StyledAccordionContent>
+                    </>)}
                 </StyledNav>
                 <StyledDivider />
                 <StyledInquiryLink href="/inquiry"
@@ -480,6 +503,16 @@ const MenuIcon = ({icon}: { icon: string }) => {
                 <circle cx="5" cy="18" r="2.5" />
                 <circle cx="19" cy="18" r="2.5" />
                 <path d="M12 7.5V12M12 12L5 15.5M12 12L19 15.5" />
+            </StyledMenuIcon>
+        );
+    }
+
+    if (icon === 'account') {
+        return (
+            <StyledMenuIcon viewBox="0 0 24 24"
+                            aria-hidden="true">
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M4 20C4 17.2 7.6 15 12 15C16.4 15 20 17.2 20 20" />
             </StyledMenuIcon>
         );
     }
