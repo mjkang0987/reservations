@@ -19,6 +19,7 @@ import {AuthActionIcon} from '../ui/AuthActionIcon';
 import {ButtonText} from '../ui/ButtonText';
 import {AdBanner} from '../ad/AdBanner';
 import {CustomerAddModal} from '../address/CustomerAddModal';
+import {StoreSwitcher} from './StoreSwitcher';
 
 const SETTINGS_SUBMENU = [
     {tab: 'revenue', href: '/settings/revenue', label: '매출', icon: 'revenue'},
@@ -114,8 +115,10 @@ export const Aside = () => {
                 </StyledMenuIcon>
                 <span>TAS</span>
             </StyledBrandLink>
-            {storeName && (
-                <StyledStoreNameLink href="/settings/store" onClick={closeMobile}>{storeName}</StyledStoreNameLink>
+            {isGuest ? (
+                storeName ? <StyledStoreNameLink href="/settings/store" onClick={closeMobile}>{storeName}</StyledStoreNameLink> : null
+            ) : (
+                <StoreSwitcher fallbackName={storeName} onNavigate={closeMobile} />
             )}
             {session?.user ? (
                 <StyledUserInfoLink href="/mypage"
@@ -237,7 +240,7 @@ export const Aside = () => {
                                     router.push('/login');
                                 }}>확인</StyledGuestLogoutConfirm>
                             </StyledGuestLogoutActions>
-                            <StyledGuestLogoutLink href="/login">SNS 계정 연동</StyledGuestLogoutLink>
+                            <StyledGuestLogoutLink href="/settings/sns">SNS 계정 연동</StyledGuestLogoutLink>
                         </StyledGuestLogoutDialog>
                     </StyledGuestLogoutOverlay>
                 )}
@@ -568,22 +571,21 @@ const StyledGuestInfo = styled.div`
     display: flex;
     flex-direction: column;
     padding: 0 10px 10px;
-    min-width: var(--aside-width);
+    width: var(--aside-width);
     box-sizing: border-box;
 `;
 
 const StyledStoreNameLink = styled(Link)`
     flex-shrink: 0;
     padding: 0 10px 6px;
-    min-width: var(--aside-width);
+    width: var(--aside-width);
     box-sizing: border-box;
     font-size: 11px;
     font-weight: 500;
     color: var(--aside-text);
     opacity: 0.6;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-all;
+    line-height: 1.4;
     text-decoration: none;
     transition: opacity 0.1s;
 
@@ -600,7 +602,7 @@ const StyledUserInfoLink = styled(Link)`
     flex-direction: column;
     gap: 2px;
     padding: 0 10px 10px;
-    min-width: var(--aside-width);
+    width: var(--aside-width);
     box-sizing: border-box;
     border-bottom: 1px solid var(--aside-divider);
     text-decoration: none;
@@ -617,9 +619,8 @@ const StyledUserName = styled.span`
     font-size: var(--small-font);
     font-weight: 600;
     color: var(--aside-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-all;
+    line-height: 1.4;
 `;
 
 const StyledUserEmail = styled.span`
