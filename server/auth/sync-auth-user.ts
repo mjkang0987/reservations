@@ -12,11 +12,18 @@ type SyncAuthUserParams = {
     displayName?: string | null;
 };
 
+type PendingMerge = {
+    conflictUserId: string;
+    provider: string;
+    providerSub: string;
+};
+
 type SyncedAuthUser = {
     id: string;
     nickname: string;
     email: string | null;
     image: string | null;
+    pendingMerge?: PendingMerge;
 };
 
 const ADJECTIVES = [
@@ -177,8 +184,15 @@ export async function syncAuthUser({account, user, inviteCode, linkUserId, displ
         });
 
         if (conflicting) {
-            // Already linked (to this or another user) — just return existing user
-            return existingUser;
+            if (conflicting.userId === linkUserId) {
+                // Already linked to this user — no action needed
+                return existingUser;
+            }
+            // Linked to a different user — return with merge info
+            return {
+                ...existingUser,
+                pendingMerge: {conflictUserId: conflicting.userId, provider, providerSub},
+            };
         }
 
         await prisma.authAccount.create({

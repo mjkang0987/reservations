@@ -26,13 +26,19 @@ import {
     subscribeLocalDb,
     type LocalDbSnapshot,
 } from '../lib/local-db';
-import {StyledEmptyCard} from '../components/settings/settings-styles';
+import {StyledEmptyCard, StyledEditBtn, StyledSaveBtn, StyledCancelBtn, StyledDeleteBtn, actionButtonStyle} from '../components/settings/settings-styles';
 import {SeoHead} from '../components/ui/SeoHead';
 
 const PROVIDER_LABELS: Record<string, string> = {
     google: 'Google',
     kakao: 'Kakao',
     naver: 'Naver',
+};
+
+const ROLE_LABELS: Record<string, string> = {
+    owner: '오너',
+    manager: '멤버',
+    staff: '멤버',
 };
 
 type MyPageProps = {
@@ -177,16 +183,16 @@ const MyPage: NextPage<MyPageProps> = ({linkedProviders}) => {
                                             maxLength={20}
                                             disabled={nicknameLoading}
                                         />
-                                        <StyledNicknameBtn type="button" onClick={handleSaveNickname} disabled={nicknameLoading}>
+                                        <StyledSaveBtn type="button" onClick={handleSaveNickname} disabled={nicknameLoading}>
                                             {nicknameLoading ? '...' : '저장'}
-                                        </StyledNicknameBtn>
-                                        <StyledNicknameBtn type="button" $cancel onClick={() => {
+                                        </StyledSaveBtn>
+                                        <StyledCancelBtn type="button" onClick={() => {
                                             setIsEditingNickname(false);
                                             setNicknameError('');
                                             setNicknameSuggestions([]);
                                         }}>
                                             취소
-                                        </StyledNicknameBtn>
+                                        </StyledCancelBtn>
                                     </StyledNicknameEditRow>
                                     <FieldError variant="inline">{nicknameError}</FieldError>
                                     {nicknameSuggestions.length > 0 && (
@@ -213,7 +219,7 @@ const MyPage: NextPage<MyPageProps> = ({linkedProviders}) => {
                             ) : (
                                 <StyledNicknameView>
                                     <StyledValue>{session.user.name ?? '-'}</StyledValue>
-                                    <StyledNicknameEditTrigger
+                                    <StyledEditBtn
                                         type="button"
                                         onClick={() => {
                                             setNicknameInput(session.user?.name ?? '');
@@ -221,7 +227,7 @@ const MyPage: NextPage<MyPageProps> = ({linkedProviders}) => {
                                         }}
                                     >
                                         수정
-                                    </StyledNicknameEditTrigger>
+                                    </StyledEditBtn>
                                 </StyledNicknameView>
                             )
                         ) : (
@@ -234,11 +240,7 @@ const MyPage: NextPage<MyPageProps> = ({linkedProviders}) => {
                     </StyledRow>
                     <StyledRow>
                         <StyledLabel>권한</StyledLabel>
-                        <StyledValue>{session?.user?.role ?? '없음'}</StyledValue>
-                    </StyledRow>
-                    <StyledRow>
-                        <StyledLabel>매장 ID</StyledLabel>
-                        <StyledValue>{session?.user?.storeId ?? '-'}</StyledValue>
+                        <StyledValue>{session?.user?.role ? (ROLE_LABELS[session.user.role] ?? session.user.role) : '없음'}</StyledValue>
                     </StyledRow>
                 </StyledCard>
 
@@ -258,13 +260,13 @@ const MyPage: NextPage<MyPageProps> = ({linkedProviders}) => {
                             </StyledRow>
                             {!!session?.user && (
                                 <StyledButtonRow>
-                                    <StyledActionButton type="button" onClick={() => signOut({callbackUrl: '/login'})}>
+                                    <StyledLogoutBtn type="button" onClick={() => signOut({callbackUrl: '/login'})}>
                                         <AuthActionIcon direction="logout" />
                                         <span>로그아웃</span>
-                                    </StyledActionButton>
-                                    <StyledDeleteButton type="button" onClick={() => setShowDeleteModal(true)}>
+                                    </StyledLogoutBtn>
+                                    <StyledDeleteBtn type="button" onClick={() => setShowDeleteModal(true)}>
                                         회원탈퇴
-                                    </StyledDeleteButton>
+                                    </StyledDeleteBtn>
                                 </StyledButtonRow>
                             )}
                         </>
@@ -362,9 +364,9 @@ const MyPage: NextPage<MyPageProps> = ({linkedProviders}) => {
                                 <span className="label">디자이너</span>
                             </StyledMetricLink>
                         </StyledGrid>
-                        <StyledDangerButton type="button" onClick={resetGuestData}>
+                        <StyledResetBtn type="button" onClick={resetGuestData}>
                             게스트 데이터 초기화
-                        </StyledDangerButton>
+                        </StyledResetBtn>
                     </StyledCard>
                 )}
                 <StyledFooterCs>Take a seat CS: <a className="link" href="mailto:takeaseat.cs@gmail.com">takeaseat.cs@gmail.com</a></StyledFooterCs>
@@ -480,26 +482,11 @@ const StyledButtonRow = styled.div`
     margin-top: 14px;
 `;
 
-const buttonLikeStyle = `
+const StyledLogoutBtn = styled.button`
+    ${actionButtonStyle};
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    height: 36px;
-    padding: 0 14px;
-    border-radius: var(--radius-md);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s;
-    box-sizing: border-box;
-
-    @media (hover: hover) and (pointer: fine) {
-        &:hover { opacity: 0.85; }
-    }
-`;
-
-const StyledActionButton = styled.button`
-    ${buttonLikeStyle}
+    gap: 6px;
     border: 1px solid var(--light-gray-color);
     background: var(--black-color);
     color: var(--white-color);
@@ -545,12 +532,8 @@ const StyledHint = styled.p`
     line-height: 1.6;
 `;
 
-const StyledDangerButton = styled.button`
+const StyledResetBtn = styled(StyledDeleteBtn)`
     margin-top: 14px;
-    ${buttonLikeStyle}
-    border: 1px solid var(--danger-border);
-    background: var(--danger-bg);
-    color: var(--danger-color);
 `;
 
 const StyledSyncStatus = styled.div<{$connected: boolean}>`
@@ -594,31 +577,15 @@ const StyledStepList = styled.ol`
 `;
 
 const StyledGoogleButton = styled.button`
+    ${actionButtonStyle};
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    height: 42px;
-    padding: 0 16px;
     border: 1px solid var(--light-gray-color);
-    border-radius: var(--radius-md);
     background: var(--white-color);
-    font-size: 14px;
-    font-weight: 600;
     color: var(--black-color);
-    cursor: pointer;
-    transition: opacity 0.15s;
-
-    @media (hover: hover) and (pointer: fine) {
-        &:hover { opacity: 0.85; }
-    }
 `;
 
-const StyledDeleteButton = styled.button`
-    ${buttonLikeStyle}
-    border: 1px solid var(--danger-border);
-    background: var(--danger-bg);
-    color: var(--danger-color);
-`;
 
 const StyledNicknameView = styled.div`
     display: flex;
@@ -634,15 +601,6 @@ const StyledNicknameBlock = styled.div`
     align-items: flex-end;
 `;
 
-const StyledNicknameEditTrigger = styled.button`
-    padding: 2px 8px;
-    border: 1px solid var(--light-gray-color);
-    border-radius: var(--radius-sm);
-    background: var(--white-color);
-    font-size: 12px;
-    color: var(--dark-gray-color2);
-    cursor: pointer;
-`;
 
 const StyledNicknameEditRow = styled.div`
     display: flex;
@@ -656,7 +614,7 @@ const StyledNicknameInput = styled.input`
     width: 140px;
     height: 30px;
     padding: 0 8px;
-    border: 1px solid var(--blue-color);
+    border: 1px solid var(--brand-color);
     border-radius: var(--radius-sm);
     font-size: 13px;
     color: var(--black-color);
@@ -666,20 +624,6 @@ const StyledNicknameInput = styled.input`
     &:disabled { opacity: 0.6; }
 `;
 
-const StyledNicknameBtn = styled.button<{$cancel?: boolean}>`
-    height: 30px;
-    padding: 0 10px;
-    border: 1px solid ${(p) => p.$cancel ? 'var(--light-gray-color)' : 'var(--blue-color)'};
-    border-radius: var(--radius-sm);
-    background: ${(p) => p.$cancel ? 'var(--white-color)' : 'var(--blue-color)'};
-    color: ${(p) => p.$cancel ? 'var(--dark-gray-color)' : 'var(--white-color)'};
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    flex-shrink: 0;
-
-    &:disabled { opacity: 0.6; cursor: default; }
-`;
 
 
 const StyledSuggestions = styled.div`
@@ -714,9 +658,9 @@ const StyledSuggestionChip = styled.button`
 
     @media (hover: hover) and (pointer: fine) {
         &:hover {
-            border-color: var(--blue-color);
-            color: var(--blue-color);
-            background: rgba(45, 127, 249, 0.06);
+            border-color: var(--brand-color);
+            color: var(--brand-color);
+            background: var(--brand-color-bg);
         }
     }
 `;

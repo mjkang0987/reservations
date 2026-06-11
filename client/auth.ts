@@ -95,9 +95,19 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
             return true;
         },
         async jwt({token, account, user, trigger, session}) {
-            if (trigger === 'update' && session?.name) {
-                token.name = session.name;
-                return token;
+            if (trigger === 'update') {
+                if (session?.clearPendingMerge) {
+                    token.pendingMerge = undefined;
+                }
+                if (session?.name) {
+                    token.name = session.name;
+                }
+                if (session?.storeId) {
+                    token.preferredStoreId = session.storeId as string;
+                }
+                if (session?.name && !session?.storeId && !session?.clearPendingMerge) {
+                    return token;
+                }
             }
 
             if (account) {
@@ -120,6 +130,7 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
                     token.email = syncedUser.email;
                     token.picture = syncedUser.image;
                     token.loginError = undefined;
+                    token.pendingMerge = syncedUser.pendingMerge;
 
                     if (account.provider === 'google' && account.access_token) {
                         await saveGoogleTokens(syncedUser.id, {
@@ -156,7 +167,7 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
                 }
             }
 
-            const membership = await resolveUserMembership((token.userId as string) ?? null);
+            const membership = await resolveUserMembership((token.userId as string) ?? null, token.preferredStoreId);
             token.role = membership?.role;
             token.storeId = membership?.storeId;
 
@@ -198,6 +209,7 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
                 session.user.storeId = token.storeId as string | undefined;
                 session.user.onboarded = token.onboarded as boolean | undefined;
                 session.user.loginError = token.loginError as string | undefined;
+                session.user.pendingMerge = token.pendingMerge;
             }
             return session;
         }

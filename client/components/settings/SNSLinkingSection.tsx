@@ -7,13 +7,26 @@ import {signIn, signOut, useSession} from 'next-auth/react';
 import styled from 'styled-components';
 
 import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledFooter, StyledActionButton, StyledModalContent, StyledModalMessage} from '../calendar/overlays/ModalStyles';
+import {LabelBadge} from '../ui/LabelBadge';
 import {PageHero} from '../ui/PageHero';
 import {GuestNotice} from '../ui/GuestNotice';
+import {useToastStore} from '../../store/toastStore';
 import {StyledSettingsCard, StyledSaveBtn, StyledEditBtn} from './settings-styles';
 
 type LinkedAccount = {
     provider: string;
     createdAt: string;
+};
+
+type MergePreview = {
+    provider: string;
+    memberships: Array<{storeName: string; role: string}>;
+};
+
+const ROLE_LABELS: Record<string, string> = {
+    owner: '오너',
+    manager: '멤버',
+    staff: '멤버',
 };
 
 type ProviderConfig = {
@@ -37,14 +50,17 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function SNSLinkingSection() {
-    const {status} = useSession();
+    const {data: session, status, update: updateSession} = useSession();
     const router = useRouter();
+    const toast = useToastStore((s) => s.show);
     const isGuest = status === 'unauthenticated';
     const [linked, setLinked] = useState<LinkedAccount[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [error, setError] = useState('');
     const [unlinkTarget, setUnlinkTarget] = useState<string | null>(null);
+    const [mergePreview, setMergePreview] = useState<MergePreview | null>(null);
+    const [mergeLoading, setMergeLoading] = useState(false);
 
     useEffect(() => {
         const authError = typeof router.query.error === 'string' ? router.query.error : null;
@@ -60,16 +76,6 @@ export function SNSLinkingSection() {
             if (res.ok) {
                 const data: LinkedAccount[] = await res.json();
                 setLinked(data);
-
-                const attempted = sessionStorage.getItem('tas-link-attempt');
-                if (attempted) {
-                    sessionStorage.removeItem('tas-link-attempt');
-                    const linked = new Set(data.map((a) => a.provider));
-                    if (!linked.has(attempted)) {
-                        const label = PROVIDERS.find((p) => p.id === attempted)?.label ?? attempted;
-                        setError(`${label} 계정이 이미 다른 사용자에게 연결되어 있습니다.`);
-                    }
-                }
             }
         } catch {
             /* ignore */
@@ -86,6 +92,41 @@ export function SNSLinkingSection() {
         }
         fetchLinked();
     }, [status, isGuest, fetchLinked]);
+
+    useEffect(() => {
+        if (!session?.user?.pendingMerge) return;
+        fetch('/api/account/merge-preview')
+            .then((res) => res.ok ? res.json() : null)
+            .then((data: MergePreview | null) => {
+                if (data) setMergePreview(data);
+            })
+            .catch(() => {});
+    }, [session?.user?.pendingMerge]);
+
+    const handleMerge = async () => {
+        setMergeLoading(true);
+        try {
+            const res = await fetch('/api/account/merge', {method: 'POST'});
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setError(data.error ?? '병합에 실패했습니다.');
+                return;
+            }
+            await updateSession({clearPendingMerge: true});
+            setMergePreview(null);
+            await fetchLinked();
+            toast('계정이 병합되었습니다.');
+        } catch {
+            setError('네트워크 오류가 발생했습니다.');
+        } finally {
+            setMergeLoading(false);
+        }
+    };
+
+    const handleMergeCancel = async () => {
+        await updateSession({clearPendingMerge: true});
+        setMergePreview(null);
+    };
 
     const linkedProviders = new Set(linked.map((a) => a.provider));
 
@@ -105,7 +146,6 @@ export function SNSLinkingSection() {
                     return;
                 }
             }
-            if (!isGuest) sessionStorage.setItem('tas-link-attempt', provider);
             await signIn(provider, {callbackUrl: isGuest ? '/' : '/settings/sns'});
         } catch {
             setError('네트워크 오류가 발생했습니다.');
@@ -218,6 +258,49 @@ export function SNSLinkingSection() {
                     </StyledConfirmModal>
                 </StyledConfirmOverlay>
             )}
+
+            {mergePreview && (
+                <StyledConfirmOverlay onClick={handleMergeCancel}>
+                    <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
+                        <StyledHeader>
+                            <h3>계정 병합</h3>
+                        </StyledHeader>
+                        <StyledModalContent>
+                            <StyledModalMessage>
+                                {mergePreview.memberships.length > 0 ? (
+                                    <>
+                                        <StyledMergeList>
+                                            {mergePreview.memberships.map((m, i) => (
+                                                <StyledMergeItem key={i}>
+                                                    <span>{m.storeName}</span>
+                                                    <LabelBadge $tone={m.role === 'owner' ? 'purple' : 'neutral'}>
+                                                        {ROLE_LABELS[m.role] ?? m.role}
+                                                    </LabelBadge>
+                                                </StyledMergeItem>
+                                            ))}
+                                        </StyledMergeList>
+                                        <p>로 등록되어있습니다.</p>
+                                    </>
+                                ) : (
+                                    <p>해당 SNS 계정이 다른 사용자에게 연결되어 있습니다.</p>
+                                )}
+                                <p>계정 병합 하시겠습니까?</p>
+                            </StyledModalMessage>
+                        </StyledModalContent>
+                        <StyledFooter>
+                            <StyledActionButton type="button" onClick={handleMergeCancel}>취소</StyledActionButton>
+                            <StyledActionButton
+                                $primary
+                                type="button"
+                                disabled={mergeLoading}
+                                onClick={handleMerge}
+                            >
+                                {mergeLoading ? '처리 중...' : '병합'}
+                            </StyledActionButton>
+                        </StyledFooter>
+                    </StyledConfirmModal>
+                </StyledConfirmOverlay>
+            )}
         </div>
     );
 }
@@ -290,6 +373,22 @@ const StyledError = styled.p`
     font-size: 13px;
     color: var(--danger-color);
     font-weight: 500;
+`;
+
+const StyledMergeList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+`;
+
+const StyledMergeItem = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dark-gray-color);
 `;
 
 

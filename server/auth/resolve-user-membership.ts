@@ -1,7 +1,7 @@
 import {ROLE_PRIORITY} from './roles';
 import {prisma} from '../db/prisma';
 
-export async function resolveUserMembership(userId: string | null | undefined) {
+export async function resolveUserMembership(userId: string | null | undefined, preferredStoreId?: string | null) {
     if (!process.env.DATABASE_URL || !userId) {
         return null;
     }
@@ -16,6 +16,11 @@ export async function resolveUserMembership(userId: string | null | undefined) {
 
     if (memberships.length === 0) {
         return null;
+    }
+
+    if (preferredStoreId) {
+        const preferred = memberships.find((m) => m.storeId === preferredStoreId);
+        if (preferred) return preferred;
     }
 
     return memberships
