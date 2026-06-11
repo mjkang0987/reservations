@@ -1,6 +1,6 @@
 # Take a Seat (TAS) - 프로젝트 인덱스
 
-> 헤어살롱 예약 관리 시스템. Next.js 16 + React 19 + Prisma 7 + PostgreSQL + Zustand
+> 예약 관리 시스템. Next.js 16 + React 19 + Prisma 7 + PostgreSQL + Zustand
 
 ---
 

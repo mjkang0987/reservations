@@ -352,7 +352,7 @@ const OnboardingPage: NextPage = () => {
                                     setStep1Error('');
                                     setShopNameError('');
                                 }}
-                                placeholder="예) 홍길동 헤어샵"
+                                placeholder="예) 우리 매장"
                                 autoFocus
                             />
                             <FieldError variant="inline">{shopNameError}</FieldError>
