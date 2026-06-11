@@ -6,6 +6,7 @@ import styled from 'styled-components';
 
 import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledFooter, StyledActionButton} from '../calendar/overlays/ModalStyles';
 import {PageHero} from '../ui/PageHero';
+import {GuestNotice} from '../ui/GuestNotice';
 import {StyledSettingsCard, StyledSettingsHint, StyledSaveBtn, StyledCancelBtn, StyledEditBtn} from './settings-styles';
 
 type LinkedAccount = {
@@ -122,6 +123,8 @@ export function SNSLinkingSection() {
     return (
         <div>
             <PageHero eyebrow="SNS" title="계정 연동" subtitle="여러 SNS 계정을 연결하면 어떤 계정으로든 로그인할 수 있습니다." />
+
+            {isGuest && <GuestNotice />}
 
             <StyledProviderCard>
                 {loading ? (

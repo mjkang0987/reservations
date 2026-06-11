@@ -142,6 +142,10 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
                     token.email = existing.user.email;
                     token.picture = existing.user.image;
                     if (!token.provider) token.provider = existing.provider;
+                } else if (!account) {
+                    // DB에서 유저를 찾을 수 없는 유령 세션 → 로그인 페이지로
+                    token.loginError = 'no-account';
+                    return token;
                 }
             }
 
