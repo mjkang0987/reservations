@@ -5,15 +5,16 @@ import {useRouter} from 'next/router';
 import {useSession} from 'next-auth/react';
 
 import styled from 'styled-components';
-import {FieldError} from '../components/ui/FieldError';
-import {GuestNotice} from '../components/ui/GuestNotice';
-import {DEFAULT_SERVICES, SHOP_CATEGORY_COLOR_MAP} from '../features/services/default-services';
-import type {ShopType} from '../features/services/default-services';
-import {createDefaultSchedule, getDesignerColor} from '../utils/designers';
-import {loadLocalDbSnapshot, saveLocalDbSnapshot} from '../lib/local-db';
-import {buildServiceColorMap, formatDuration, formatPrice, getServiceColor} from '../utils/services';
-import type {ServiceItem} from '../utils/services';
-import {SeoHead} from '../components/ui/SeoHead';
+import {FieldError} from '../../components/ui/FieldError';
+import {GuestNotice} from '../../components/ui/GuestNotice';
+import {DEFAULT_SERVICES, SHOP_CATEGORY_COLOR_MAP} from '../../features/services/default-services';
+import type {ShopType} from '../../features/services/default-services';
+import {createDefaultSchedule, getDesignerColor} from '../../utils/designers';
+import {loadLocalDbSnapshot, saveLocalDbSnapshot} from '../../lib/local-db';
+import {buildServiceColorMap, formatDuration, formatPrice, getServiceColor} from '../../utils/services';
+import type {ServiceItem} from '../../utils/services';
+import {SeoHead} from '../../components/ui/SeoHead';
+import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledFooter, StyledActionButton} from '../../components/calendar/overlays/ModalStyles';
 
 type OnboardingStep = 0 | 1 | 2 | 3 | 4 | 5;
 type ExtShopType = ShopType | 'etc';
@@ -55,21 +56,23 @@ const DEFAULT_DESIGNER_ID_START = 1;
 const OnboardingPage: NextPage = () => {
     const router = useRouter();
     const {data: session, status} = useSession();
-    const guest = router.isReady ? router.query.mode === 'guest' : null;
+    const guest = router.pathname === '/onboarding/guest';
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (status === 'loading' || !router.isReady) return;
+        if (status === 'loading') return;
         if (guest) return;
         if (!session) { router.replace('/login'); return; }
-        if ((session as {onboarded?: boolean}).onboarded) { router.replace('/'); }
+        if (session.user?.onboarded) {
+            if (typeof window !== 'undefined' && window.history.length > 1) router.back();
+            else router.replace('/');
+        }
     }, [status, session, guest, router]);
 
     // ── Step navigation ──
     const [step, setStep] = useState<OnboardingStep>(0);
 
     useEffect(() => {
-        if (guest === null) return;
         setStep(guest ? 0 : 1);
     }, [guest]);
 
@@ -98,6 +101,7 @@ const OnboardingPage: NextPage = () => {
 
     // ── Step 5 ──
     const [finalError, setFinalError] = useState('');
+    const [showSetupLayer, setShowSetupLayer] = useState(false);
 
     // ── Computed ──
     const realShopTypes = shopTypes.filter((t): t is ShopType => t !== 'etc');
@@ -272,6 +276,10 @@ const OnboardingPage: NextPage = () => {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
+                if (res.status === 409) {
+                    setShowSetupLayer(true);
+                    return;
+                }
                 setFinalError(data.error ?? '오류가 발생했습니다.');
                 return;
             }
@@ -644,9 +652,32 @@ const OnboardingPage: NextPage = () => {
                     </StyledStepBody>
                 )}
             </StyledCard>
+            {showSetupLayer && (
+                <StyledConfirmOverlay onClick={() => router.replace('/')}>
+                    <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
+                        <StyledHeader><h3>이미 설정된 매장</h3></StyledHeader>
+                        <StyledSetupLayerText>
+                            이미 디자이너·서비스가 등록된 매장입니다.<br />
+                            온보딩을 다시 진행할 수 없습니다.
+                        </StyledSetupLayerText>
+                        <StyledFooter>
+                            <StyledActionButton type="button" $primary onClick={() => router.replace('/')}>
+                                홈으로
+                            </StyledActionButton>
+                        </StyledFooter>
+                    </StyledConfirmModal>
+                </StyledConfirmOverlay>
+            )}
         </StyledPage>
     );
 };
+
+const StyledSetupLayerText = styled.p`
+    margin: 0 0 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--dark-gray-color);
+`;
 
 export default OnboardingPage;
 

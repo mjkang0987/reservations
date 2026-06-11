@@ -28,7 +28,7 @@ export default function LayoutComponent({children}: NodeType) {
     const router = useRouter();
 
     const isLoginPage = router.pathname === '/login';
-    const isOnboardingPage = router.pathname === '/onboarding';
+    const isOnboardingPage = router.pathname.startsWith('/onboarding');
 
     const [loading, setLoading] = useState(false);
     const aside = useCalendarStore((s) => s.aside);

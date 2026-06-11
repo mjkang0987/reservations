@@ -20,9 +20,8 @@ export default auth((req) => {
         }
     }
 
-    if (onboarded && pathname.startsWith('/onboarding')) {
-        return Response.redirect(new URL('/', req.url));
-    }
+    // 온보딩된 사용자가 온보딩 경로로 진입하면 페이지 가드가 이전 페이지로 돌려보냄
+    // (미들웨어는 고정 URL로만 보낼 수 있어 '이전 페이지' 처리를 클라이언트 가드에 위임)
 });
 
 export const config = {

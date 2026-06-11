@@ -25,6 +25,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const storeId = session.storeId;
 
+    // 이미 디자이너/서비스가 등록된 매장이면 재온보딩을 거부 (기존 데이터 삭제 방지)
+    const [designerCount, serviceCount] = await Promise.all([
+        prisma.designer.count({where: {storeId}}),
+        prisma.service.count({where: {storeId}}),
+    ]);
+    if (designerCount > 0 || serviceCount > 0) {
+        return res.status(409).json({error: '이미 설정된 매장입니다.', code: 'ALREADY_SETUP'});
+    }
+
     await prisma.$transaction(async (tx) => {
         await tx.store.update({
             where: {id: storeId},
@@ -51,8 +60,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         await tx.designer.deleteMany({where: {storeId}});
         await tx.designer.createMany({
-            data: designersList.map((d: {name: string; color?: string | null}) => ({
+            data: designersList.map((d: {name: string; color?: string | null}, index: number) => ({
                 storeId,
+                legacyId: index + 1,
                 name: String(d.name ?? '').trim() || '원장',
                 status: 'active',
                 color: d.color ?? null,
