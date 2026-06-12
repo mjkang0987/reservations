@@ -20,6 +20,7 @@ CREATE TYPE "DesignerStatus" AS ENUM ('active', 'on_leave', 'resigned');
 CREATE TABLE "Store" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "onboarded" BOOLEAN NOT NULL DEFAULT false,
     "categoryBaseColorsJson" JSONB NOT NULL DEFAULT '{}',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
