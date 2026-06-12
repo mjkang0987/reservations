@@ -6,26 +6,26 @@ import type {Customer, CustomerMemoTag, PointHistoryEntry} from '../../../utils/
 import type {Reservation, ReservationMap} from '../../../utils/reservations';
 
 import {
-    OVERLAY_Z_INDEX,
-    StyledOverlay,
-    StyledDetail,
     StyledHeader,
     useDialogAccessibility,
     useLayerInstanceId,
-    scrollHintStyle,
-    scrollContentStyle,
 } from './ModalStyles';
 
 import {buildDesignerColorMap, buildDesignerNameMap} from '../../../utils/designers';
 import {buildServiceColorMap, formatPrice} from '../../../utils/services';
-import {formatTel, toCustomerMap, POINT_HISTORY_LABELS} from '../../../utils/customers';
+import {formatTel, toCustomerMap} from '../../../utils/customers';
 import type {Customer as CustomerType} from '../../../utils/customers';
 import {useCalendarStore} from '../../../store/calendarStore';
-import {CloseIconButton} from '../../ui/CloseIconButton';
-import {CustomerReservationCards} from '../../ui/CustomerReservationCards';
-import {ColorTag} from '../../ui/ColorTag';
-import {ColorPickerButton} from '../../ui/ColorPickerButton';
 import {useToastStore} from '../../../store/toastStore';
+import {CustomerReservationCards} from '../../ui/CustomerReservationCards';
+import {
+    CustomerMemoTagSection,
+    CustomerPointHistoryModal,
+    CustomerUnmergeModal,
+    MEMO_TAG_COLORS,
+    PointHistoryItem,
+    type MergeHistorySummary,
+} from './CustomerDetailSections';
 import {
     StyledCustomerOverlay,
     StyledCustomerDetail,
@@ -38,39 +38,14 @@ import {
     StyledNoshowCount,
     StyledEditFields,
     StyledPointInfo,
-    StyledNotesSection,
-    StyledNoteList,
-    StyledNoteItem,
-    StyledNoteEditor,
     StyledReservationSection,
     StyledPointHistorySection,
     StyledPointHistoryHeader,
     StyledPointHistoryMoreButton,
-    StyledPointHistoryOverlay,
-    StyledPointHistoryModal,
-    StyledPointHistoryModalContent,
-    StyledAddressMemoSection,
-    StyledAddressMemoList,
-    StyledTagEditor,
-    StyledTagInputRow,
-    StyledColorRow,
-    StyledAddressMemoItem,
-    StyledTagRemoveButton,
-    StyledEditError,
-    StyledPointHistoryList,
-    StyledPointHistoryItem,
-    StyledPointHistoryTop,
-    StyledPointHistoryMeta,
     StyledEmptyText,
+    StyledPointHistoryList,
     StyledReservationScroll,
     StyledMoreButton,
-    StyledUnmergeOverlay,
-    StyledUnmergeModal,
-    StyledUnmergeContent,
-    StyledUnmergeMessage,
-    StyledUnmergeList,
-    StyledUnmergeItem,
-    StyledUnmergeFooter,
 } from './CustomerDetail.styles';
 
 const PAGE_SIZE = 5;
@@ -81,8 +56,6 @@ interface CustomerDetailProps {
     onClose: () => void;
     onReservationClick?: (reservation: Reservation) => void;
 }
-
-const MEMO_TAG_COLORS = ['#4285F4', '#34A853', '#EA4335', '#FBBC04', '#FF6D01', '#46BDC6', '#9334E6', '#E91E8C'];
 
 type CustomerEditForm = {
     name: string;
@@ -106,7 +79,7 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
     const [newTagText, setNewTagText] = useState('');
     const [selectedTagColor, setSelectedTagColor] = useState(MEMO_TAG_COLORS[0]);
     const [editError, setEditError] = useState('');
-    const [mergeHistories, setMergeHistories] = useState<Array<{id: string; sourceName: string; sourceTel: string; mergedAt: string}>>([]);
+    const [mergeHistories, setMergeHistories] = useState<MergeHistorySummary[]>([]);
     const [isUnmergeConfirm, setIsUnmergeConfirm] = useState(false);
     const [isUnmerging, setIsUnmerging] = useState(false);
     const serviceCatalog = useCalendarStore((s) => s.serviceCatalog);
@@ -341,58 +314,19 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                         </dl>
                     )}
                 </StyledInfo>
-                <StyledAddressMemoSection>
-                    <h4>고객 메모</h4>
-                    {isEditing && (
-                        <StyledTagEditor>
-                            <StyledTagInputRow>
-                                <input
-                                    id="customer-edit-memo-tag"
-                                    type="text"
-                                    value={newTagText}
-                                    placeholder="메모 태그 입력"
-                                    onChange={(e) => {
-                                        setNewTagText(e.target.value);
-                                        setEditError('');
-                                    }}
-                                />
-                                <button type="button"
-                                        onClick={handleAddTag}>추가
-                                </button>
-                            </StyledTagInputRow>
-                            <StyledColorRow>
-                                {MEMO_TAG_COLORS.map((color) => (
-                                    <ColorPickerButton
-                                        key={color}
-                                        type="button"
-                                        $selected={selectedTagColor === color}
-                                        $color={color}
-                                        $size={22}
-                                        onClick={() => setSelectedTagColor(color)}
-                                    />
-                                ))}
-                            </StyledColorRow>
-                        </StyledTagEditor>
-                    )}
-                    {displayMemoTags.length === 0 ? (
-                        <StyledEmptyText>등록된 메모가 없습니다.</StyledEmptyText>
-                    ) : (
-                        <StyledAddressMemoList>
-                            {displayMemoTags.map((tag) => (
-                                <StyledAddressMemoItem key={`${customer.id}-${tag.text}`}
-                                                       $color={tag.color}>
-                                    <span>{tag.text}</span>
-
-                                    {isEditing && (
-                                        <StyledTagRemoveButton type="button"
-                                                               onClick={() => handleRemoveTag(tag.text)}>삭제</StyledTagRemoveButton>
-                                    )}
-                                </StyledAddressMemoItem>
-                            ))}
-                        </StyledAddressMemoList>
-                    )}
-                    {isEditing && editError && <StyledEditError>{editError}</StyledEditError>}
-                </StyledAddressMemoSection>
+                <CustomerMemoTagSection customerId={customer.id}
+                                        isEditing={isEditing}
+                                        tags={displayMemoTags}
+                                        newTagText={newTagText}
+                                        selectedTagColor={selectedTagColor}
+                                        editError={editError}
+                                        onNewTagTextChange={(value) => {
+                                            setNewTagText(value);
+                                            setEditError('');
+                                        }}
+                                        onSelectTagColor={setSelectedTagColor}
+                                        onAddTag={handleAddTag}
+                                        onRemoveTag={handleRemoveTag} />
                 <StyledPointHistorySection>
                     <StyledPointHistoryHeader>
                         <h4>적립금 이력 ({pointHistories.length})</h4>
@@ -406,20 +340,7 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                         <StyledEmptyText>적립금 이력이 없습니다.</StyledEmptyText>
                     ) : (
                         <StyledPointHistoryList>
-                            <StyledPointHistoryItem
-                                $clickable={!!pointHistories[0].relatedReservationId}
-                                onClick={() => handlePointHistoryClick(pointHistories[0])}
-                            >
-                                <StyledPointHistoryTop>
-                                    <strong>{POINT_HISTORY_LABELS[pointHistories[0].type]}</strong>
-                                    <span>{pointHistories[0].delta > 0 ? '+' : ''}{formatPrice(pointHistories[0].delta)}</span>
-                                </StyledPointHistoryTop>
-                                <StyledPointHistoryMeta>
-                                    <span>{pointHistories[0].description}</span>
-                                    <span>잔액 {formatPrice(pointHistories[0].balance)}</span>
-                                    <span>{pointHistories[0].createdAt.slice(0, 16).replace('T', ' ')}</span>
-                                </StyledPointHistoryMeta>
-                            </StyledPointHistoryItem>
+                            <PointHistoryItem entry={pointHistories[0]} onClick={handlePointHistoryClick} />
                         </StyledPointHistoryList>
                     )}
                 </StyledPointHistorySection>
@@ -442,68 +363,16 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
         </StyledCustomerDetail>
     </StyledCustomerOverlay>
     {isPointHistoryOpen && pointHistories.length > 0 && (
-        <StyledPointHistoryOverlay onClick={() => setIsPointHistoryOpen(false)}>
-            <StyledPointHistoryModal onClick={(e) => e.stopPropagation()}>
-                <StyledHeader>
-                    <h3>적립금 이력 ({pointHistories.length})</h3>
-                    <CloseIconButton onClick={() => setIsPointHistoryOpen(false)} />
-                </StyledHeader>
-                <StyledPointHistoryModalContent>
-                    <StyledPointHistoryList>
-                        {pointHistories.map((history) => (
-                            <StyledPointHistoryItem
-                                key={history.id}
-                                $clickable={!!history.relatedReservationId}
-                                onClick={() => handlePointHistoryClick(history)}
-                            >
-                                <StyledPointHistoryTop>
-                                    <strong>{POINT_HISTORY_LABELS[history.type]}</strong>
-                                    <span>{history.delta > 0 ? '+' : ''}{formatPrice(history.delta)}</span>
-                                </StyledPointHistoryTop>
-                                <StyledPointHistoryMeta>
-                                    <span>{history.description}</span>
-                                    <span>잔액 {formatPrice(history.balance)}</span>
-                                    <span>{history.createdAt.slice(0, 16).replace('T', ' ')}</span>
-                                </StyledPointHistoryMeta>
-                            </StyledPointHistoryItem>
-                        ))}
-                    </StyledPointHistoryList>
-                </StyledPointHistoryModalContent>
-            </StyledPointHistoryModal>
-        </StyledPointHistoryOverlay>
+        <CustomerPointHistoryModal pointHistories={pointHistories}
+                                   onEntryClick={handlePointHistoryClick}
+                                   onClose={() => setIsPointHistoryOpen(false)} />
     )}
     {isUnmergeConfirm && mergeHistories.length > 0 && (
-        <StyledUnmergeOverlay onClick={() => setIsUnmergeConfirm(false)}>
-            <StyledUnmergeModal onClick={(e) => e.stopPropagation()}>
-                <StyledHeader>
-                    <h3>고객 병합 분리</h3>
-                    <CloseIconButton onClick={() => setIsUnmergeConfirm(false)} />
-                </StyledHeader>
-                <StyledUnmergeContent>
-                    <StyledUnmergeMessage>
-                        다음 고객이 <strong>{customer.name}</strong>에 병합되었습니다. 분리하면 원래 고객이 복원됩니다.
-                    </StyledUnmergeMessage>
-                    <StyledUnmergeList>
-                        {mergeHistories.map((h) => (
-                            <StyledUnmergeItem key={h.id}>
-                                <strong>{h.sourceName}</strong>
-                                <span>{h.sourceTel ? formatTel(h.sourceTel) : '연락처 없음'}</span>
-                                <span className="date">{h.mergedAt.slice(0, 10).replace(/-/g, '.')}</span>
-                            </StyledUnmergeItem>
-                        ))}
-                    </StyledUnmergeList>
-                </StyledUnmergeContent>
-                <StyledUnmergeFooter>
-                    <StyledHeaderActionButton type="button"
-                                              onClick={() => setIsUnmergeConfirm(false)}
-                                              disabled={isUnmerging}>취소</StyledHeaderActionButton>
-                    <StyledHeaderActionButton type="button"
-                                              $danger
-                                              onClick={handleUnmerge}
-                                              disabled={isUnmerging}>{isUnmerging ? '분리 중...' : '분리'}</StyledHeaderActionButton>
-                </StyledUnmergeFooter>
-            </StyledUnmergeModal>
-        </StyledUnmergeOverlay>
+        <CustomerUnmergeModal customerName={customer.name}
+                              histories={mergeHistories}
+                              isUnmerging={isUnmerging}
+                              onConfirm={handleUnmerge}
+                              onClose={() => setIsUnmergeConfirm(false)} />
     )}
     </>, modalRoot);
 };

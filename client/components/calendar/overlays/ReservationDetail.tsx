@@ -52,6 +52,12 @@ import {
     getPaymentEntries,
     getPaymentEntryDrafts,
     getPointAmount,
+    PAYMENT_METHOD_OPTIONS,
+    MODE_LABELS,
+    resolveReservationPrice,
+    buildReservationFormState,
+    buildDraftReservation,
+    buildSyncedPaidReservation,
 } from './reservationDetailUtils';
 import {
     StyledReservationOverlay,
@@ -60,18 +66,6 @@ import {
     StyledRestoreBody,
     StyledRestoreMessage,
 } from './ReservationDetail.styles';
-
-const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['현금', '현금+현금영수증', '카드', '네이버페이', '네이버 예약금', '지역화폐', '지역화폐+현금영수증', '상품권', '적립금', '할인'];
-
-const MODE_LABELS: Partial<Record<ReservationDetailMode, string>> = {
-    editing: '예약 수정',
-    confirming: '변경 확인',
-    pastConfirm: '변경 확인',
-    completing: '예약 완료',
-    cancelling: '예약 취소',
-    noshow: '노쇼 처리',
-    payment: '결제 처리',
-};
 
 interface ReservationDetailProps {
     reservation: Reservation;
@@ -83,66 +77,6 @@ interface ReservationDetailProps {
     onUpdate: (prev: Reservation, updated: Reservation) => void;
     onCancel: (reservation: Reservation, status?: ReservationStatus) => void;
     onRestore: (reservation: Reservation) => void;
-}
-
-function resolveReservationPrice(reservation: Reservation): number {
-    return reservation.price ?? sumPrice(parseServiceString(reservation.service));
-}
-
-function buildReservationFormState(reservation: Reservation): ReservationDetailFormState {
-    return {
-        date: reservation.date,
-        startTime: reservation.startTime,
-        endTime: reservation.endTime,
-        service: reservation.service,
-        designerId: reservation.designerId ?? 0,
-        price: resolveReservationPrice(reservation),
-        memo: reservation.memo ?? '',
-        channel: reservation.channel ?? '전화예약',
-    };
-}
-
-function buildDraftReservation(reservation: Reservation, form: ReservationDetailFormState): Reservation {
-    return {
-        ...reservation,
-        date: form.date,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        service: form.service,
-        price: form.price,
-        memo: form.memo,
-        ...(form.designerId ? {designerId: form.designerId} : {designerId: undefined}),
-    };
-}
-
-function buildSyncedPaidReservation(reservation: Reservation, nextReservation: Reservation): Reservation {
-    const paymentEntries = getPaymentEntries(reservation);
-
-    if (paymentEntries.length === 1) {
-        return {
-            ...nextReservation,
-            paymentEntries: [{
-                ...paymentEntries[0],
-                amount: nextReservation.price ?? 0,
-            }],
-            paymentMethod: paymentEntries[0].method,
-            paymentCompleted: true,
-        };
-    }
-
-    if (paymentEntries.length === 0 && reservation.paymentCompleted && reservation.paymentMethod) {
-        return {
-            ...nextReservation,
-            paymentEntries: [{
-                method: reservation.paymentMethod,
-                amount: nextReservation.price ?? 0,
-            }],
-            paymentMethod: reservation.paymentMethod,
-            paymentCompleted: true,
-        };
-    }
-
-    return nextReservation;
 }
 
 export const ReservationDetail = ({
