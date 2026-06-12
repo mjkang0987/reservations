@@ -48,8 +48,22 @@ class ReservationDocument extends Document {
                     <meta name="twitter:description" content={SITE_TWITTER_DESCRIPTION} />
                     <meta name="twitter:card" content="summary" />
                     <meta name="twitter:image" content={SITE_OG_IMAGE} />
-                    <link rel="shortcut icon"
-                          href="/favicon/favicon.ico" />
+                    <link rel="icon"
+                          href="/favicon/favicon.ico"
+                          sizes="any" />
+                    <link rel="icon"
+                          type="image/png"
+                          sizes="32x32"
+                          href="/favicon/favicon32x32.png" />
+                    <link rel="icon"
+                          type="image/png"
+                          sizes="16x16"
+                          href="/favicon/favicon16x16.png" />
+                    <link rel="apple-touch-icon"
+                          sizes="180x180"
+                          href="/favicon/apple-icon-180x180.png" />
+                    <link rel="manifest"
+                          href="/favicon/manifest.json" />
                     <script async
                             src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
                             crossOrigin="anonymous" />
