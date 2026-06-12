@@ -79,6 +79,11 @@ const StyledOverlapButton = styled.button`
     box-sizing: border-box;
     box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
 
+    @media (max-width: 640px) {
+        align-items: flex-start;
+        padding: 4px 2px;
+    }
+
     strong {
         font-size: var(--small-font);
         font-weight: 700;

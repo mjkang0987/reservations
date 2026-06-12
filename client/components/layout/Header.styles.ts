@@ -72,7 +72,6 @@ export const StyledToolRow = styled.div`
     @media (max-width: 640px) {
         width: 100%;
         padding: 4px 2px;
-        border-top: 1px solid var(--light-gray-color);
     }
 `;
 

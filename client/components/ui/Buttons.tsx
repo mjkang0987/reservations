@@ -63,9 +63,9 @@ export const ButtonCircle: React.FC<Props> = ({children, ...props}) => {
 const StyledReserveButton = styled.button <Props>`
     position: ${props => props.$position ? props.$position: ''};
     top: ${props => props.$top}px;
-    left: 5px;
+    left: 3px;
     right: 5px;
-    width: calc(100% - 10px);
+    width: calc(100% - 6px);
     height: ${props => props.$height}px;
     max-height: ${props => props.$height}px;
     background-color: ${props => `${props.$color}12`};
@@ -84,7 +84,7 @@ const StyledReserveButton = styled.button <Props>`
     transition: max-height 0.2s ease, box-shadow 0.2s ease;
     text-align: left;
     @media (max-width: 640px) {
-        padding: 10px 2px;
+        padding: 4px 2px;
     }
 
     .highlight {
