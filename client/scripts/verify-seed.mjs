@@ -1,8 +1,12 @@
-import {PrismaClient} from '../prisma/generated/prisma/client.js';
+import 'dotenv/config';
+
+import {PrismaPg} from '@prisma/adapter-pg';
+
+import {PrismaClient} from '../prisma/generated/prisma/client.ts';
 import fs from 'fs/promises';
 import path from 'path';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({adapter: new PrismaPg({connectionString: process.env.DATABASE_URL})});
 const DEFAULT_STORE_KEY = 'default-store';
 const SEED_DATA_DIR = '../server/prisma/seed-data';
 

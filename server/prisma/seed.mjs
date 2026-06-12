@@ -1,8 +1,16 @@
-import {PrismaClient} from '../../client/prisma/generated/prisma/client.js';
+import {createRequire} from 'node:module';
 import fs from 'fs/promises';
 import path from 'path';
 
-const prisma = new PrismaClient();
+import {PrismaClient} from '../../client/prisma/generated/prisma/client.ts';
+
+// 이 파일은 패키지 루트(client) 밖에 있어 bare import가 해석되지 않으므로
+// client 패키지 컨텍스트로 의존성을 로드한다 (Prisma 7은 driver adapter 필수).
+const require = createRequire(new URL('../../client/package.json', import.meta.url));
+require('dotenv').config();
+const {PrismaPg} = require('@prisma/adapter-pg');
+
+const prisma = new PrismaClient({adapter: new PrismaPg({connectionString: process.env.DATABASE_URL})});
 const DEFAULT_STORE_KEY = 'default-store';
 const SEED_OWNER_EMAIL = process.env.SEED_OWNER_EMAIL;
 const SEED_OWNER_NAME = process.env.SEED_OWNER_NAME ?? 'Owner';
@@ -253,6 +261,7 @@ async function seedOwnerMembership() {
         create: {
             email: SEED_OWNER_EMAIL,
             name: SEED_OWNER_NAME,
+            nickname: SEED_OWNER_EMAIL.split('@')[0],
         },
     });
 

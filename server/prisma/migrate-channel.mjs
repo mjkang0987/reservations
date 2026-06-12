@@ -1,6 +1,12 @@
-import {PrismaClient} from '../../client/prisma/generated/prisma/client.js';
+import {createRequire} from 'node:module';
 
-const prisma = new PrismaClient();
+import {PrismaClient} from '../../client/prisma/generated/prisma/client.ts';
+
+const require = createRequire(new URL('../../client/package.json', import.meta.url));
+require('dotenv').config();
+const {PrismaPg} = require('@prisma/adapter-pg');
+
+const prisma = new PrismaClient({adapter: new PrismaPg({connectionString: process.env.DATABASE_URL})});
 
 async function main() {
     const result = await prisma.reservation.updateMany({
