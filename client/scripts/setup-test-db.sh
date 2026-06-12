@@ -11,4 +11,4 @@ export TEST_DB=1
 
 cd "$(dirname "$0")/.."
 pnpm exec prisma migrate deploy
-node prisma/seed.mjs
+node ../server/prisma/seed.mjs

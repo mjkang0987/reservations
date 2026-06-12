@@ -4,7 +4,7 @@ import path from 'path';
 
 const prisma = new PrismaClient();
 const DEFAULT_STORE_KEY = 'default-store';
-const SEED_DATA_DIR = 'prisma/seed-data';
+const SEED_DATA_DIR = '../server/prisma/seed-data';
 
 async function readJson(relativePath) {
     const absolutePath = path.join(process.cwd(), relativePath);

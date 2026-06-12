@@ -1,4 +1,4 @@
-import {PrismaClient} from './generated/prisma/client.js';
+import {PrismaClient} from '../../client/prisma/generated/prisma/client.js';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 const DEFAULT_STORE_KEY = 'default-store';
 const SEED_OWNER_EMAIL = process.env.SEED_OWNER_EMAIL;
 const SEED_OWNER_NAME = process.env.SEED_OWNER_NAME ?? 'Owner';
-const SEED_DATA_DIR = 'prisma/seed-data';
+const SEED_DATA_DIR = '../server/prisma/seed-data';
 const MAX_INT_32 = 2147483647;
 
 function mapDesignerStatus(status) {
