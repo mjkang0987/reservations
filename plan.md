@@ -1,7 +1,7 @@
 # 게스트 → 계정 데이터 마이그레이션 (병합 플로우) 계획
 ## 상태 확인 후 완료되었으면 스킵
 
-> **진행 현황 (2026-06-12)**: 서버 단계 일부 구현됨 — `/api/migrate-local`(전체 데이터 이전 + 409/confirm), `/api/designers/merge`(디자이너 병합). 클라이언트 확인 레이어·병합 UI·로컬 정리 연결은 미완.
+> **진행 현황 (2026-06-12, 완료)**: 서버(`/api/migrate-local`, `/api/designers/merge`) + 클라이언트(`GuestMigrationLayer` 확인 레이어·디자이너 병합 레이어·로컬 정리, `_app.tsx` 분기)까지 전부 구현 확인 → **스킵 처리**.
 
 ## 배경 / 문제
 - 게스트 모드는 모든 데이터를 `localStorage`(`takeaseat.local-db.v1`)에 저장.
@@ -64,6 +64,8 @@
 ---
 
 # 폴더 경계 정리 계획 (client / server)
+
+> **진행 현황 (2026-06-12, 완료)**: Phase 1(`a98f938`)·Phase 2(`a413b37`) 완료. 단, generated 클라이언트는 빌드 산출물이라 `client/prisma/generated`에 유지 — 패키지 루트(client) 밖으로 옮기면 `@prisma/client/runtime` 해석이 깨짐(tsc·node 시드 모두). DB 연결이 필요한 검증(migrate status diff, 시드, 카운트 비교)은 원격 환경 제약으로 미실행 — 로컬에서 1회 확인 권장. 추가로 nodemailer 의존성 누락·server/ bare import 해석 문제 수정(`f67c680`)으로 `next build` 그린.
 
 ## 배경 / 문제
 이 repo는 단일 패키지(패키지 루트 = `client/`, `server/`는 Next 앱이 import하는 소스 폴더)라서 백엔드 자산이 client 쪽에 섞여 있음.
@@ -173,6 +175,8 @@ psql "$DATABASE_URL" -c "(위 카운트 쿼리 재실행)" | diff /tmp/counts-be
 Phase 1(API 이전) 먼저 — 위험이 낮고 즉시 경계가 깔끔해짐. Phase 2(Prisma)는 배포 런북 확인 후 별도 진행.
 
 # 구글 계정 email 사용 연동 추가
+
+> **진행 현황 (2026-06-12, 완료)**: `30cf145`. 구글 로그인은 로그인 전용(스코프 축소), Gmail 연동은 별도 플로우(`/api/gmail/connect→oauth-callback`, GmailConnection 테이블, 계정 선택 화면 강제)로 분리. 실패 시 `/settings/naver?gmail=error` 리다이렉트 + 안내 레이어. **배포 전 필수**: Google Cloud 콘솔 OAuth 클라이언트에 리다이렉트 URI `{origin}/api/gmail/oauth-callback` 등록, DB 마이그레이션(`202606120001_gmail_connection`) 적용.
 ## 시나리오
 ### 구글 게정 로그인
 1. 로그인 기능만 사용 
@@ -190,5 +194,7 @@ Phase 1(API 이전) 먼저 — 위험이 낮고 즉시 경계가 깔끔해짐. P
 
 
 # 패스 잘못 진입 시 리다이렉트 혹은 에러 페이지 구성
+
+> **진행 현황 (2026-06-12, 완료)**: 404/500 안내 페이지는 기존(aa3be11) 디자인 적용 확인. 404에 5초 카운트다운 자동 홈 리다이렉트 추가(`3938299`). 잘못된 설정 탭 경로는 기존 `getServerSideProps` 리다이렉트로 처리됨.
 - 디자인 가이드 맞춰서 안내 페이지 제작
 - 올바른 페이지로 리다이렉트 기능 구현 
