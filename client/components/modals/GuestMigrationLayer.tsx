@@ -1,7 +1,8 @@
 import React, {useCallback, useState} from 'react';
 
-import styled, {keyframes} from 'styled-components';
+import styled from 'styled-components';
 
+import {Spinner} from '../ui/Spinner';
 import type {LocalDbSnapshot} from '../../lib/local-db';
 import {createDefaultLocalDbSnapshot, saveLocalDbSnapshot} from '../../lib/local-db';
 import type {Designer} from '../../features/designers/model';
@@ -140,7 +141,7 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
             <StyledConfirmOverlay>
                 <StyledConfirmModal>
                     <StyledSpinnerWrap>
-                        <StyledSpinner />
+                        <Spinner $size={32} />
                         <p>데이터를 병합하는 중...</p>
                     </StyledSpinnerWrap>
                 </StyledConfirmModal>
@@ -263,10 +264,6 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
     );
 }
 
-const spin = keyframes`
-    to { transform: rotate(360deg); }
-`;
-
 const StyledSpinnerWrap = styled.div`
     display: flex;
     flex-direction: column;
@@ -279,15 +276,6 @@ const StyledSpinnerWrap = styled.div`
         font-size: 13px;
         color: var(--dark-gray-color2);
     }
-`;
-
-const StyledSpinner = styled.div`
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--light-gray-color);
-    border-top-color: var(--brand-color);
-    border-radius: 50%;
-    animation: ${spin} 0.6s linear infinite;
 `;
 
 const StyledBody = styled.div`

@@ -4,11 +4,12 @@ import {createPortal} from 'react-dom';
 import Link from 'next/link';
 import {useSession} from 'next-auth/react';
 
-import styled, {keyframes} from 'styled-components';
+import styled from 'styled-components';
 
 import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledModalContent} from '../calendar/overlays/ModalStyles';
 import {actionButtonStyle} from '../settings/settings-styles';
 import {LabelBadge} from '../ui/LabelBadge';
+import {LoadingOverlay} from '../ui/LoadingOverlay';
 import {ROLE_LABELS} from '../../utils/labels';
 
 type StoreEntry = {
@@ -104,10 +105,7 @@ export function StoreSwitcher({fallbackName, onNavigate}: StoreSwitcherProps) {
             )}
 
             {switching && typeof document !== 'undefined' && document.getElementById('modal-root') && createPortal(
-                <StyledSwitchOverlay>
-                    <StyledSwitchSpinner />
-                    <StyledSwitchText>매장 전환 중...</StyledSwitchText>
-                </StyledSwitchOverlay>,
+                <LoadingOverlay backdrop="solid" text="매장 전환 중..." zIndex={10000} />,
                 document.getElementById('modal-root')!,
             )}
         </StyledRow>
@@ -194,37 +192,6 @@ const StyledCheckIcon = styled.svg`
     stroke-width: 2.5;
     stroke-linecap: round;
     stroke-linejoin: round;
-`;
-
-const switchSpin = keyframes`
-    to { transform: rotate(360deg); }
-`;
-
-const StyledSwitchOverlay = styled.div`
-    position: fixed;
-    inset: 0;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    background: var(--white-color);
-`;
-
-const StyledSwitchSpinner = styled.div`
-    width: 36px;
-    height: 36px;
-    border: 3px solid var(--light-gray-color);
-    border-top-color: var(--brand-color);
-    border-radius: 50%;
-    animation: ${switchSpin} 0.6s linear infinite;
-`;
-
-const StyledSwitchText = styled.span`
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--dark-gray-color);
 `;
 
 const StyledFallbackLink = styled(Link)`
