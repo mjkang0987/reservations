@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import {NewCustomerBadge} from '../../ui/NewCustomerBadge';
 import {DesignerLabel} from '../../ui/DesignerLabel';
 import {LabelBadge} from '../../ui/LabelBadge';
+import {NaverBookingInfo} from '../../ui/NaverBookingInfo';
 import {ServiceChipList} from '../../ui/ServiceChip';
 import type {CustomerMap} from '../../../utils/customers';
 import {formatTel} from '../../../utils/customers';
@@ -142,15 +143,7 @@ export function ReservationViewSection({
                     <dd>
                         {reservation.naverBookingId ? (
                             <>
-                                <StyledBookingInfo>
-                                    <StyledPlatformTag>네이버예약</StyledPlatformTag>
-                                    <span>{reservation.naverBookingId}</span>
-                                    {reservation.naverBookingUrl && (
-                                        <StyledBookingLink href={reservation.naverBookingUrl} target="_blank" rel="noopener noreferrer">
-                                            바로가기 ↗
-                                        </StyledBookingLink>
-                                    )}
-                                </StyledBookingInfo>
+                                <NaverBookingInfo reservation={reservation} />
                                 <StyledBookingNotice>
                                     네이버예약의 실제 변경/취소는 스마트플레이스 통해서 가능합니다.
                                 </StyledBookingNotice>
@@ -283,20 +276,6 @@ const StyledNaverLogo = styled.svg`
     flex-shrink: 0;
 `;
 
-const StyledBookingInfo = styled.span`
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-`;
-
-const StyledPlatformTag = styled(LabelBadge).attrs({
-    $tone: 'brand',
-    $shape: 'soft',
-    $size: 'sm',
-})`
-    font-size: 10px;
-`;
-
 const StyledChannelTag = styled(LabelBadge).attrs({
     $tone: 'info',
     $shape: 'soft',
@@ -305,18 +284,6 @@ const StyledChannelTag = styled(LabelBadge).attrs({
     font-size: 10px;
 `;
 
-const StyledBookingLink = styled.a`
-    font-size: 11px;
-    color: #03C75A;
-    font-weight: 600;
-    text-decoration: none;
-
-    @media (hover: hover) and (pointer: fine) {
-        &:hover {
-            text-decoration: underline;
-        }
-    }
-`;
 
 const StyledHistorySection = styled.div`
     margin-top: 16px;

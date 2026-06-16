@@ -25,6 +25,7 @@ import {
 import {CloseIconButton} from '../ui/CloseIconButton';
 import {LabelBadge} from '../ui/LabelBadge';
 import {ReservationInfoCard} from '../ui/ReservationInfoCard';
+import {NaverBookingInfo} from '../ui/NaverBookingInfo';
 
 interface Props {
     suggestion: MergeSuggestion;
@@ -243,6 +244,9 @@ export const CustomerMergeSuggestionModal = ({
                                                     compactDate
                                                     onClick={handleReservationClick}
                                                 />
+                                                {lastRes.naverBookingId && (
+                                                    <StyledNaverInfo reservation={lastRes} />
+                                                )}
                                             </StyledCardSection>
                                         )}
                                     </StyledExtraInfo>
@@ -411,6 +415,10 @@ const StyledNotes = styled.div`
 
 const StyledCardSection = styled.div`
     cursor: default;
+`;
+
+const StyledNaverInfo = styled(NaverBookingInfo)`
+    margin-top: 6px;
 `;
 
 const StyledGuide = styled.p`
