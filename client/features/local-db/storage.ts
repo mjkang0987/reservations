@@ -56,6 +56,24 @@ export function shouldUseLocalDb(): boolean {
     return !sessionStorage.getItem(AUTH_FLAG_KEY);
 }
 
+const GUEST_TERMS_KEY = 'takeaseat.guest-terms-version';
+
+// 게스트(미로그인) 약관 동의 버전 — 로그인 계정은 DB(User.agreedTermsVersion)에 저장
+export function getGuestTermsVersion(): string | null {
+    if (typeof localStorage === 'undefined') return null;
+    return localStorage.getItem(GUEST_TERMS_KEY);
+}
+
+export function setGuestTermsAgreed(version: string): void {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(GUEST_TERMS_KEY, version);
+}
+
+export function clearGuestTermsAgreed(): void {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.removeItem(GUEST_TERMS_KEY);
+}
+
 export function loadLocalDbSnapshot(): LocalDbSnapshot {
     if (typeof window === 'undefined') {
         return createDefaultLocalDbSnapshot();

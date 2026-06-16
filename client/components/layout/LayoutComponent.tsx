@@ -29,6 +29,10 @@ export default function LayoutComponent({children}: NodeType) {
 
     const isLoginPage = router.pathname === '/login';
     const isOnboardingPage = router.pathname.startsWith('/onboarding');
+    const isBarePage = isLoginPage || isOnboardingPage
+        || router.pathname === '/consent'
+        || router.pathname === '/terms'
+        || router.pathname === '/privacy';
 
     const [loading, setLoading] = useState(false);
     const aside = useCalendarStore((s) => s.aside);
@@ -163,7 +167,7 @@ export default function LayoutComponent({children}: NodeType) {
         });
     }, [currValue, setRouterSlice, view]);
 
-    if (isLoginPage || isOnboardingPage) {
+    if (isBarePage) {
         return <>{children}</>;
     }
 

@@ -163,6 +163,17 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
                 token.onboarded = false;
             }
 
+            // 약관 동의 버전(매 요청 갱신) — 동의 게이트 판정용
+            if (token.userId) {
+                const consentUser = await prisma.user.findUnique({
+                    where: {id: token.userId as string},
+                    select: {agreedTermsVersion: true},
+                });
+                token.termsVersion = consentUser?.agreedTermsVersion ?? undefined;
+            } else {
+                token.termsVersion = undefined;
+            }
+
             return token;
         },
         async session({session, token}) {
@@ -190,6 +201,7 @@ export const {handlers, auth, signIn, signOut} = NextAuth({
                 session.user.role = token.role as 'owner' | 'staff' | undefined;
                 session.user.storeId = token.storeId as string | undefined;
                 session.user.onboarded = token.onboarded as boolean | undefined;
+                session.user.termsVersion = token.termsVersion as string | undefined;
                 session.user.loginError = token.loginError as string | undefined;
                 session.user.pendingMerge = token.pendingMerge;
             }

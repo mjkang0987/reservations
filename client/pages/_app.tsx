@@ -18,11 +18,13 @@ import type {Designer} from '../utils/designers';
 import type {StoreSettings} from '../utils/storeSettings';
 import {groupByDate} from '../utils/reservations';
 import {toCustomerMap} from '../utils/customers';
-import {createDefaultLocalDbSnapshot, loadLocalDbSnapshot, saveLocalDbSnapshot, setAuthenticated, shouldUseLocalDb} from '../lib/local-db';
+import {createDefaultLocalDbSnapshot, getGuestTermsVersion, loadLocalDbSnapshot, saveLocalDbSnapshot, setAuthenticated, shouldUseLocalDb} from '../lib/local-db';
+import {CURRENT_TERMS_VERSION} from '../utils/terms';
 
 import LayoutComponent from '../components/layout/LayoutComponent';
 import {ToastContainer} from '../components/ui/ToastContainer';
 import {GuestMigrationLayer} from '../components/modals/GuestMigrationLayer';
+import {ConfirmDialog} from '../components/ui/ConfirmDialog';
 
 type AppContentProps = Pick<AppProps, 'Component' | 'pageProps'>;
 
@@ -49,7 +51,9 @@ function AppContent({Component, pageProps}: AppContentProps) {
     const [servicesReady, setServicesReady] = useState(false);
     const [designersReady, setDesignersReady] = useState(false);
     const [reservationsReady, setReservationsReady] = useState(false);
+    const [showGuestEntry, setShowGuestEntry] = useState(false);
     const hadSessionRef = useRef(false);
+    const guestEntryHandledRef = useRef(false);
 
     useEffect(() => {
         if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('takeaseat.authenticated') === '1') {
@@ -129,10 +133,59 @@ function AppContent({Component, pageProps}: AppContentProps) {
             });
     }, [hasApiAccess, session]);
 
+    // 미인증(게스트) 진입 처리 — 로그인 계정은 proxy.ts 미들웨어가 처리
+    useEffect(() => {
+        if (status === 'loading' || status === 'authenticated') return;
+        const path = router.pathname;
+
+        if (path === '/login' || path === '/consent' || path === '/terms'
+            || path === '/privacy' || path === '/logout') return;
+
+        // 게스트 시작(온보딩 진입) → 약관 미동의면 동의 먼저
+        if (path.startsWith('/onboarding')) {
+            if (getGuestTermsVersion() !== CURRENT_TERMS_VERSION) {
+                router.replace(`/consent?next=${encodeURIComponent(router.asPath)}`);
+            }
+            return;
+        }
+
+        // 그 외 앱 페이지 첫 진입 (마운트당 1회)
+        if (guestEntryHandledRef.current) return;
+        guestEntryHandledRef.current = true;
+
+        // raw를 직접 읽어 판정 (loadLocalDbSnapshot은 빈 키를 생성하는 부작용이 있어 사용하지 않음)
+        const raw = typeof window !== 'undefined'
+            ? window.localStorage.getItem('takeaseat.local-db.v1')
+            : null;
+        let hasGuestData = false;
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                hasGuestData = parsed.onboarded === true
+                    || (Array.isArray(parsed.customers) && parsed.customers.length > 0)
+                    || (Array.isArray(parsed.reservations) && parsed.reservations.length > 0)
+                    || (Array.isArray(parsed.designers) && parsed.designers.length > 0)
+                    || (Array.isArray(parsed.services) && parsed.services.length > 0);
+            } catch {
+                hasGuestData = false;
+            }
+        }
+
+        if (!hasGuestData) {
+            // 로컬 데이터 없음 → 로그인으로
+            router.replace('/login');
+            return;
+        }
+        // 게스트 이용 데이터 있음 → 로그인 권유 안내
+        setShowGuestEntry(true);
+    }, [status, router]);
+
     useEffect(() => {
         if (status === 'loading') return;
         if (!shouldUseLocalDb()) return;
         if (router.pathname.startsWith('/onboarding') || router.pathname.startsWith('/login')) return;
+        // 약관 미동의 게스트는 동의 게이트가 먼저 처리하도록 양보
+        if (getGuestTermsVersion() !== CURRENT_TERMS_VERSION) return;
 
         if (typeof window === 'undefined') return;
         const raw = window.localStorage.getItem('takeaseat.local-db.v1');
@@ -295,7 +348,8 @@ function AppContent({Component, pageProps}: AppContentProps) {
 
     // 데이터(서비스·디자이너·예약)가 모두 준비될 때까지 오버레이로 가려 새로고침 플래시를 막음.
     // bootDataReady류 상태는 SSR/첫 렌더 모두 false라 하이드레이션 불일치가 없음.
-    const isAuthFlowPage = router.pathname.startsWith('/login') || router.pathname.startsWith('/onboarding');
+    const isAuthFlowPage = router.pathname.startsWith('/login') || router.pathname.startsWith('/onboarding')
+        || router.pathname === '/consent' || router.pathname === '/terms' || router.pathname === '/privacy';
     const isBooting = !isAuthFlowPage && !(servicesReady && designersReady && reservationsReady);
 
     return (
@@ -315,6 +369,24 @@ function AppContent({Component, pageProps}: AppContentProps) {
                     snapshot={migrationData.snapshot}
                     storeName={migrationData.storeName}
                     onFinish={() => setMigrationData(null)}
+                />
+            )}
+            {showGuestEntry && (
+                <ConfirmDialog
+                    title="이전 데이터 불러오기"
+                    message="게스트모드 데이터가 있습니다. 이전 데이터를 불러오시겠습니까?"
+                    confirmLabel="예"
+                    cancelLabel="아니오"
+                    showCloseButton={false}
+                    layerKey="guest-entry"
+                    onConfirm={() => {
+                        setShowGuestEntry(false);
+                        // 약관 미동의 시 동의 먼저 (동의 후 원래 페이지로 복귀하며 로컬데이터 로드)
+                        if (getGuestTermsVersion() !== CURRENT_TERMS_VERSION) {
+                            router.replace(`/consent?next=${encodeURIComponent(router.asPath)}`);
+                        }
+                    }}
+                    onClose={() => { setShowGuestEntry(false); router.replace('/login'); }}
                 />
             )}
             {sessionExpired && (

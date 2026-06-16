@@ -14,6 +14,7 @@ declare module 'next-auth' {
             role?: 'owner' | 'staff';
             storeId?: string;
             onboarded?: boolean;
+            termsVersion?: string;
             loginError?: string;
             pendingMerge?: PendingMergeInfo;
         } & DefaultSession['user'];
@@ -28,6 +29,7 @@ declare module 'next-auth/jwt' {
         storeId?: string;
         preferredStoreId?: string;
         onboarded?: boolean;
+        termsVersion?: string;
         loginError?: string;
         pendingMerge?: PendingMergeInfo;
     }
