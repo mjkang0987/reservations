@@ -11,10 +11,6 @@ const DESIGNER_STATUS_TONE: Record<DesignerStatus, 'success' | 'warning' | 'neut
     '퇴직': 'neutral',
 };
 
-export const StyledConfirmBody = styled.div`
-    padding: 16px 20px;
-`;
-
 export const compactInputStyle = css`
     ${formControlStyle};
 `;

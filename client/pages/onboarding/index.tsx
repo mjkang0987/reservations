@@ -12,7 +12,7 @@ import {createDefaultSchedule, getDesignerColor} from '../../utils/designers';
 import {loadLocalDbSnapshot, saveLocalDbSnapshot} from '../../lib/local-db';
 import type {ServiceItem} from '../../utils/services';
 import {SeoHead} from '../../components/ui/SeoHead';
-import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledFooter, StyledActionButton} from '../../components/calendar/overlays/ModalStyles';
+import {ConfirmDialog} from '../../components/ui/ConfirmDialog';
 import type {OnboardingStep, ExtShopType, LocalDesigner} from '../../components/onboarding/onboarding-types';
 import {DEFAULT_DESIGNER_ID_START, STEP_LABELS} from '../../components/onboarding/onboarding-types';
 import {StyledNavRow, StyledSkipBtn, StyledNextBtn, StyledHighlight} from '../../components/onboarding/onboarding-step-styles';
@@ -57,6 +57,7 @@ const OnboardingPage: NextPage = () => {
 
     const [finalError, setFinalError] = useState('');
     const [showSetupLayer, setShowSetupLayer] = useState(false);
+    const [showSkipConfirm, setShowSkipConfirm] = useState(false);
 
     const realShopTypes = shopTypes.filter((t): t is ShopType => t !== 'etc');
     const skipServiceStep = realShopTypes.length === 0;
@@ -112,6 +113,11 @@ const OnboardingPage: NextPage = () => {
         snapshot.onboarded = true;
         saveLocalDbSnapshot(snapshot);
         router.replace('/');
+    };
+
+    const handleConfirmSkip = () => {
+        setShowSkipConfirm(false);
+        handleSkipOnboarding();
     };
 
     const handleComplete = async () => {
@@ -198,7 +204,7 @@ const OnboardingPage: NextPage = () => {
                         </StyledStep0Desc>
                         <GuestNotice />
                         <StyledNavRow>
-                            <StyledSkipBtn type="button" onClick={handleSkipOnboarding}>건너뛰기</StyledSkipBtn>
+                            <StyledSkipBtn type="button" onClick={() => setShowSkipConfirm(true)}>건너뛰기</StyledSkipBtn>
                             <StyledNextBtn type="button" onClick={() => setStep(1)}>설정 시작</StyledNextBtn>
                         </StyledNavRow>
                     </StyledStepBody>
@@ -271,21 +277,27 @@ const OnboardingPage: NextPage = () => {
                 )}
             </StyledCard>
 
+            {showSkipConfirm && (
+                <ConfirmDialog
+                    title="설정을 건너뛸까요?"
+                    message={'기본 설정 없이 바로 시작합니다.\n서비스·디자이너는 나중에 설정에서 추가할 수 있어요.'}
+                    confirmLabel="건너뛰고 시작"
+                    layerKey="onboarding-skip-confirm"
+                    onConfirm={handleConfirmSkip}
+                    onClose={() => setShowSkipConfirm(false)}
+                />
+            )}
+
             {showSetupLayer && (
-                <StyledConfirmOverlay onClick={() => router.replace('/')}>
-                    <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
-                        <StyledHeader><h3>이미 설정된 매장</h3></StyledHeader>
-                        <StyledSetupLayerText>
-                            이미 디자이너·서비스가 등록된 매장입니다.<br />
-                            온보딩을 다시 진행할 수 없습니다.
-                        </StyledSetupLayerText>
-                        <StyledFooter>
-                            <StyledActionButton type="button" $primary onClick={() => router.replace('/')}>
-                                홈으로
-                            </StyledActionButton>
-                        </StyledFooter>
-                    </StyledConfirmModal>
-                </StyledConfirmOverlay>
+                <ConfirmDialog
+                    title="이미 설정된 매장"
+                    message={'이미 디자이너·서비스가 등록된 매장입니다.\n온보딩을 다시 진행할 수 없습니다.'}
+                    confirmLabel="홈으로"
+                    hideCancel
+                    layerKey="onboarding-setup-exists"
+                    onConfirm={() => router.replace('/')}
+                    onClose={() => router.replace('/')}
+                />
             )}
         </StyledPage>
     );
@@ -382,11 +394,4 @@ const StyledStep0Desc = styled.div`
     line-height: 1.7;
     color: var(--dark-gray-color);
     text-align: center;
-`;
-
-const StyledSetupLayerText = styled.p`
-    margin: 0 0 20px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--dark-gray-color);
 `;

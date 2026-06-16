@@ -1,23 +1,9 @@
-import {createPortal} from 'react-dom';
-
 import styled from 'styled-components';
 
 import type {Reservation} from '../../../utils/reservations';
 
-import {
-    StyledActionButton,
-    StyledArrow,
-    StyledChangeRow,
-    StyledConfirmModal,
-    StyledConfirmOverlay,
-    StyledFooter,
-    StyledHeader,
-    StyledHeaderTitleGroup,
-    StyledNewTime,
-    useDialogAccessibility,
-    useLayerInstanceId,
-} from './ModalStyles';
-import {CloseIconButton} from '../../ui/CloseIconButton';
+import {StyledArrow, StyledChangeRow, StyledNewTime} from './ModalStyles';
+import {ConfirmDialog} from '../../ui/ConfirmDialog';
 
 interface ReservationMoveConfirmModalProps {
     reservation: Reservation;
@@ -34,74 +20,56 @@ export const ReservationMoveConfirmModal = ({
     onClose,
     onConfirm,
 }: ReservationMoveConfirmModalProps) => {
-    const modalRoot = document.getElementById('modal-root');
-    const {layerId, layerDataId} = useLayerInstanceId('reservation-move-confirm');
-    const dialogRef = useDialogAccessibility<HTMLDivElement>(onClose);
-
     const dateChanged = reservation.date !== nextReservation.date;
 
-    if (!modalRoot) return null;
-
-    return createPortal(
-        <StyledConfirmOverlay onClick={onClose}
-                              role="dialog"
-                              aria-modal="true"
-                              aria-label="예약 변경 확인"
-                              id={layerId}
-                              data-layer-id={layerDataId}>
-            <StyledConfirmModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
-                <StyledHeader>
-                    <StyledHeaderTitleGroup>
-                        <h3>예약 변경 전 확인</h3>
-                        <p>이동할 예약 시간을 한 번 더 확인합니다.</p>
-                    </StyledHeaderTitleGroup>
-                    <CloseIconButton onClick={onClose} />
-                </StyledHeader>
-                <StyledConfirmContent>
-                    <dl>
-                        <dt>서비스</dt>
-                        <dd>{reservation.service}</dd>
-                        {customerName && (
-                            <>
-                                <dt>고객</dt>
-                                <dd>{customerName}</dd>
-                            </>
-                        )}
-                        {dateChanged && (
-                            <>
-                                <dt>날짜</dt>
-                                <dd>
-                                    <StyledChangeRow>
-                                        <span>{reservation.date}</span>
-                                        <StyledArrow>→</StyledArrow>
-                                        <span>{nextReservation.date}</span>
-                                    </StyledChangeRow>
-                                </dd>
-                            </>
-                        )}
-                        {!dateChanged && (
-                            <>
-                                <dt>날짜</dt>
-                                <dd>{reservation.date}</dd>
-                            </>
-                        )}
-                        <dt>변경 전</dt>
-                        <dd>
-                            <StyledOldTime>{reservation.startTime} ~ {reservation.endTime}</StyledOldTime>
-                        </dd>
-                        <dt>변경 후</dt>
-                        <dd>
-                            <StyledNewTime>{nextReservation.startTime} ~ {nextReservation.endTime}</StyledNewTime>
-                        </dd>
-                    </dl>
-                </StyledConfirmContent>
-                <StyledFooter>
-                    <StyledActionButton type="button" onClick={onClose}>취소</StyledActionButton>
-                    <StyledActionButton type="button" $primary onClick={onConfirm}>변경</StyledActionButton>
-                </StyledFooter>
-            </StyledConfirmModal>
-        </StyledConfirmOverlay>,
-        modalRoot
+    return (
+        <ConfirmDialog
+            title="예약 변경 전 확인"
+            description="이동할 예약 시간을 한 번 더 확인합니다."
+            ariaLabel="예약 변경 확인"
+            layerKey="reservation-move-confirm"
+            confirmLabel="변경"
+            onConfirm={onConfirm}
+            onClose={onClose}
+        >
+            <StyledConfirmContent>
+                <dl>
+                    <dt>서비스</dt>
+                    <dd>{reservation.service}</dd>
+                    {customerName && (
+                        <>
+                            <dt>고객</dt>
+                            <dd>{customerName}</dd>
+                        </>
+                    )}
+                    {dateChanged ? (
+                        <>
+                            <dt>날짜</dt>
+                            <dd>
+                                <StyledChangeRow>
+                                    <span>{reservation.date}</span>
+                                    <StyledArrow>→</StyledArrow>
+                                    <span>{nextReservation.date}</span>
+                                </StyledChangeRow>
+                            </dd>
+                        </>
+                    ) : (
+                        <>
+                            <dt>날짜</dt>
+                            <dd>{reservation.date}</dd>
+                        </>
+                    )}
+                    <dt>변경 전</dt>
+                    <dd>
+                        <StyledOldTime>{reservation.startTime} ~ {reservation.endTime}</StyledOldTime>
+                    </dd>
+                    <dt>변경 후</dt>
+                    <dd>
+                        <StyledNewTime>{nextReservation.startTime} ~ {nextReservation.endTime}</StyledNewTime>
+                    </dd>
+                </dl>
+            </StyledConfirmContent>
+        </ConfirmDialog>
     );
 };
 
@@ -136,4 +104,3 @@ const StyledOldTime = styled.span`
     color: var(--dark-gray-color2);
     text-decoration: line-through;
 `;
-

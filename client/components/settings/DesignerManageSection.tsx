@@ -1,9 +1,8 @@
 import {useState} from 'react';
-import {createPortal} from 'react-dom';
 
 import {useCalendarStore} from '../../store/calendarStore';
 import {PageHero} from '../ui/PageHero';
-import {StyledConfirmOverlay, StyledDetail, StyledHeader, StyledFooter, StyledActionButton, StyledModalMessage, useDialogAccessibility, useLayerInstanceId} from '../calendar/overlays/ModalStyles';
+import {ConfirmDialog} from '../ui/ConfirmDialog';
 import type {Designer, DesignerStatus} from '../../utils/designers';
 import {WEEKDAY_LABELS, getDesignerColor, getDesignerStatus, getDesignerStatusMeta, splitDesignersByStatus, sortDesigners} from '../../utils/designers';
 import {Dot} from '../ui/Dot';
@@ -11,7 +10,6 @@ import {LabelBadge} from '../ui/LabelBadge';
 import {formControlStyle} from '../ui/FormControls';
 import {StyledEditBtn, StyledDeleteBtn, StyledSaveBtn, StyledCancelBtn, StyledEmpty, StyledServiceFooter} from './settings-styles';
 import {
-    StyledConfirmBody,
     compactInputStyle,
     StyledAddInput,
     StyledDesignerBody,
@@ -47,36 +45,6 @@ import {
 } from './DesignerManageSection.styles';
 
 const DESIGNER_STATUS_OPTIONS: DesignerStatus[] = ['재직', '휴직', '퇴직'];
-
-interface ConfirmDialogProps {
-    message: string;
-    onConfirm: () => void;
-    onClose: () => void;
-}
-
-const ConfirmDialog = ({message, onConfirm, onClose}: ConfirmDialogProps) => {
-    const modalRoot = typeof document !== 'undefined' ? document.getElementById('modal-root') : null;
-    const {layerId, layerDataId} = useLayerInstanceId('designer-confirm');
-    const dialogRef = useDialogAccessibility<HTMLDivElement>(onClose);
-
-    if (!modalRoot) return null;
-
-    return createPortal(
-        <StyledConfirmOverlay onClick={onClose} role="dialog" aria-modal="true" aria-label="확인" id={layerId} data-layer-id={layerDataId}>
-            <StyledDetail ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
-                <StyledHeader><h3>확인</h3></StyledHeader>
-                <StyledConfirmBody>
-                    <StyledModalMessage>{message}</StyledModalMessage>
-                </StyledConfirmBody>
-                <StyledFooter>
-                    <StyledActionButton type="button" onClick={onClose}>취소</StyledActionButton>
-                    <StyledActionButton type="button" $danger onClick={() => { onConfirm(); onClose(); }}>확인</StyledActionButton>
-                </StyledFooter>
-            </StyledDetail>
-        </StyledConfirmOverlay>,
-        modalRoot
-    );
-};
 
 interface DesignerCardProps {
     designer: Designer;
@@ -435,7 +403,10 @@ export const DesignerManageSection = () => {
             </StyledServiceFooter>
             {confirmTarget && (
                 <ConfirmDialog
+                    title="확인"
                     message={`"${confirmTarget.name}" 디자이너를 퇴직 처리하시겠습니까?`}
+                    confirmVariant="danger"
+                    layerKey="designer-confirm"
                     onConfirm={handleConfirmDelete}
                     onClose={() => setConfirmTarget(null)}
                 />
