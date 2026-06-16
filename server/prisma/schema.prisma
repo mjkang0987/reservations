@@ -29,13 +29,15 @@ model Store {
 }
 
 model User {
-  id              String        @id @default(cuid())
-  email           String?       @unique
-  nickname        String        @unique
-  name            String?
-  image           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  email              String?       @unique
+  nickname           String        @unique
+  name               String?
+  image              String?
+  agreedTermsVersion String?
+  agreedTermsAt      DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
   accounts        AuthAccount[]
   invitesUsed     Invite[]      @relation("InviteUsedBy")
   invitesCreated  Invite[]      @relation("InviteCreatedBy")
@@ -328,6 +330,20 @@ model CustomerMergeHistory {
   addedMemoTagIds       Json     @default("[]")
   createdAt             DateTime @default(now())
 
+  @@index([storeId])
+}
+
+model ConflictResolution {
+  id          String   @id @default(cuid())
+  storeId     String
+  conflictKey String
+  reason      String
+  memo        String?
+  resolvedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([storeId, conflictKey])
   @@index([storeId])
 }
 
