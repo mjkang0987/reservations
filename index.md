@@ -10,6 +10,7 @@
 hair_reservations/
 ├── client/          # 프론트엔드 (Next.js 앱, pages/api 라우트 포함)
 │   ├── pages/       # 라우팅 (pages 라우터). 실제 화면 전부
+│   ├── content/     # 정적 콘텐츠 단일 소스 (policies/ — 약관·개인정보·DPA 본문)
 │   └── app/         # app 라우터 — NextAuth route handler + 전역 not-found(404)만
 ├── server/          # 백엔드 (API 핸들러 + DB + Auth + Prisma 자산)
 ├── docs/            # 문서
@@ -35,16 +36,20 @@ hair_reservations/
 | `/onboarding` | `onboarding/index.tsx` | 신규 매장 초기 설정 (로그인 사용자). 온보딩 완료자는 이전 페이지로 리다이렉트 |
 | `/onboarding/guest` | `onboarding/guest.tsx` | 게스트 온보딩 (index 컴포넌트 재사용, 경로로 분기) |
 | `/inquiry` | `inquiry.tsx` | 고객센터 문의·이력 조회 |
-| `/consent` (`/consent/:slug*`) | `consent.tsx` | 이용약관·개인정보처리방침 **동의 게이트**[^19]. 동의 후 원래 가려던 경로로 복귀 |
-| `/terms` | `terms.tsx` | 이용약관 페이지 (공개, 본문 준비 중) |
-| `/privacy` | `privacy.tsx` | 개인정보처리방침 페이지 (공개, 본문 준비 중) |
+| `/consent` (`/consent/:slug*`) | `consent.tsx` | 이용약관·개인정보·처리위탁 **동의 게이트**[^19]. 동의 후 원래 가려던 경로로 복귀 |
+| `/terms` | `terms.tsx` | 이용약관 (앱 인라인, Aside 포함)[^20] |
+| `/privacy` | `privacy.tsx` | 개인정보처리방침 (앱 인라인)[^20] |
+| `/dpa` | `dpa.tsx` | 개인정보 처리 위탁계약(DPA) (앱 인라인)[^20] |
+| `/policies/:slug` | `pages/api/policies/[slug].ts` | 정책 **풀페이지**(앱 셸 없는 독립 HTML, OAuth 검수·외부 링크용). `next.config` rewrite로 연결[^20] |
 | (404) | `pages/404.tsx` + `app/not-found.tsx` | 안내 페이지 + 5초 카운트다운 후 홈 자동 리다이렉트[^18] |
 | (500) | `pages/500.tsx` | 서버 오류 안내 페이지 |
 
 ### 미들웨어 (`client/proxy.ts`)
 
+- **약관 동의 게이트**: 로그인 계정이 `termsVersion !== CURRENT_TERMS_VERSION`이면 `/consent`로 리다이렉트. 단 게스트 동의 쿠키(`tas-guest-terms`) 보유 시 통과시키고 처리위탁(DPA) 동의만 앱 위 레이어로 받음[^19]
 - `storeId` 있고 `onboarded=false`인 사용자는 허용 경로 외 접근 시 `/onboarding`으로 리다이렉트
 - 온보딩 완료자의 `/onboarding` 진입 차단은 페이지 가드가 담당 (이전 페이지로 `router.back()`)
+- **주의**: `/api/*`는 동의 게이트에서 제외(exempt)됨 — 데이터 기록 API는 `requireRole`만 검증(동의는 클라이언트 흐름으로 보장)
 
 ### 컴포넌트 (`client/components/`)
 
@@ -54,7 +59,8 @@ hair_reservations/
 | `calendar/overlays/` | 예약 생성·상세·수정 모달 | `ReservationCreate.tsx`(+`useReservationCreateForm.ts`/`ReservationCreateCustomerFields.tsx`), `ReservationDetail.tsx`(+`ReservationDetailSections`/`Header`/`FooterActions`/`PaymentLayer`/`ViewSection`, 순수 로직은 `reservationDetailUtils.ts`·타입은 `reservationDetailTypes.ts`), `CustomerDetail.tsx`(+`CustomerDetailSections.tsx`[^3a]), `ModalStyles.ts`(공통 모달 스타일·`OVERLAY_Z_INDEX`·접근성 훅), 컴포넌트별 `*.styles.ts` |
 | `calendar/service/` | 서비스 범례·필드 | `ServiceLegend.tsx`(시술 배지 디자인), `ServiceFields.tsx` |
 | `layout/` | 공통 레이아웃 | `Header.tsx`(디자이너 필터 base-select)+`HeaderSearchLayer.tsx`(고객 검색)+`Header.styles.ts`, `Aside.tsx`(역할별 설정 메뉴 + 하단 이용약관/개인정보처리방침 링크)+`AsideMenuIcon.tsx`(메뉴 아이콘)+`AsideGuestLogout.tsx`(게스트 로그아웃 확인, 동의 플래그 초기화 포함)+`Aside.styles.ts`, `StoreSwitcher.tsx`[^17], `LayoutComponent.tsx`, `Footer.tsx`, `NaverSyncNotification.tsx`[^1](+`.styles.ts`) |
-| `modals/` | 전역 오버레이 (layout과 분리) | `NaverSyncConflictModal.tsx`[^2](+`.styles.ts`), `CustomerMergeSuggestionModal.tsx`[^3], `GuestMigrationLayer.tsx`(게스트→계정 병합 레이어) |
+| `modals/` | 전역 오버레이 (layout과 분리) | `NaverSyncConflictModal.tsx`[^2](+`.styles.ts`), `CustomerMergeSuggestionModal.tsx`[^3], `GuestMigrationLayer.tsx`(게스트→계정 병합 레이어), `ConsentDpaLayer.tsx`(처리위탁 DPA 동의 레이어 — "보기"는 `PolicyViewLayer`) |
+| `policy/` | 정책 문서 표시 | `PolicyPage.tsx`(앱 인라인 페이지 레이아웃, mypage `StyledContainer` 사용), `PolicyViewLayer.tsx`(약관 "보기" — 공통 `ModalStyles` 레이어), `policyCss.ts`(인라인·풀페이지 공유 CSS + 독립 HTML 생성 `renderPolicyHtml`)[^20] |
 | `onboarding/` | 온보딩 스텝 분리 | `OnboardingStep1~5.tsx`, `onboarding-types.ts`, `onboarding-step-styles.tsx` |
 | `settings/` | 설정 화면 섹션 | `StoreManageSection.tsx`, `ServiceManageSection.tsx`, `DesignerManageSection.tsx`, `PointManageSection.tsx`(+`PointSettingsTab`/`PointAdjustTab`/`PointHistoryTab`), `MemberSection.tsx`, `SNSLinkingSection.tsx`[^14], `NaverBookingSection.tsx`[^15], `settings-styles.ts`[^16]. 큰 섹션은 본체와 `*.styles.ts` 분리 |
 | `settings/revenue/` | 매출 관리 | `RevenueSection.tsx`(+`.styles.ts`, 순수 차트 로직은 `revenueChartUtils.ts`), `RevenueChartGrid.tsx`, `RevenueKpiGrid.tsx`, `RevenueFilters.tsx`, `RevenueMetricModal.tsx`, `RevenueReservationList.tsx`, `RevenueDailyList.tsx`, `RevenueDailyDetailModal.tsx`, `revenue-styles.ts`/`revenue-chart-styles.ts` |
@@ -71,7 +77,8 @@ hair_reservations/
 [^16]: 설정 공통 styled-components — `StyledSettingsCard`, `StyledSettingsCardTitle`, `StyledSettingsHint`, `StyledEditBtn`, `StyledSaveBtn`, `StyledCancelBtn`, `StyledDeleteBtn`, `StyledSelect`
 [^17]: 멀티매장 전환 드롭다운. `/api/user/stores`로 멤버십 매장 목록 조회 → 선택 시 세션 `preferredStoreId` 갱신
 [^18]: app 라우터에 `app/` 디렉터리(NextAuth route handler)가 있으면 잘못된 경로의 404를 app 라우터가 처리하므로, `app/not-found.tsx`(+최소 `app/layout.tsx`)에 디자인 가이드 동일 스타일 + 자동 리다이렉트를 구현. `pages/404.tsx`는 pages 라우터 폴백용으로 동일 UI 유지
-[^19]: 약관 버전은 `utils/terms.ts`의 `CURRENT_TERMS_VERSION`(날짜 기반 `YYYY-MM-DD`)으로 관리. 동의 여부 판정 — 게스트: `getGuestTermsVersion()===CURRENT_TERMS_VERSION`(localStorage), 로그인: 세션 `termsVersion===CURRENT_TERMS_VERSION`. 미동의 시 게이트 노출, 동의 시 게스트는 localStorage(`setGuestTermsAgreed`)·로그인은 `POST /api/consent`(→ `User.agreedTermsVersion`/`agreedTermsAt` 갱신) 후 세션 갱신. `/consent/<경로>` 형태로 복귀 경로를 슬래시로 전달(`next.config.mjs` rewrite). Aside 하단에 이용약관/개인정보처리방침 링크 제공, 게스트 로그아웃 시 동의 플래그도 초기화
+[^19]: 약관 버전은 `utils/terms.ts`의 `CURRENT_TERMS_VERSION`(날짜 기반 `YYYY-MM-DD`)으로 관리. 동의 여부 판정 — 게스트: `getGuestTermsVersion()===CURRENT_TERMS_VERSION`(localStorage), 로그인: 세션 `termsVersion===CURRENT_TERMS_VERSION`. 미동의 시 게이트 노출, 동의 시 게스트는 localStorage(`setGuestTermsAgreed`)·로그인은 `POST /api/consent`(→ `User.agreedTermsVersion`/`agreedTermsAt` 갱신) 후 세션 갱신. `/consent/<경로>` 형태로 복귀 경로를 슬래시로 전달(`next.config.mjs` rewrite). Aside 하단에 이용약관/개인정보처리방침 링크 제공, 게스트 로그아웃 시 동의 플래그도 초기화. **동의 항목 구성** — 게스트: 이용약관 + 개인정보 수집·이용(서버 위탁 없음). 로그인(SNS 연동, 서버 보관): 위 2개 + **개인정보 처리위탁(DPA)** 별도 항목. 게스트가 SNS 연동한 경우는 이미 받은 동의는 건너뛰고 DPA만 `_app.tsx`의 앱 레벨 `ConsentDpaLayer`로 추가 수령. 각 항목 "보기"는 `PolicyViewLayer`로 표시
+[^20]: **정책 문서 단일 소스 구조** — 법률 본문은 문서당 파일 하나(`content/policies/{terms,privacy,dpa}.ts`)에만 두고, 제목 메타는 `content/policies/index.ts` 레지스트리(`navTitle`/`docTitle`/`body`)로 관리. 이 본문을 **인라인 페이지**(`/terms`·`/privacy`·`/dpa` → `PolicyPage`)·**보기 레이어**(`PolicyViewLayer`)·**풀페이지**(`/policies/:slug` → `api/policies/[slug].ts`가 `renderPolicyHtml`로 독립 HTML 응답)가 모두 공유 → 한 곳만 고치면 전체 반영. 공통 CSS도 `components/policy/policyCss.ts`(`POLICY_VARS_*`·`POLICY_ELEMENT_CSS`)에서 styled-components(인라인)·`<style>`(풀페이지) 양쪽이 같은 문자열 사용. DPA는 서버 보관(수탁) 개시 시점에 필요하므로 SNS 연동(인증) 이후에만 노출
 
 ### 도메인 모델 (`client/features/`)
 
@@ -152,7 +159,8 @@ NextAuth 5.0 설정. Google·Kakao·Naver OAuth 지원.
 ### 부팅/마이그레이션 (`client/pages/_app.tsx`)
 
 - **부팅 게이트**: 서비스·디자이너·예약 3종 데이터가 준비될 때까지 전체 오버레이로 가림 (새로고침 시 기본값 플래시 방지). 로그인/온보딩 페이지는 제외
-- **게스트 → 서버 마이그레이션**: 인증 후 로컬 스냅샷에 데이터가 있으면 `/api/onboarding` POST (owner만). 성공 또는 409(이미 설정된 매장) 시 재시도 중단. 전체 데이터 병합 플로우는 `plan.md` 참고
+- **게스트 → 서버 마이그레이션**: 인증 후 로컬 스냅샷에 데이터가 있으면 `/api/migrate-local` POST (owner만). **단, `termsVersion===CURRENT_TERMS_VERSION`(DPA 등 동의 기록 완료) 이후에만 실행** — 수탁자(서버) 저장 전에 위탁계약 동의가 선행되도록 보장. 성공 또는 409(이미 설정된 매장) 시 재시도 중단. 전체 데이터 병합 플로우는 `plan.md` 참고
+- **앱 레벨 DPA 동의 레이어**: 게스트 동의 보유자가 SNS 연동했고 DB 동의 기록만 없으면(`/consent` 우회 케이스) 앱 위에 `ConsentDpaLayer` 노출 → `POST /api/consent` 후 마이그레이션 진행
 
 ---
 
@@ -325,6 +333,7 @@ useCustomerMergeSuggestion.ts (동명이인 감지, 게스트 모드 제외)
 ```
 게스트 사용 (localStorage 'takeaseat.local-db.v1'에 데이터 저장)
   → SNS 로그인 → syncAuthUser(): 새 User + Store(onboarded: true) + owner 생성
+  → DPA 동의 선행: 앱 레벨 ConsentDpaLayer → POST /api/consent → termsVersion 기록 (이 전엔 마이그레이션 보류)
   → _app.tsx에서 로컬 데이터 감지 → POST /api/onboarding (owner만)
     ├─ 빈 매장(200): 서비스·디자이너·매장명 이전 → onboarded 플래그 해제
     └─ 기존 데이터 매장(409): 자동 이전 중단
@@ -337,9 +346,11 @@ useCustomerMergeSuggestion.ts (동명이인 감지, 게스트 모드 제외)
 ```
 CURRENT_TERMS_VERSION (utils/terms.ts, 날짜 버전)
   → 로그인: 세션 termsVersion vs CURRENT  /  게스트: localStorage 동의 버전 vs CURRENT
-  → 불일치 → /consent (이용약관 + 개인정보처리방침 동의 화면)
-    ├─ 게스트: setGuestTermsAgreed(localStorage) → 원래 경로 복귀
-    └─ 로그인: POST /api/consent → User.agreedTermsVersion/agreedTermsAt 갱신 → 세션 갱신 → 복귀
+  → 불일치 → /consent (동의 화면)
+    ├─ 게스트: 이용약관 + 개인정보 수집·이용 → setGuestTermsAgreed(localStorage) → 복귀
+    └─ 로그인: 위 2개 + 개인정보 처리위탁(DPA, 서버 보관) → POST /api/consent → 세션 갱신 → 복귀
+  → 게스트가 SNS 연동(쿠키 보유 → /consent 우회): _app.tsx 앱 레벨 ConsentDpaLayer로 DPA만 추가 수령
+  → 각 항목 "보기"는 PolicyViewLayer(공통 레이어). 본문은 content/policies 단일 소스
   → 약관 개정 시 상수 값만 올리면 전체 사용자 재동의
 ```
 
@@ -372,7 +383,7 @@ StorePointSettings (적립률, 충전규칙)
 | 파일 | 설명 |
 |------|------|
 | `.env.local` | 환경변수 (DATABASE_URL, AUTH_SECRET, OAuth 키) |
-| `next.config.mjs` | URL 리라이트(/day/\*/week/\* → /), styled-components, Turbopack |
+| `next.config.mjs` | URL 리라이트(/day/\*/week/\* → /, /consent/\*, /policies/:slug → /api/policies/:slug), styled-components, Turbopack |
 | `client/proxy.ts` | NextAuth 미들웨어 (온보딩 리다이렉트) |
 | `client/prisma.config.ts` | Prisma 7 설정 (datasource URL, migration, seed) |
 | `tsconfig.json` | ES2017, strict, path aliases |
