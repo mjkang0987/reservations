@@ -7,6 +7,8 @@ import {signOut, useSession} from 'next-auth/react';
 
 import styled from 'styled-components';
 
+import {ConfirmDialog} from '../components/ui/ConfirmDialog';
+import {LoadingOverlay} from '../components/ui/LoadingOverlay';
 import {SeoHead} from '../components/ui/SeoHead';
 import {CURRENT_TERMS_VERSION} from '../utils/terms';
 import {getGuestTermsVersion, setGuestTermsAgreed} from '../lib/local-db';
@@ -26,12 +28,20 @@ export default function ConsentPage() {
     const [agreePrivacy, setAgreePrivacy] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
 
     const alreadyAgreed = isGuest
         ? getGuestTermsVersion() === CURRENT_TERMS_VERSION
         : session?.user?.termsVersion === CURRENT_TERMS_VERSION;
 
-    // 로그인 에러 → 로그인, 이미 동의 → 앱으로
+    // 동의 후 돌아갈 경로: 슬래시 경로(/consent/<경로>)에서 추출, 없으면 월 진입
+    const resolveNextPath = () => {
+        const rest = router.asPath.slice('/consent'.length);
+        const next = rest.startsWith('/') && !rest.startsWith('//') ? rest : null;
+        return next ?? getMonthEntryPath();
+    };
+
+    // 로그인 에러 → 로그인, 이미 동의 → 원래 가려던 곳(슬래시 경로)으로
     useEffect(() => {
         if (status === 'loading') return;
         if (status === 'authenticated' && session?.user?.loginError) {
@@ -39,8 +49,10 @@ export default function ConsentPage() {
             return;
         }
         if (alreadyAgreed) {
-            router.replace(getMonthEntryPath());
+            router.replace(resolveNextPath());
         }
+        // resolveNextPath는 router 기반이라 deps에 router만 있으면 충분
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [status, alreadyAgreed, session, router]);
 
     const allChecked = agreeTerms && agreePrivacy;
@@ -57,10 +69,7 @@ export default function ConsentPage() {
         // 게스트: localStorage에 동의 기록 (DB 계정 없음) 후 원래 가려던 곳으로 복귀
         if (isGuest) {
             setGuestTermsAgreed(CURRENT_TERMS_VERSION);
-            // 돌아갈 경로는 슬래시 경로(/consent/<경로>)에서 추출
-            const rest = router.asPath.slice('/consent'.length);
-            const next = rest.startsWith('/') && !rest.startsWith('//') ? rest : null;
-            router.replace(next ?? getMonthEntryPath());
+            router.replace(resolveNextPath());
             return;
         }
 
@@ -69,7 +78,7 @@ export default function ConsentPage() {
             if (!res.ok) throw new Error('consent failed');
             // 세션(JWT) 갱신 → termsVersion 반영 후 진입
             await update();
-            router.replace(getMonthEntryPath());
+            router.replace(resolveNextPath());
         } catch {
             setError('동의 처리 중 오류가 발생했습니다. 다시 시도해 주세요.');
             setSubmitting(false);
@@ -78,22 +87,27 @@ export default function ConsentPage() {
 
     const handleDecline = () => {
         if (submitting) return;
+        setShowDeclineConfirm(true);
+    };
+
+    const confirmDecline = () => {
+        setShowDeclineConfirm(false);
 
         if (isGuest) {
-            const ok = window.confirm('약관에 동의하지 않으면 서비스를 이용할 수 없습니다.');
-            if (!ok) return;
             router.replace('/login');
             return;
         }
 
-        const ok = window.confirm('약관에 동의하지 않으면 서비스를 이용할 수 없습니다.\n로그아웃하시겠습니까?');
-        if (!ok) return;
         setSubmitting(true);
         void signOut({callbackUrl: '/login'});
     };
 
-    if (status === 'loading' || alreadyAgreed) {
-        return null;
+    if (status === 'loading') {
+        return <LoadingOverlay text="로그인 상태 확인 중..." />;
+    }
+    // 동의 직후/이미 동의: 다음 화면으로 이동하는 동안 안내 문구 노출
+    if (alreadyAgreed) {
+        return <LoadingOverlay text="서비스를 준비하는 중..." />;
     }
 
     return (
@@ -151,6 +165,22 @@ export default function ConsentPage() {
                     동의 안 함
                 </StyledSecondaryButton>
             </StyledCard>
+
+            {showDeclineConfirm && (
+                <ConfirmDialog
+                    title="약관 동의 안 함"
+                    message={
+                        isGuest
+                            ? '약관에 동의하지 않으면 서비스를 이용할 수 없습니다.'
+                            : '약관에 동의하지 않으면 서비스를 이용할 수 없습니다.\n로그아웃하시겠습니까?'
+                    }
+                    confirmLabel={isGuest ? '나가기' : '로그아웃'}
+                    confirmVariant="danger"
+                    layerKey="consent-decline"
+                    onConfirm={confirmDecline}
+                    onClose={() => setShowDeclineConfirm(false)}
+                />
+            )}
         </StyledWrapper>
     );
 }
@@ -167,13 +197,12 @@ const StyledWrapper = styled.div`
 const StyledCard = styled.div`
     display: flex;
     flex-direction: column;
-    padding: 36px 30px;
+    padding: 40px 30px;
     background-color: var(--white-color);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     width: 100%;
     max-width: 360px;
-    box-sizing: border-box;
 
     @media (max-width: 640px) {
         padding: 28px 20px;
