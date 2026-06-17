@@ -37,6 +37,8 @@ const nextConfig = {
             })),
             // /consent/<돌아갈 경로> → consent 페이지 (쿼리스트링 대신 슬래시 경로)
             {source: '/consent/:slug*', destination: '/consent'},
+            // /policies/<slug> → 독립 HTML 정책 문서 (앱 셸 없는 풀페이지)
+            {source: '/policies/:slug', destination: '/api/policies/:slug'},
         ];
     },
 };
