@@ -45,12 +45,12 @@ export function AddressCustomerTags({
                             {customerTags.map((tag) => (
                                 <StyledTag key={tag.text} $color={tag.color}>
                                     {tag.text}
-                                    <button
+                                    <StyledTagRemoveButton
                                         type="button"
                                         onClick={() => onRemoveTag(customerId, tag.text)}
                                     >
                                         &#x2715;
-                                    </button>
+                                    </StyledTagRemoveButton>
                                 </StyledTag>
                             ))}
                         </StyledTagList>
@@ -158,20 +158,20 @@ const StyledTag = styled(ColorTag).attrs({ $shape: 'soft' as const })`
     font-size: var(--tiny-font);
     font-weight: 500;
     padding: 2px 6px;
+`;
 
-    > button {
-        border: none;
-        background: none;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 9px;
-        cursor: pointer;
-        padding: 0;
-        line-height: 1;
+const StyledTagRemoveButton = styled.button`
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 9px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
 
-        @media (hover: hover) and (pointer: fine) {
-            &:hover {
-                color: var(--white-color);
-            }
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
+            color: var(--white-color);
         }
     }
 `;

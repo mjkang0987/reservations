@@ -26,25 +26,25 @@ export const OnboardingStep5 = ({shopName, realShopTypes, localServices, localDe
             <StyledCompleteSummary>
                 {shopName.trim() && (
                     <StyledSummaryRow>
-                        <span>매장명</span>
-                        <strong>{shopName.trim()}</strong>
+                        <StyledSummaryLabel>매장명</StyledSummaryLabel>
+                        <StyledSummaryValue>{shopName.trim()}</StyledSummaryValue>
                     </StyledSummaryRow>
                 )}
                 {realShopTypes.length > 0 && (
                     <StyledSummaryRow>
-                        <span>업종</span>
-                        <strong>
+                        <StyledSummaryLabel>업종</StyledSummaryLabel>
+                        <StyledSummaryValue>
                             {realShopTypes.map((t) => SHOP_TYPES.find((s) => s.type === t)?.label).filter(Boolean).join(', ')}
-                        </strong>
+                        </StyledSummaryValue>
                     </StyledSummaryRow>
                 )}
                 <StyledSummaryRow>
-                    <span>서비스</span>
-                    <strong>{localServices.length}개</strong>
+                    <StyledSummaryLabel>서비스</StyledSummaryLabel>
+                    <StyledSummaryValue>{localServices.length}개</StyledSummaryValue>
                 </StyledSummaryRow>
                 <StyledSummaryRow>
-                    <span>디자이너</span>
-                    <strong>{localDesigners.length}명</strong>
+                    <StyledSummaryLabel>디자이너</StyledSummaryLabel>
+                    <StyledSummaryValue>{localDesigners.length}명</StyledSummaryValue>
                 </StyledSummaryRow>
             </StyledCompleteSummary>
         </StyledCompleteSection>
@@ -105,17 +105,17 @@ const StyledSummaryRow = styled.div`
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+`;
 
-    span {
-        font-size: 13px;
-        color: var(--dark-gray-color2);
-    }
+const StyledSummaryLabel = styled.span`
+    font-size: 13px;
+    color: var(--dark-gray-color2);
+`;
 
-    strong {
-        font-size: 13px;
-        color: var(--dark-gray-color);
-        font-weight: 600;
-    }
+const StyledSummaryValue = styled.strong`
+    font-size: 13px;
+    color: var(--dark-gray-color);
+    font-weight: 600;
 `;
 
 const StyledSubmitBtn = styled.button`

@@ -8,6 +8,7 @@ import {
     StyledOverlay,
     StyledDetail,
     StyledHeader,
+    StyledHeaderTitle,
     StyledForm,
     StyledFooter,
     StyledActionButton,
@@ -61,7 +62,7 @@ export function CustomerAddModal({onClose}: { onClose: () => void }) {
         <StyledOverlay onClick={onClose}>
             <StyledDetail onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <h3>고객 추가</h3>
+                    <StyledHeaderTitle>고객 추가</StyledHeaderTitle>
                     <button type="button" onClick={onClose}>닫기</button>
                 </StyledHeader>
                 <StyledFormWrap>

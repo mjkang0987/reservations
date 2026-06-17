@@ -11,6 +11,7 @@ import {
     StyledOverlay,
     StyledDetail,
     StyledHeader,
+    StyledHeaderTitle,
     StyledFooter,
     StyledActionButton,
     StyledConfirmOverlay,
@@ -39,6 +40,7 @@ import {
     StyledCategoryEditRow,
     StyledCategoryEditInput,
     StyledCategoryDragHandle,
+    StyledCategoryDragHandleIcon,
     StyledCategoryColorInput,
     StyledItem,
     StyledViewRow,
@@ -51,6 +53,7 @@ import {
     StyledEditBtn,
     StyledAddButton,
     StyledDeleteMsg,
+    StyledDeleteTarget,
 } from './ServiceManageSection.styles';
 
 /* ------------------------------------------------------------------ */
@@ -110,7 +113,7 @@ const ServiceEditModal = ({item, serviceCatalog, onSave, onDelete, onClose}: Ser
         >
             <StyledServiceModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <h3>서비스 수정</h3>
+                    <StyledHeaderTitle>서비스 수정</StyledHeaderTitle>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledModalBody>
@@ -162,9 +165,9 @@ const ServiceEditModal = ({item, serviceCatalog, onSave, onDelete, onClose}: Ser
             {confirmDelete && (
                 <StyledConfirmOverlay onClick={() => setConfirmDelete(false)}>
                     <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
-                        <StyledHeader><h3>서비스 삭제</h3></StyledHeader>
+                        <StyledHeader><StyledHeaderTitle>서비스 삭제</StyledHeaderTitle></StyledHeader>
                         <StyledDeleteMsg>
-                            <strong>"{item.name}"</strong> 서비스를 삭제하시겠습니까?<br />
+                            <StyledDeleteTarget>"{item.name}"</StyledDeleteTarget> 서비스를 삭제하시겠습니까?<br />
                             이 작업은 되돌릴 수 없습니다.
                         </StyledDeleteMsg>
                         <StyledFooter>
@@ -241,7 +244,7 @@ const ServiceAddModal = ({categories, serviceCatalog, onAdd, onClose}: ServiceAd
         >
             <StyledServiceModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <h3>서비스 추가</h3>
+                    <StyledHeaderTitle>서비스 추가</StyledHeaderTitle>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledModalBody>
@@ -478,11 +481,11 @@ export const ServiceManageSection = () => {
                                         title="카테고리 순서 이동"
                                         aria-label={`${category} 카테고리 순서 이동`}
                                     >
-                                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                                        <StyledCategoryDragHandleIcon viewBox="0 0 16 16" aria-hidden="true">
                                             <rect x="2.5" y="3" width="11" height="1.5" rx="0.75" />
                                             <rect x="2.5" y="7.25" width="11" height="1.5" rx="0.75" />
                                             <rect x="2.5" y="11.5" width="11" height="1.5" rx="0.75" />
-                                        </svg>
+                                        </StyledCategoryDragHandleIcon>
                                     </StyledCategoryDragHandle>
                                     <span>{category}</span>
                                 </StyledCategoryNameChip>

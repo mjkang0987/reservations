@@ -52,39 +52,39 @@ export function ReservationViewSection({
     return (
         <StyledDetailBody>
             <StyledDetailBodyInner>
-                <dl>
+                <StyledDetailList>
                     {isCancelled && (
                         <>
-                            <dt>상태</dt>
-                            <dd><ReservationStatusBadge $type="cancelled">취소</ReservationStatusBadge></dd>
+                            <StyledTerm>상태</StyledTerm>
+                            <StyledDesc><ReservationStatusBadge $type="cancelled">취소</ReservationStatusBadge></StyledDesc>
                         </>
                     )}
                     {isNoshow && (
                         <>
-                            <dt>상태</dt>
-                            <dd><ReservationStatusBadge $type="noshow">노쇼</ReservationStatusBadge></dd>
+                            <StyledTerm>상태</StyledTerm>
+                            <StyledDesc><ReservationStatusBadge $type="noshow">노쇼</ReservationStatusBadge></StyledDesc>
                         </>
                     )}
                     {isCompleted && (
                         <>
-                            <dt>상태</dt>
-                            <dd><ReservationStatusBadge $type="completed">완료</ReservationStatusBadge></dd>
+                            <StyledTerm>상태</StyledTerm>
+                            <StyledDesc><ReservationStatusBadge $type="completed">완료</ReservationStatusBadge></StyledDesc>
                         </>
                     )}
-                    <dt>날짜</dt>
-                    <dd>{reservation.date}</dd>
-                    <dt>시간</dt>
-                    <dd>{reservation.startTime} ~ {reservation.endTime}</dd>
-                    <dt>서비스</dt>
-                    <dd>
+                    <StyledTerm>날짜</StyledTerm>
+                    <StyledDesc>{reservation.date}</StyledDesc>
+                    <StyledTerm>시간</StyledTerm>
+                    <StyledDesc>{reservation.startTime} ~ {reservation.endTime}</StyledDesc>
+                    <StyledTerm>서비스</StyledTerm>
+                    <StyledDesc>
                         <StyledServiceChipList service={reservation.service}
                                               serviceColorMap={serviceColorMap}
                                               keyPrefix={reservation.id} />
-                    </dd>
-                    <dt>가격</dt>
-                    <dd>{formatPrice(displayPrice)}</dd>
-                    <dt>결제</dt>
-                    <dd>
+                    </StyledDesc>
+                    <StyledTerm>가격</StyledTerm>
+                    <StyledDesc>{formatPrice(displayPrice)}</StyledDesc>
+                    <StyledTerm>결제</StyledTerm>
+                    <StyledDesc>
                         <StyledPaymentValue>
                             <ReservationStatusBadge $type={paymentCompleted ? 'paid' : 'unpaid'}>
                                 {paymentCompleted ? '결제완료' : '미결제'}
@@ -103,20 +103,20 @@ export function ReservationViewSection({
                                 <span>{formatPrice(reservation.naverDeposit)}</span>
                             </StyledNaverDepositLine>
                         )}
-                    </dd>
-                    <dt>고객명</dt>
-                    <dd>
+                    </StyledDesc>
+                    <StyledTerm>고객명</StyledTerm>
+                    <StyledDesc>
                         <StyledCustomerButton type="button" onClick={() => onCustomerClick(reservation.customerId)}>
                             {isNewCustomer && <NewCustomerBadge>N</NewCustomerBadge>}
                             {customer?.name ?? '-'}
                         </StyledCustomerButton>
-                    </dd>
-                    <dt>연락처</dt>
-                    <dd>{customer?.tel ? <StyledTelLink href={`tel:${customer.tel}`}>{formatTel(customer.tel)}</StyledTelLink> : '-'}</dd>
+                    </StyledDesc>
+                    <StyledTerm>연락처</StyledTerm>
+                    <StyledDesc>{customer?.tel ? <StyledTelLink href={`tel:${customer.tel}`}>{formatTel(customer.tel)}</StyledTelLink> : '-'}</StyledDesc>
                     {customerMemoTags.length > 0 && (
                         <>
-                            <dt>고객 메모</dt>
-                            <dd>
+                            <StyledTerm>고객 메모</StyledTerm>
+                            <StyledDesc>
                                 <StyledMemoTagList>
                                     {customerMemoTags.map((tag) => (
                                         <StyledMemoTag key={`${reservation.id}-${tag.text}`} $color={tag.color}>
@@ -124,23 +124,23 @@ export function ReservationViewSection({
                                         </StyledMemoTag>
                                     ))}
                                 </StyledMemoTagList>
-                            </dd>
+                            </StyledDesc>
                         </>
                     )}
                     {reservation.memo?.trim() && (
                         <>
-                            <dt>요청사항</dt>
-                            <dd>{reservation.memo.trim()}</dd>
+                            <StyledTerm>요청사항</StyledTerm>
+                            <StyledDesc>{reservation.memo.trim()}</StyledDesc>
                         </>
                     )}
-                    <dt>적립금</dt>
-                    <dd>{formatPrice(customer?.points ?? 0)}</dd>
-                    <dt>디자이너</dt>
-                    <dd>
+                    <StyledTerm>적립금</StyledTerm>
+                    <StyledDesc>{formatPrice(customer?.points ?? 0)}</StyledDesc>
+                    <StyledTerm>디자이너</StyledTerm>
+                    <StyledDesc>
                         <DesignerLabel color={displayDesignerColor} name={displayDesignerName} />
-                    </dd>
-                    <dt>예약경로</dt>
-                    <dd>
+                    </StyledDesc>
+                    <StyledTerm>예약경로</StyledTerm>
+                    <StyledDesc>
                         {reservation.naverBookingId ? (
                             <>
                                 <NaverBookingInfo reservation={reservation} />
@@ -151,8 +151,8 @@ export function ReservationViewSection({
                         ) : (
                             <StyledChannelTag>{reservation.channel === '현장방문' ? '현장방문' : '전화예약'}</StyledChannelTag>
                         )}
-                    </dd>
-                </dl>
+                    </StyledDesc>
+                </StyledDetailList>
                 {historyCount > 0 && (
                     <StyledHistorySection>
                         <StyledHistoryButton type="button" onClick={onOpenHistory}>
@@ -167,24 +167,24 @@ export function ReservationViewSection({
 
 const StyledDetailBody = styled(StyledBody)``;
 
-const StyledDetailBodyInner = styled(StyledBodyInner)`
-    dl {
-        display: grid;
-        grid-template-columns: 60px 1fr;
-        gap: 8px 12px;
-        margin: 0;
-    }
+const StyledDetailBodyInner = styled(StyledBodyInner)``;
 
-    dt {
-        font-size: 13px;
-        color: var(--dark-gray-color);
-        font-weight: 500;
-    }
+const StyledDetailList = styled.dl`
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 8px 12px;
+    margin: 0;
+`;
 
-    dd {
-        margin: 0;
-        font-size: 13px;
-    }
+const StyledTerm = styled.dt`
+    font-size: 13px;
+    color: var(--dark-gray-color);
+    font-weight: 500;
+`;
+
+const StyledDesc = styled.dd`
+    margin: 0;
+    font-size: 13px;
 `;
 
 const StyledTelLink = styled.a`

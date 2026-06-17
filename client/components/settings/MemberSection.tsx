@@ -6,7 +6,7 @@ import {LabelBadge, type LabelBadgeTone} from '../ui/LabelBadge';
 import {PageHero} from '../ui/PageHero';
 import {EMPTY_TEXT, StyledEmpty, StyledSettingsCard, StyledSettingsCardTitle, StyledSettingsHint, StyledSaveBtn, StyledSelect} from './settings-styles';
 import {FieldError} from '../ui/FieldError';
-import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledFooter, StyledActionButton} from '../calendar/overlays/ModalStyles';
+import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledHeaderTitle, StyledFooter, StyledActionButton} from '../calendar/overlays/ModalStyles';
 import {useToastStore} from '../../store/toastStore';
 import {
     StyledContainer,
@@ -364,7 +364,7 @@ export const MemberSection = () => {
         {deleteTarget && (
             <StyledConfirmOverlay onClick={() => setDeleteTarget(null)}>
                 <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
-                    <StyledHeader><h3>초대코드 취소</h3></StyledHeader>
+                    <StyledHeader><StyledHeaderTitle>초대코드 취소</StyledHeaderTitle></StyledHeader>
                     <StyledConfirmText>초대코드를 취소하면 더 이상 사용할 수 없습니다. 계속하시겠습니까?</StyledConfirmText>
                     <StyledFooter>
                         <StyledActionButton type="button" onClick={() => setDeleteTarget(null)}>닫기</StyledActionButton>
@@ -377,7 +377,7 @@ export const MemberSection = () => {
         {kickTarget && (
             <StyledConfirmOverlay onClick={() => !kicking && setKickTarget(null)}>
                 <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
-                    <StyledHeader><h3>멤버 제거</h3></StyledHeader>
+                    <StyledHeader><StyledHeaderTitle>멤버 제거</StyledHeaderTitle></StyledHeader>
                     <StyledConfirmText>
                         <strong>{kickTarget.user.nickname}</strong>님을 매장에서 제거하면
                         더 이상 이 매장에 접근할 수 없습니다. 계속하시겠습니까?

@@ -322,10 +322,7 @@ export const StyledAsideAd = styled.div`
     margin-top: auto;
     padding: 8px 8px 8px 0;
     flex-shrink: 0;
-
-    @media (max-width: 640px) {
-        display: none;
-    }`;
+`;
 
 export const StyledToggleIcon = styled.span<{ $collapsed: boolean }>`
     display: inline-flex;
@@ -334,16 +331,16 @@ export const StyledToggleIcon = styled.span<{ $collapsed: boolean }>`
     transform: ${props => props.$collapsed ? 'rotate(90deg)' : 'rotate(270deg)'};
     transition: transform 0.2s;
     flex-shrink: 0;
+`;
 
-    svg {
-        width: 100%;
-        height: 100%;
-        stroke: currentColor;
-        fill: none;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
+export const StyledToggleSvg = styled.svg`
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 `;
 
 export const StyledLegalLinks = styled.div`
@@ -354,21 +351,21 @@ export const StyledLegalLinks = styled.div`
     flex-shrink: 0;
     padding: 6px 10px 2px;
     font-size: var(--tiny-font);
+`;
 
-    a {
-        color: var(--aside-text);
-        text-decoration: none;
-        opacity: 0.55;
-        white-space: nowrap;
-        transition: opacity 0.1s;
+export const StyledLegalLink = styled(Link)`
+    color: var(--aside-text);
+    text-decoration: none;
+    opacity: 0.55;
+    white-space: nowrap;
+    transition: opacity 0.1s;
 
-        @media (hover: hover) and (pointer: fine) {
-            &:hover { opacity: 0.9; text-decoration: underline; }
-        }
+    @media (hover: hover) and (pointer: fine) {
+        &:hover { opacity: 0.9; text-decoration: underline; }
     }
+`;
 
-    span {
-        color: var(--aside-text);
-        opacity: 0.35;
-    }
+export const StyledLegalSeparator = styled.span`
+    color: var(--aside-text);
+    opacity: 0.35;
 `;

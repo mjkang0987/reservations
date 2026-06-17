@@ -9,6 +9,7 @@ import {
     StyledConfirmOverlay,
     StyledConfirmModal,
     StyledHeader,
+    StyledHeaderTitle,
     StyledFooter,
     StyledActionButton as BaseActionButton,
     StyledModalMessage,
@@ -67,7 +68,7 @@ export const AccountDeleteModal = ({role, onClose}: AccountDeleteModalProps) => 
         <StyledConfirmOverlay role="dialog" aria-modal="true" aria-label="회원탈퇴">
             <StyledConfirmModal ref={dialogRef} tabIndex={-1}>
                 <StyledHeader>
-                    <h3>회원탈퇴</h3>
+                    <StyledHeaderTitle>회원탈퇴</StyledHeaderTitle>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledModalContent>
@@ -77,7 +78,7 @@ export const AccountDeleteModal = ({role, onClose}: AccountDeleteModalProps) => 
                             : '탈퇴 시 계정이 삭제되고 매장 접근 권한이 제거됩니다. 이 작업은 되돌릴 수 없습니다.'}
                     </StyledModalMessage>
                     <StyledInputLabel as="label" htmlFor="account-delete-confirm">
-                        확인을 위해 <strong>탈퇴</strong>를 입력해주세요.
+                        확인을 위해 <StyledLabelStrong>탈퇴</StyledLabelStrong>를 입력해주세요.
                     </StyledInputLabel>
                     <StyledInput id="account-delete-confirm"
                                  type="text"
@@ -108,10 +109,10 @@ const StyledInputLabel = styled.p`
     margin: 12px 0 6px;
     font-size: 13px;
     color: #374151;
+`;
 
-    strong {
-        color: #be123c;
-    }
+const StyledLabelStrong = styled.strong`
+    color: #be123c;
 `;
 
 const StyledInput = styled.input`

@@ -46,24 +46,24 @@ export const StyledHeaderCloseButton = styled(CloseIconButton)`
 export const StyledInfo = styled.div`
     padding: 8px;
     border-bottom: 1px solid var(--light-gray-color);
+`;
 
-    dl {
-        display: grid;
-        grid-template-columns: 60px 1fr;
-        gap: 4px 12px;
-        margin: 0;
-    }
+export const StyledInfoList = styled.dl`
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 4px 12px;
+    margin: 0;
+`;
 
-    dt {
-        font-size: 13px;
-        color: var(--dark-gray-color);
-        font-weight: 500;
-    }
+export const StyledInfoTerm = styled.dt`
+    font-size: 13px;
+    color: var(--dark-gray-color);
+    font-weight: 500;
+`;
 
-    dd {
-        margin: 0;
-        font-size: 13px;
-    }
+export const StyledInfoDesc = styled.dd`
+    margin: 0;
+    font-size: 13px;
 `;
 
 export const StyledTelLink = styled.a`
@@ -84,26 +84,26 @@ export const StyledEditFields = styled.div`
     display: flex;
     flex-direction: column;
     gap: 10px;
+`;
 
-    label {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
+export const StyledEditFieldLabel = styled.label`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+`;
 
-    span {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--dark-gray-color);
-    }
+export const StyledEditFieldLabelText = styled.span`
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dark-gray-color);
+`;
 
-    input {
-        height: 34px;
-        padding: 0 10px;
-        border: 1px solid var(--light-gray-color);
-        border-radius: 8px;
-        font-size: 13px;
-    }
+export const StyledEditFieldInput = styled.input`
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 8px;
+    font-size: 13px;
 `;
 
 export const StyledPointInfo = styled.div`
@@ -184,12 +184,12 @@ export const StyledReservationSection = styled.div`
 export const StyledPointHistorySection = styled.div`
     padding: 8px;
     border-bottom: 1px solid var(--light-gray-color);
+`;
 
-    h4 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-    }
+export const StyledPointHistoryTitle = styled.h4`
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
 `;
 
 export const StyledPointHistoryHeader = styled.div`
@@ -228,12 +228,12 @@ export const StyledAddressMemoSection = styled.div`
     gap: 10px;
     padding: 8px;
     border-bottom: 1px solid var(--light-gray-color);
+`;
 
-    h4 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-    }
+export const StyledAddressMemoTitle = styled.h4`
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
 `;
 
 export const StyledAddressMemoList = styled.div`
@@ -252,26 +252,26 @@ export const StyledTagInputRow = styled.div`
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
+`;
 
-    input {
-        height: 34px;
-        padding: 0 10px;
-        border: 1px solid var(--light-gray-color);
-        border-radius: 8px;
-        font-size: 12px;
-    }
+export const StyledTagInput = styled.input`
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 8px;
+    font-size: 12px;
+`;
 
-    button {
-        height: 34px;
-        padding: 0 12px;
-        border: none;
-        border-radius: 8px;
-        background: var(--brand-color);
-        color: var(--white-color);
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-    }
+export const StyledTagAddButton = styled.button`
+    height: 34px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--brand-color);
+    color: var(--white-color);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
 `;
 
 export const StyledColorRow = styled.div`
@@ -331,17 +331,17 @@ export const StyledPointHistoryTop = styled.div`
     justify-content: space-between;
     gap: 8px;
     align-items: center;
+`;
 
-    strong {
-        font-size: 12px;
-        font-weight: 600;
-    }
+export const StyledPointHistoryType = styled.strong`
+    font-size: 12px;
+    font-weight: 600;
+`;
 
-    span {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--brand-color);
-    }
+export const StyledPointHistoryDelta = styled.span`
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand-color);
 `;
 
 export const StyledPointHistoryMeta = styled.div`
@@ -361,12 +361,12 @@ export const StyledEmptyText = styled.p`
 export const StyledReservationScroll = styled.div`
     ${scrollContentStyle};
     padding: 8px 8px 30px;
+`;
 
-    h4 {
-        margin: 0 0 8px;
-        font-size: 14px;
-        font-weight: 600;
-    }
+export const StyledReservationTitle = styled.h4`
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 600;
 `;
 
 export const StyledMoreButton = styled.button`
@@ -405,10 +405,10 @@ export const StyledUnmergeMessage = styled.p`
     line-height: 1.5;
     color: var(--dark-gray-color);
     word-break: keep-all;
+`;
 
-    strong {
-        color: #0f172a;
-    }
+export const StyledUnmergeHighlight = styled.strong`
+    color: #0f172a;
 `;
 
 export const StyledUnmergeList = styled.div`
@@ -426,20 +426,21 @@ export const StyledUnmergeItem = styled.div`
     border-radius: 8px;
     background: var(--gray-color2);
     font-size: 12px;
+`;
 
-    strong {
-        font-weight: 700;
-        color: #0f172a;
-    }
+export const StyledUnmergeName = styled.strong`
+    font-weight: 700;
+    color: #0f172a;
+`;
 
-    span {
-        color: var(--dark-gray-color2);
-    }
+export const StyledUnmergeTel = styled.span`
+    color: var(--dark-gray-color2);
+`;
 
-    .date {
-        margin-left: auto;
-        font-size: 11px;
-    }
+export const StyledUnmergeDate = styled.span`
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--dark-gray-color2);
 `;
 
 export const StyledUnmergeFooter = styled.div`

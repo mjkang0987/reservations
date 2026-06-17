@@ -10,6 +10,7 @@ import {
     StyledConfirmOverlay,
     StyledConfirmModal,
     StyledHeader,
+    StyledHeaderTitle,
     StyledFooter,
     StyledActionButton,
 } from '../calendar/overlays/ModalStyles';
@@ -142,7 +143,7 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
                 <StyledConfirmModal>
                     <StyledSpinnerWrap>
                         <Spinner $size={32} />
-                        <p>데이터를 병합하는 중...</p>
+                        <StyledSpinnerText>데이터를 병합하는 중...</StyledSpinnerText>
                     </StyledSpinnerWrap>
                 </StyledConfirmModal>
             </StyledConfirmOverlay>
@@ -153,7 +154,7 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
         return (
             <StyledConfirmOverlay>
                 <StyledConfirmModal>
-                    <StyledHeader><h3>오류</h3></StyledHeader>
+                    <StyledHeader><StyledHeaderTitle>오류</StyledHeaderTitle></StyledHeader>
                     <StyledBody>
                         <StyledErrorText>{errorMsg}</StyledErrorText>
                     </StyledBody>
@@ -179,7 +180,7 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
             <StyledConfirmOverlay>
                 <StyledWiderModal>
                     <StyledHeader>
-                        <h3>디자이너 병합</h3>
+                        <StyledHeaderTitle>디자이너 병합</StyledHeaderTitle>
                     </StyledHeader>
                     <StyledBody>
                         <StyledDesc>
@@ -192,7 +193,7 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
                                 return (
                                     <StyledPairRow key={pair.newDesigner.id}>
                                         <StyledPairNames>
-                                            <strong>{pair.existingDesigner.name}</strong>
+                                            <StyledPairName>{pair.existingDesigner.name}</StyledPairName>
                                             <StyledPairArrow>+</StyledPairArrow>
                                             <span>{pair.newDesigner.name} (게스트)</span>
                                         </StyledPairNames>
@@ -238,7 +239,7 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
         <StyledConfirmOverlay>
             <StyledConfirmModal>
                 <StyledHeader>
-                    <h3>로컬 데이터 병합</h3>
+                    <StyledHeaderTitle>로컬 데이터 병합</StyledHeaderTitle>
                 </StyledHeader>
                 <StyledBody>
                     <StyledDesc>
@@ -246,9 +247,9 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
                         게스트 모드에서 만든 데이터를 어떻게 하시겠습니까?
                     </StyledDesc>
                     <StyledStats>
-                        {designers.length > 0 && <li>디자이너 {designers.length}명</li>}
-                        {customers.length > 0 && <li>고객 {customers.length}명</li>}
-                        {reservations.length > 0 && <li>예약 {reservations.length}건</li>}
+                        {designers.length > 0 && <StyledStatItem>디자이너 {designers.length}명</StyledStatItem>}
+                        {customers.length > 0 && <StyledStatItem>고객 {customers.length}명</StyledStatItem>}
+                        {reservations.length > 0 && <StyledStatItem>예약 {reservations.length}건</StyledStatItem>}
                     </StyledStats>
                 </StyledBody>
                 <StyledFooter>
@@ -270,12 +271,12 @@ const StyledSpinnerWrap = styled.div`
     align-items: center;
     gap: 16px;
     padding: 40px 24px;
+`;
 
-    p {
-        margin: 0;
-        font-size: 13px;
-        color: var(--dark-gray-color2);
-    }
+const StyledSpinnerText = styled.p`
+    margin: 0;
+    font-size: 13px;
+    color: var(--dark-gray-color2);
 `;
 
 const StyledBody = styled.div`
@@ -307,12 +308,12 @@ const StyledStats = styled.ul`
     border-radius: var(--radius-md);
     list-style: disc;
     list-style-position: inside;
+`;
 
-    li {
-        font-size: 13px;
-        color: var(--dark-gray-color);
-        line-height: 1.8;
-    }
+const StyledStatItem = styled.li`
+    font-size: 13px;
+    color: var(--dark-gray-color);
+    line-height: 1.8;
 `;
 
 const StyledWiderModal = styled(StyledConfirmModal)`
@@ -348,11 +349,11 @@ const StyledPairNames = styled.div`
     color: var(--dark-gray-color);
     min-width: 0;
     flex: 1;
+`;
 
-    strong {
-        font-weight: 600;
-        color: var(--black-color);
-    }
+const StyledPairName = styled.strong`
+    font-weight: 600;
+    color: var(--black-color);
 `;
 
 const StyledPairArrow = styled.span`

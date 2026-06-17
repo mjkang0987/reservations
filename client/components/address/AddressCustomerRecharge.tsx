@@ -16,6 +16,7 @@ import {
     StyledOverlay,
     StyledDetail,
     StyledHeader,
+    StyledHeaderTitle,
     scrollContentStyle,
 } from '../calendar/overlays/ModalStyles';
 
@@ -84,8 +85,8 @@ export function AddressCustomerRecharge({customer, customerReservations, onReser
             {enableRecharge && (
                 <>
                     <StyledRechargeHeader>
-                        <strong>적립금 충전</strong>
-                        <span>현재 잔액 {formatPrice(customer.points ?? 0)}</span>
+                        <StyledRechargeTitle>적립금 충전</StyledRechargeTitle>
+                        <StyledRechargeBalance>현재 잔액 {formatPrice(customer.points ?? 0)}</StyledRechargeBalance>
                     </StyledRechargeHeader>
                     <StyledRechargeControls>
                         <StyledRechargeSelect
@@ -119,7 +120,7 @@ export function AddressCustomerRecharge({customer, customerReservations, onReser
             {pointHistories.length > 0 && (
                 <StyledPointSection>
                     <StyledPointSectionHeader>
-                        <strong>적립금 이력 ({pointHistories.length})</strong>
+                        <StyledPointSectionTitle>적립금 이력 ({pointHistories.length})</StyledPointSectionTitle>
                         {pointHistories.length > 1 && (
                             <StyledMoreButton type="button" onClick={() => setIsPointHistoryOpen(true)}>
                                 더보기
@@ -132,8 +133,8 @@ export function AddressCustomerRecharge({customer, customerReservations, onReser
                             onClick={() => handlePointHistoryClick(pointHistories[0])}
                         >
                             <StyledPointTop>
-                                <strong>{POINT_HISTORY_LABELS[pointHistories[0].type]}</strong>
-                                <span>{pointHistories[0].delta > 0 ? '+' : ''}{formatPrice(pointHistories[0].delta)}</span>
+                                <StyledPointType>{POINT_HISTORY_LABELS[pointHistories[0].type]}</StyledPointType>
+                                <StyledPointDelta>{pointHistories[0].delta > 0 ? '+' : ''}{formatPrice(pointHistories[0].delta)}</StyledPointDelta>
                             </StyledPointTop>
                             <StyledPointMeta>
                                 <span>{pointHistories[0].description}</span>
@@ -148,7 +149,7 @@ export function AddressCustomerRecharge({customer, customerReservations, onReser
                 <StyledHistoryOverlay onClick={() => setIsPointHistoryOpen(false)}>
                     <StyledHistoryModal onClick={(e) => e.stopPropagation()}>
                         <StyledHeader>
-                            <h3>적립금 이력 ({pointHistories.length})</h3>
+                            <StyledHeaderTitle>적립금 이력 ({pointHistories.length})</StyledHeaderTitle>
                             <CloseIconButton onClick={() => setIsPointHistoryOpen(false)} />
                         </StyledHeader>
                         <StyledHistoryModalContent>
@@ -160,8 +161,8 @@ export function AddressCustomerRecharge({customer, customerReservations, onReser
                                         onClick={() => handlePointHistoryClick(history)}
                                     >
                                         <StyledPointTop>
-                                            <strong>{POINT_HISTORY_LABELS[history.type]}</strong>
-                                            <span>{history.delta > 0 ? '+' : ''}{formatPrice(history.delta)}</span>
+                                            <StyledPointType>{POINT_HISTORY_LABELS[history.type]}</StyledPointType>
+                                            <StyledPointDelta>{history.delta > 0 ? '+' : ''}{formatPrice(history.delta)}</StyledPointDelta>
                                         </StyledPointTop>
                                         <StyledPointMeta>
                                             <span>{history.description}</span>
@@ -194,16 +195,16 @@ const StyledRechargeHeader = styled.div`
     gap: 8px;
     align-items: center;
     flex-wrap: wrap;
+`;
 
-    strong {
-        font-size: 13px;
-        color: var(--dark-gray-color);
-    }
+const StyledRechargeTitle = styled.strong`
+    font-size: 13px;
+    color: var(--dark-gray-color);
+`;
 
-    span {
-        font-size: 12px;
-        color: var(--dark-gray-color2);
-    }
+const StyledRechargeBalance = styled.span`
+    font-size: 12px;
+    color: var(--dark-gray-color2);
 `;
 
 const StyledRechargeControls = styled.div`
@@ -250,11 +251,11 @@ const StyledPointSectionHeader = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
+`;
 
-    strong {
-        font-size: 13px;
-        color: var(--dark-gray-color);
-    }
+const StyledPointSectionTitle = styled.strong`
+    font-size: 13px;
+    color: var(--dark-gray-color);
 `;
 
 const StyledMoreButton = styled.button`
@@ -296,17 +297,17 @@ const StyledPointTop = styled.div`
     justify-content: space-between;
     gap: 8px;
     align-items: center;
+`;
 
-    strong {
-        font-size: 12px;
-        font-weight: 600;
-    }
+const StyledPointType = styled.strong`
+    font-size: 12px;
+    font-weight: 600;
+`;
 
-    span {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--blue-color);
-    }
+const StyledPointDelta = styled.span`
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue-color);
 `;
 
 const StyledPointMeta = styled.div`

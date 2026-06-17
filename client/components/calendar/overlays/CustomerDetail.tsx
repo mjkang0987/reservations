@@ -7,6 +7,7 @@ import type {Reservation, ReservationMap} from '../../../utils/reservations';
 
 import {
     StyledHeader,
+    StyledHeaderTitle,
     useDialogAccessibility,
     useLayerInstanceId,
 } from './ModalStyles';
@@ -34,17 +35,25 @@ import {
     StyledHeaderActionButton,
     StyledHeaderCloseButton,
     StyledInfo,
+    StyledInfoList,
+    StyledInfoTerm,
+    StyledInfoDesc,
     StyledTelLink,
     StyledNoshowCount,
     StyledEditFields,
+    StyledEditFieldLabel,
+    StyledEditFieldLabelText,
+    StyledEditFieldInput,
     StyledPointInfo,
     StyledReservationSection,
     StyledPointHistorySection,
+    StyledPointHistoryTitle,
     StyledPointHistoryHeader,
     StyledPointHistoryMoreButton,
     StyledEmptyText,
     StyledPointHistoryList,
     StyledReservationScroll,
+    StyledReservationTitle,
     StyledMoreButton,
 } from './CustomerDetail.styles';
 
@@ -255,7 +264,7 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                               tabIndex={-1}
                               onClick={(e) => e.stopPropagation()}>
             <StyledHeader>
-                <h3>{customer.name}</h3>
+                <StyledHeaderTitle>{customer.name}</StyledHeaderTitle>
                 <StyledHeaderActions>
                     {isEditing ? (
                         <>
@@ -283,35 +292,35 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                 <StyledInfo>
                     {isEditing ? (
                         <StyledEditFields>
-                            <label htmlFor="customer-edit-name">
-                                <span>고객명</span>
-                                <input
+                            <StyledEditFieldLabel htmlFor="customer-edit-name">
+                                <StyledEditFieldLabelText>고객명</StyledEditFieldLabelText>
+                                <StyledEditFieldInput
                                     id="customer-edit-name"
                                     type="text"
                                     value={editForm.name}
                                     onChange={(e) => handleFieldChange('name', e.target.value)}
                                 />
-                            </label>
-                            <label htmlFor="customer-edit-tel">
-                                <span>연락처</span>
-                                <input
+                            </StyledEditFieldLabel>
+                            <StyledEditFieldLabel htmlFor="customer-edit-tel">
+                                <StyledEditFieldLabelText>연락처</StyledEditFieldLabelText>
+                                <StyledEditFieldInput
                                     id="customer-edit-tel"
                                     type="text"
                                     value={editForm.tel}
                                     onChange={(e) => handleFieldChange('tel', e.target.value)}
                                 />
-                            </label>
+                            </StyledEditFieldLabel>
                             <StyledPointInfo>적립금 {formatPrice(customer.points ?? 0)}</StyledPointInfo>
                         </StyledEditFields>
                     ) : (
-                        <dl>
-                            <dt>연락처</dt>
-                            <dd><StyledTelLink href={`tel:${customer.tel}`}>{formatTel(customer.tel)}</StyledTelLink></dd>
-                            <dt>적립금</dt>
-                            <dd>{formatPrice(customer.points ?? 0)}</dd>
-                            <dt>노쇼</dt>
-                            <dd><StyledNoshowCount $hasNoshow={noshowCount > 0}>{noshowCount}회</StyledNoshowCount></dd>
-                        </dl>
+                        <StyledInfoList>
+                            <StyledInfoTerm>연락처</StyledInfoTerm>
+                            <StyledInfoDesc><StyledTelLink href={`tel:${customer.tel}`}>{formatTel(customer.tel)}</StyledTelLink></StyledInfoDesc>
+                            <StyledInfoTerm>적립금</StyledInfoTerm>
+                            <StyledInfoDesc>{formatPrice(customer.points ?? 0)}</StyledInfoDesc>
+                            <StyledInfoTerm>노쇼</StyledInfoTerm>
+                            <StyledInfoDesc><StyledNoshowCount $hasNoshow={noshowCount > 0}>{noshowCount}회</StyledNoshowCount></StyledInfoDesc>
+                        </StyledInfoList>
                     )}
                 </StyledInfo>
                 <CustomerMemoTagSection customerId={customer.id}
@@ -329,7 +338,7 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                                         onRemoveTag={handleRemoveTag} />
                 <StyledPointHistorySection>
                     <StyledPointHistoryHeader>
-                        <h4>적립금 이력 ({pointHistories.length})</h4>
+                        <StyledPointHistoryTitle>적립금 이력 ({pointHistories.length})</StyledPointHistoryTitle>
                         {pointHistories.length > 1 && (
                             <StyledPointHistoryMoreButton type="button" onClick={() => setIsPointHistoryOpen(true)}>
                                 더보기
@@ -346,7 +355,7 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                 </StyledPointHistorySection>
                 <StyledReservationSection>
                     <StyledReservationScroll>
-                        <h4>예약 내역 ({customerReservations.length})</h4>
+                        <StyledReservationTitle>예약 내역 ({customerReservations.length})</StyledReservationTitle>
                         <CustomerReservationCards reservations={visibleList}
                                                   designerColorMap={designerColorMap}
                                                   designerNameMap={designerNameMap}

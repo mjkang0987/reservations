@@ -244,11 +244,11 @@ export const StyledReasonTitle = styled.div`
     font-weight: 700;
     color: var(--dark-gray-color);
     margin-bottom: 8px;
+`;
 
-    span {
-        font-weight: 500;
-        color: var(--dark-gray-color2);
-    }
+export const StyledReasonTitleHint = styled.span`
+    font-weight: 500;
+    color: var(--dark-gray-color2);
 `;
 
 export const StyledReasonList = styled.div`
@@ -265,10 +265,10 @@ export const StyledReasonOption = styled.label`
     font-size: 13px;
     color: var(--dark-gray-color);
     cursor: pointer;
+`;
 
-    input {
-        flex-shrink: 0;
-    }
+export const StyledReasonRadio = styled.input`
+    flex-shrink: 0;
 `;
 
 export const StyledReasonMemo = styled.textarea`

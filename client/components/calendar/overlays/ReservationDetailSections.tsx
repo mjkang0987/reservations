@@ -11,6 +11,10 @@ import {
     StyledBody,
     StyledBodyInner,
     StyledDiffGrid,
+    StyledDiffGridTerm,
+    StyledDiffGridDesc,
+    StyledDiffGridDel,
+    StyledDiffGridIns,
     StyledError,
     StyledFieldRow,
     StyledFooter,
@@ -18,6 +22,7 @@ import {
     StyledInlineError,
     StyledModalMessage,
     StyledPriceRow,
+    StyledPriceRowInput,
     StyledPriceUnit,
 } from './ModalStyles';
 import {ServiceFields} from '../service/ServiceFields';
@@ -105,7 +110,7 @@ export const ReservationFormFields = ({
         <label htmlFor={`${idPrefix}-price`}>
             <strong>가격</strong>
             <StyledPriceRow>
-                <input
+                <StyledPriceRowInput
                     id={`${idPrefix}-price`}
                     type="text"
                     inputMode="numeric"
@@ -243,7 +248,7 @@ export const ReservationEditSection = ({
     <StyledBody><StyledBodyInner>
         {customerMemoTags.length > 0 && (
             <StyledMemoSection>
-                <strong>고객 메모</strong>
+                <StyledMemoLabel>고객 메모</StyledMemoLabel>
                 <StyledMemoTagList>
                     {customerMemoTags.map((tag) => (
                         <ColorTag key={`${tag.color}-${tag.text}`} $color={tag.color}>
@@ -292,11 +297,11 @@ export const ReservationDiffSection = ({message, color, diffs}: ReservationDiffS
             <StyledDiffList>
                 {diffs.map((diff) => (
                     <StyledDiffGrid key={diff.label}>
-                        <dt>{diff.label}</dt>
-                        <dd>
-                            <del>{diff.before}</del>
-                            <ins>{diff.after}</ins>
-                        </dd>
+                        <StyledDiffGridTerm>{diff.label}</StyledDiffGridTerm>
+                        <StyledDiffGridDesc>
+                            <StyledDiffGridDel>{diff.before}</StyledDiffGridDel>
+                            <StyledDiffGridIns>{diff.after}</StyledDiffGridIns>
+                        </StyledDiffGridDesc>
                     </StyledDiffGrid>
                 ))}
             </StyledDiffList>
@@ -316,8 +321,8 @@ export const ReservationStaticDiffSection = ({message, color, items}: Reservatio
         <StyledDiffList>
             {items.map((item) => (
                 <StyledDiffGrid key={item.label}>
-                    <dt>{item.label}</dt>
-                    <dd>{item.value}</dd>
+                    <StyledDiffGridTerm>{item.label}</StyledDiffGridTerm>
+                    <StyledDiffGridDesc>{item.value}</StyledDiffGridDesc>
                 </StyledDiffGrid>
             ))}
         </StyledDiffList>
@@ -351,11 +356,11 @@ const StyledMemoSection = styled.div`
     border: 1px solid var(--light-gray-color);
     border-radius: 10px;
     background: rgba(248, 250, 252, 0.9);
+`;
 
-    > strong {
-        font-size: 12px;
-        color: var(--dark-gray-color);
-    }
+const StyledMemoLabel = styled.strong`
+    font-size: 12px;
+    color: var(--dark-gray-color);
 `;
 
 const StyledMemoTagList = styled.div`

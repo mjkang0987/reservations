@@ -86,8 +86,8 @@ export function ReservationCreateCustomerFields({
                                         aria-selected={customer.id === customerId}
                                         onMouseDown={() => onSelectCustomer(customer.id)}
                                     >
-                                        <span>{customer.name}</span>
-                                        <span>{formatTel(customer.tel)}</span>
+                                        <StyledSuggestionName>{customer.name}</StyledSuggestionName>
+                                        <StyledSuggestionTel>{formatTel(customer.tel)}</StyledSuggestionTel>
                                     </StyledSuggestionItem>
                                 ))}
                             </StyledSuggestionList>
@@ -189,11 +189,6 @@ const StyledSuggestionItem = styled.li`
   font-size: 13px;
   cursor: pointer;
 
-  > span:last-child {
-    font-size: 11px;
-    color: var(--gray-color);
-  }
-
   &[aria-selected="true"] {
     background-color: var(--black-color-10);
   }
@@ -203,6 +198,13 @@ const StyledSuggestionItem = styled.li`
       background-color: var(--black-color-10);
     }
   }
+`;
+
+const StyledSuggestionName = styled.span``;
+
+const StyledSuggestionTel = styled.span`
+  font-size: 11px;
+  color: var(--gray-color);
 `;
 
 const StyledNoResult = styled.li`

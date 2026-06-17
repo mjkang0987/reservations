@@ -167,14 +167,6 @@ export const StyledHeader = styled.div`
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, var(--bg-subtle-92) 100%);
     backdrop-filter: blur(10px);
 
-    h3 {
-        margin: 0;
-        font-size: var(--modal-title-font);
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        color: var(--black-color);
-    }
-
     > button:not([class]) {
         min-width: 44px;
         height: 30px;
@@ -195,19 +187,27 @@ export const StyledHeader = styled.div`
     }
 `;
 
+export const StyledHeaderTitle = styled.h3`
+    margin: 0;
+    font-size: var(--modal-title-font);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--black-color);
+`;
+
 export const StyledHeaderTitleGroup = styled.div`
     display: flex;
     flex-direction: column;
     gap: 4px;
     min-width: 0;
+`;
 
-    > p {
-        margin: 0;
-        font-size: 12px;
-        line-height: 1.45;
-        color: var(--dark-gray-color2);
-        font-weight: 500;
-    }
+export const StyledHeaderTitleGroupText = styled.p`
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--dark-gray-color2);
+    font-weight: 500;
 `;
 
 export const scrollHintStyle = css`
@@ -292,11 +292,11 @@ export const StyledPriceRow = styled.div`
     display: flex;
     align-items: center;
     gap: var(--gap-xs);
+`;
 
-    > input {
-        flex: 1;
-        text-align: right;
-    }
+export const StyledPriceRowInput = styled.input`
+    flex: 1;
+    text-align: right;
 `;
 
 export const StyledPriceUnit = styled.span`
@@ -331,30 +331,30 @@ export const StyledInfoGrid = styled.dl`
     display: grid;
     gap: var(--info-grid-gap);
     margin: 0;
+`;
 
-    > div {
-        display: grid;
-        grid-template-columns: 64px 1fr;
-        gap: var(--info-grid-cell-gap);
-        align-items: start;
-        padding: var(--info-grid-cell-padding);
-        border-radius: var(--info-grid-cell-radius);
-        background: rgba(248, 250, 252, 0.9); /* --bg-subtle 계열 (0.9 변형은 변수 없음) */
-        border: 1px solid rgba(226, 232, 240, 0.9);
-        font-size: 13px;
-    }
+export const StyledInfoGridRow = styled.div`
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: var(--info-grid-cell-gap);
+    align-items: start;
+    padding: var(--info-grid-cell-padding);
+    border-radius: var(--info-grid-cell-radius);
+    background: rgba(248, 250, 252, 0.9); /* --bg-subtle 계열 (0.9 변형은 변수 없음) */
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    font-size: 13px;
+`;
 
-    dt {
-        color: var(--gray-color);
-        font-weight: 600;
-    }
+export const StyledInfoGridTerm = styled.dt`
+    color: var(--gray-color);
+    font-weight: 600;
+`;
 
-    dd {
-        margin: 0;
-        color: #111827;
-        font-weight: 600;
-        line-height: 1.45;
-    }
+export const StyledInfoGridDesc = styled.dd`
+    margin: 0;
+    color: #111827;
+    font-weight: 600;
+    line-height: 1.45;
 `;
 
 export const StyledDiffGrid = styled.dl`
@@ -362,38 +362,38 @@ export const StyledDiffGrid = styled.dl`
     grid-template-columns: 60px 1fr;
     gap: var(--gap-xs) var(--gap-lg);
     margin: 0;
+`;
 
-    dt {
-        font-size: 13px;
+export const StyledDiffGridTerm = styled.dt`
+    font-size: 13px;
+    color: var(--dark-gray-color);
+    font-weight: 500;
+`;
+
+export const StyledDiffGridDesc = styled.dd`
+    display: flex;
+    align-items: center;
+    gap: var(--gap-md);
+    margin: 0;
+    font-size: 13px;
+`;
+
+export const StyledDiffGridDel = styled.del`
+    color: var(--danger-color);
+    text-decoration: line-through;
+    font-size: var(--small-font);
+`;
+
+export const StyledDiffGridIns = styled.ins`
+    color: var(--success-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--small-font);
+
+    &::before {
+        content: "\\2192\\00a0";
         color: var(--dark-gray-color);
-        font-weight: 500;
-    }
-
-    dd {
-        display: flex;
-        align-items: center;
-        gap: var(--gap-md);
-        margin: 0;
-        font-size: 13px;
-    }
-
-    del {
-        color: var(--danger-color);
-        text-decoration: line-through;
-        font-size: var(--small-font);
-    }
-
-    ins {
-        color: var(--success-color);
-        text-decoration: none;
-        font-weight: 600;
-        font-size: var(--small-font);
-
-        &::before {
-            content: "\\2192\\00a0";
-            color: var(--dark-gray-color);
-            font-weight: 400;
-        }
+        font-weight: 400;
     }
 `;
 

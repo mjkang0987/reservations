@@ -89,20 +89,20 @@ export const StyledAddFormRow = styled.div`
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+`;
 
-    select {
-        flex: 1;
-        min-width: 120px;
-        height: 34px;
-        padding: 0 8px;
-        border: 1px solid var(--light-gray-color);
-        border-radius: var(--radius-sm);
-        font-size: 13px;
-        background: var(--white-color);
-        outline: none;
+export const StyledAddFormRowSelect = styled.select`
+    flex: 1;
+    min-width: 120px;
+    height: 34px;
+    padding: 0 8px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    background: var(--white-color);
+    outline: none;
 
-        &:focus { border-color: var(--blue-color); }
-    }
+    &:focus { border-color: var(--blue-color); }
 `;
 
 export const StyledAddInput = styled.input`

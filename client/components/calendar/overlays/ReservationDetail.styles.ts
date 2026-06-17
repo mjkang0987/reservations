@@ -15,24 +15,24 @@ export const StyledRestoreModal = styled(StyledDetail)`
 
 export const StyledRestoreBody = styled.div`
     padding: var(--modal-body-padding);
+`;
 
-    dl {
-        display: grid;
-        grid-template-columns: 60px 1fr;
-        gap: 8px 12px;
-        margin: 0;
-    }
+export const StyledRestoreList = styled.dl`
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 8px 12px;
+    margin: 0;
+`;
 
-    dt {
-        font-size: 13px;
-        color: var(--dark-gray-color);
-        font-weight: 500;
-    }
+export const StyledRestoreTerm = styled.dt`
+    font-size: 13px;
+    color: var(--dark-gray-color);
+    font-weight: 500;
+`;
 
-    dd {
-        margin: 0;
-        font-size: 13px;
-    }
+export const StyledRestoreDesc = styled.dd`
+    margin: 0;
+    font-size: 13px;
 `;
 
 export const StyledRestoreMessage = styled.p`

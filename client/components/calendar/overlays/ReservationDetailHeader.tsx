@@ -21,7 +21,7 @@ export function ReservationDetailHeader({
     return (
         <StyledReservationHeader>
             <StyledReservationTitleGroup>
-                <h3>{title}</h3>
+                <StyledReservationTitle>{title}</StyledReservationTitle>
             </StyledReservationTitleGroup>
             <CloseIconButton onClick={onClose} />
         </StyledReservationHeader>
@@ -37,11 +37,11 @@ const StyledReservationTitleGroup = styled.div`
     min-width: 0;
     flex: 1;
     overflow: hidden;
+`;
 
-    h3 {
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+const StyledReservationTitle = styled.h3`
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 `;

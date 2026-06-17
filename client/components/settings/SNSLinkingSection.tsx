@@ -6,7 +6,7 @@ import {signIn, signOut, useSession} from 'next-auth/react';
 
 import styled from 'styled-components';
 
-import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledFooter, StyledActionButton, StyledModalContent, StyledModalMessage} from '../calendar/overlays/ModalStyles';
+import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledHeaderTitle, StyledFooter, StyledActionButton, StyledModalContent, StyledModalMessage} from '../calendar/overlays/ModalStyles';
 import {LabelBadge} from '../ui/LabelBadge';
 import {PageHero} from '../ui/PageHero';
 import {GuestNotice} from '../ui/GuestNotice';
@@ -197,13 +197,19 @@ export function SNSLinkingSection() {
                                 <StyledProviderInfo>
                                     <StyledProviderDot $bg={p.bg} $border={p.border} />
                                     <StyledProviderName>{p.label}</StyledProviderName>
-                                    {isLinked && <StyledBadge>연결됨</StyledBadge>}
+                                    {isLinked && <LabelBadge $tone="success" $shape="pill">연결됨</LabelBadge>}
                                 </StyledProviderInfo>
                                 <StyledProviderAction>
                                     {isLinked ? (
                                         <StyledEditBtn
                                             type="button"
-                                            onClick={() => setUnlinkTarget(p.id)}
+                                            onClick={() => {
+                                                if (isLastAccount) {
+                                                    toast('로그인 수단 유지를 위해 마지막 계정은 해제할 수 없습니다.', 'info');
+                                                    return;
+                                                }
+                                                setUnlinkTarget(p.id);
+                                            }}
                                             disabled={isProcessing}
                                         >
                                             {isProcessing ? '처리 중...' : '연결 해제'}
@@ -230,7 +236,7 @@ export function SNSLinkingSection() {
                 <StyledConfirmOverlay onClick={() => setUnlinkTarget(null)}>
                     <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
                         <StyledHeader>
-                            <h3>연결 해제</h3>
+                            <StyledHeaderTitle>연결 해제</StyledHeaderTitle>
                         </StyledHeader>
                         <StyledModalContent>
                             <StyledModalMessage>
@@ -258,7 +264,7 @@ export function SNSLinkingSection() {
                 <StyledConfirmOverlay onClick={handleMergeCancel}>
                     <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
                         <StyledHeader>
-                            <h3>계정 병합</h3>
+                            <StyledHeaderTitle>계정 병합</StyledHeaderTitle>
                         </StyledHeader>
                         <StyledModalContent>
                             <StyledModalMessage>
@@ -347,15 +353,6 @@ const StyledProviderName = styled.span`
     font-size: 14px;
     font-weight: 600;
     color: var(--dark-gray-color);
-`;
-
-const StyledBadge = styled.span`
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--success-color);
-    background: var(--success-bg);
-    padding: 2px 8px;
-    border-radius: 999px;
 `;
 
 const StyledProviderAction = styled.div`

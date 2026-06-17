@@ -334,8 +334,8 @@ const Address: NextPage<AddressProps> = ({customers, reservations, history, stor
             {lastMerge && (
                 <StyledUndoToast>
                     <span>{lastMerge.sourceNames.length}명 → &quot;{lastMerge.targetName}&quot; 병합 완료</span>
-                    <button type="button" onClick={handleUnmerge}>되돌리기</button>
-                    <button type="button" onClick={() => setLastMerge(null)}>✕</button>
+                    <StyledUndoButton type="button" onClick={handleUnmerge}>되돌리기</StyledUndoButton>
+                    <StyledUndoCloseButton type="button" onClick={() => setLastMerge(null)}>✕</StyledUndoCloseButton>
                 </StyledUndoToast>
             )}
             {selectedReservations.map((reservation, index) => (
@@ -422,24 +422,24 @@ const StyledUndoToast = styled.div`
     z-index: 100;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
+`;
 
-    > button:first-of-type {
-        padding: 4px 12px;
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        border-radius: var(--radius-md);
-        background: transparent;
-        color: var(--blue-color);
-        font-size: var(--small-font);
-        font-weight: 600;
-        cursor: pointer;
-    }
+const StyledUndoButton = styled.button`
+    padding: 4px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--blue-color);
+    font-size: var(--small-font);
+    font-weight: 600;
+    cursor: pointer;
+`;
 
-    > button:last-of-type {
-        padding: 2px 6px;
-        border: none;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.6);
-        font-size: var(--font);
-        cursor: pointer;
-    }
+const StyledUndoCloseButton = styled.button`
+    padding: 2px 6px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--font);
+    cursor: pointer;
 `;

@@ -9,9 +9,9 @@ interface CloseIconButtonProps {
 
 export const CloseIconButton = ({onClick, className}: CloseIconButtonProps) => (
     <StyledCloseIconButton type="button" onClick={onClick} aria-label="닫기" className={className}>
-        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <StyledCloseIcon viewBox="0 0 24 24" aria-hidden="true">
             <path d="M7 7L17 17M17 7L7 17" />
-        </svg>
+        </StyledCloseIcon>
     </StyledCloseIconButton>
 );
 
@@ -38,15 +38,14 @@ const StyledCloseIconButton = styled.button`
         background-color: var(--black-color-10);
     }
     }
+`;
 
-    svg {
-        width: 14px;
-        height: 14px;
-        stroke: currentColor;
-        fill: none;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-
-    }
+const StyledCloseIcon = styled.svg`
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 `;

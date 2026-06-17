@@ -9,6 +9,7 @@ import {
     StyledDetail,
     StyledFooter,
     StyledHeader,
+    StyledHeaderTitle,
     StyledHeaderTitleGroup,
     StyledOverlay,
     useDialogAccessibility,
@@ -26,6 +27,8 @@ import type {RevenueMetricKey} from './RevenueKpiGrid';
 import {EMPTY_TEXT} from '../settings-styles';
 import {
     StyledCustomerInfoGrid,
+    StyledCustomerInfoGridItem,
+    StyledCustomerInfoGridStrong,
     StyledCustomerName,
     StyledList,
     StyledRevenueEmpty,
@@ -98,7 +101,7 @@ export const RevenueMetricModal = ({
             <StyledMetricModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
                     <StyledHeaderTitleGroup>
-                        <h3>{metricLayer.title}</h3>
+                        <StyledHeaderTitle>{metricLayer.title}</StyledHeaderTitle>
                         {(metricLayerKey === 'new' || metricLayerKey === 'returning') && (
                             <StyledMetricSubtitle>
                                 {metricLayerKey === 'new'
@@ -132,11 +135,11 @@ export const RevenueMetricModal = ({
                                             <StyledCustomerVisitDate>{item.visitDate}</StyledCustomerVisitDate>
                                         </StyledCustomerRowHeader>
                                         <StyledCustomerInfoGrid>
-                                            <span><strong>연락처</strong>{item.customer.tel ? <StyledTelLink href={`tel:${item.customer.tel}`}>{formatTel(item.customer.tel)}</StyledTelLink> : '-'}</span>
-                                            <span><strong>적립금</strong>{formatPrice(item.customer.points ?? 0)}</span>
-                                            <span><strong>최근 방문일</strong>{item.visitDate}</span>
+                                            <StyledCustomerInfoGridItem><StyledCustomerInfoGridStrong>연락처</StyledCustomerInfoGridStrong>{item.customer.tel ? <StyledTelLink href={`tel:${item.customer.tel}`}>{formatTel(item.customer.tel)}</StyledTelLink> : '-'}</StyledCustomerInfoGridItem>
+                                            <StyledCustomerInfoGridItem><StyledCustomerInfoGridStrong>적립금</StyledCustomerInfoGridStrong>{formatPrice(item.customer.points ?? 0)}</StyledCustomerInfoGridItem>
+                                            <StyledCustomerInfoGridItem><StyledCustomerInfoGridStrong>최근 방문일</StyledCustomerInfoGridStrong>{item.visitDate}</StyledCustomerInfoGridItem>
                                             {metricLayerKey === 'returning' && item.prevVisitDate && (
-                                                <span><strong>이전 방문</strong>{item.prevVisitDate}</span>
+                                                <StyledCustomerInfoGridItem><StyledCustomerInfoGridStrong>이전 방문</StyledCustomerInfoGridStrong>{item.prevVisitDate}</StyledCustomerInfoGridItem>
                                             )}
                                         </StyledCustomerInfoGrid>
                                     </StyledCustomerRow>

@@ -9,7 +9,7 @@ import type {AddServiceState} from './onboarding-types';
 import {
     StyledNavRow, StyledBackBtn, StyledSkipBtn, StyledNextBtn,
     StyledSectionNote, StyledHighlight,
-    StyledAddForm, StyledAddFormRow, StyledAddInput, StyledAddFormActions,
+    StyledAddForm, StyledAddFormRow, StyledAddFormRowSelect, StyledAddInput, StyledAddFormActions,
     StyledCancelBtnSm, StyledConfirmBtnSm, StyledAddServiceBtn,
 } from './onboarding-step-styles';
 
@@ -110,7 +110,7 @@ export const OnboardingStep2 = ({localServices, mergedCategoryColors, onServices
             {addSvc ? (
                 <StyledAddForm>
                     <StyledAddFormRow>
-                        <select
+                        <StyledAddFormRowSelect
                             id="onboard-svc-category"
                             value={addSvc.category}
                             onChange={(e) => setAddSvc({...addSvc, category: e.target.value, newCategory: ''})}
@@ -120,7 +120,7 @@ export const OnboardingStep2 = ({localServices, mergedCategoryColors, onServices
                                 <option key={c} value={c}>{c}</option>
                             ))}
                             <option value="__new">+ 새 카테고리</option>
-                        </select>
+                        </StyledAddFormRowSelect>
                         {addSvc.category === '__new' && (
                             <StyledAddInput
                                 id="onboard-svc-new-category"

@@ -123,6 +123,6 @@ export const StyledEmptyCard = styled.p`
 `;
 
 export const StyledServiceFooter = styled.div`
-    padding: 12px 16px;
+    padding: 12px 0;
     border-top: 1px solid var(--light-gray-color);
 `;

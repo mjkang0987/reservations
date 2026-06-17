@@ -182,12 +182,12 @@ export const StyledCategoryDragHandle = styled.span`
     &:active {
         cursor: grabbing;
     }
+`;
 
-    svg {
-        width: 16px;
-        height: 16px;
-        fill: currentColor;
-    }
+export const StyledCategoryDragHandleIcon = styled.svg`
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
 `;
 
 export const StyledCategoryColorInput = styled.input`
@@ -322,6 +322,9 @@ export const StyledDeleteMsg = styled.p`
     font-size: 14px;
     color: var(--dark-gray-color);
     line-height: 1.6;
-    strong { font-weight: 700; }
+`;
+
+export const StyledDeleteTarget = styled.strong`
+    font-weight: 700;
 `;
 

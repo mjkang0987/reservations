@@ -60,7 +60,7 @@ export const HeaderSearchLayer = ({onClose}: Props) => {
                             <StyledResultItem key={c.id}
                                               onClick={() => handleSelect(c.id)}>
                                 <span>{c.name}</span>
-                                <span>{formatTel(c.tel)}</span>
+                                <StyledResultTel>{formatTel(c.tel)}</StyledResultTel>
                             </StyledResultItem>
                         ))
                     )}
@@ -138,16 +138,16 @@ const StyledResultItem = styled.li`
     font-size: 14px;
     cursor: pointer;
 
-    > span:last-child {
-        font-size: 12px;
-        color: var(--gray-color);
-    }
-
     @media (hover: hover) and (pointer: fine) {
         &:hover {
             background-color: var(--black-color-10);
         }
     }
+`;
+
+const StyledResultTel = styled.span`
+    font-size: 12px;
+    color: var(--gray-color);
 `;
 
 const StyledNoResult = styled.li`

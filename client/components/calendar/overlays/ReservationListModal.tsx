@@ -18,7 +18,9 @@ import {
     StyledOverlay,
     StyledDetail,
     StyledHeader,
+    StyledHeaderTitle,
     StyledHeaderTitleGroup,
+    StyledHeaderTitleGroupText,
     StyledBody,
     StyledBodyInner,
     useDialogAccessibility,
@@ -148,8 +150,8 @@ export const ReservationListModal = () => {
                          onClick={(e) => e.stopPropagation()}>
             <StyledHeader>
                 <StyledHeaderTitleGroup>
-                    <h3>{title} 예약 ({reservations.length})</h3>
-                    <p>예약을 누르면 상세 레이어가 열리고, 고객명은 바로 고객 상세로 이동합니다.</p>
+                    <StyledHeaderTitle>{title} 예약 ({reservations.length})</StyledHeaderTitle>
+                    <StyledHeaderTitleGroupText>예약을 누르면 상세 레이어가 열리고, 고객명은 바로 고객 상세로 이동합니다.</StyledHeaderTitleGroupText>
                 </StyledHeaderTitleGroup>
                 <CloseIconButton onClick={handleClose} />
             </StyledHeader>

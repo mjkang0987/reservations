@@ -6,7 +6,7 @@ import {useSession} from 'next-auth/react';
 
 import styled from 'styled-components';
 
-import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledModalContent} from '../calendar/overlays/ModalStyles';
+import {StyledConfirmOverlay, StyledConfirmModal, StyledHeader, StyledHeaderTitle, StyledModalContent} from '../calendar/overlays/ModalStyles';
 import {actionButtonStyle} from '../settings/settings-styles';
 import {LabelBadge} from '../ui/LabelBadge';
 import {LoadingOverlay} from '../ui/LoadingOverlay';
@@ -75,7 +75,7 @@ export function StoreSwitcher({fallbackName, onNavigate}: StoreSwitcherProps) {
                 <StyledConfirmOverlay onClick={() => setOpen(false)}>
                     <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
                         <StyledHeader>
-                            <h3>매장 전환</h3>
+                            <StyledHeaderTitle>매장 전환</StyledHeaderTitle>
                             <button type="button" onClick={() => setOpen(false)}>닫기</button>
                         </StyledHeader>
                         <StyledModalContent>

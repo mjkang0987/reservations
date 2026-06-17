@@ -10,8 +10,14 @@ import {
     StyledBodyInner,
     StyledDetail,
     StyledDiffGrid,
+    StyledDiffGridDel,
+    StyledDiffGridDesc,
+    StyledDiffGridIns,
+    StyledDiffGridTerm,
     StyledHeader,
+    StyledHeaderTitle,
     StyledHeaderTitleGroup,
+    StyledHeaderTitleGroupText,
     StyledOverlay,
     useDialogAccessibility,
     useLayerInstanceId,
@@ -52,8 +58,8 @@ export function ReservationHistoryLayer({
             <StyledHistoryPanel ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()} $width={400}>
                 <StyledHeader>
                     <StyledHeaderTitleGroup>
-                        <h3>변경 이력</h3>
-                        <p>예약 상태와 시간, 서비스 변경 흐름을 시간순으로 보여줍니다.</p>
+                        <StyledHeaderTitle>변경 이력</StyledHeaderTitle>
+                        <StyledHeaderTitleGroupText>예약 상태와 시간, 서비스 변경 흐름을 시간순으로 보여줍니다.</StyledHeaderTitleGroupText>
                     </StyledHeaderTitleGroup>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
@@ -71,7 +77,7 @@ export function ReservationHistoryLayer({
                                 return (
                                     <StyledHistoryDetailItem key={index} $type={entryType}>
                                         <StyledHistoryDetailHeader>
-                                            <time dateTime={entry.timestamp}>{formatTimestamp(entry.timestamp)}</time>
+                                            <StyledHistoryTime dateTime={entry.timestamp}>{formatTimestamp(entry.timestamp)}</StyledHistoryTime>
                                             <StyledHistoryTypeBadge $type={entryType}>
                                                 {isCancelEntry ? '취소' : isNoshowEntry ? '노쇼' : isCompleteEntry ? '예약완료' : isRestoreEntry ? '예약전환' : '변경'}
                                             </StyledHistoryTypeBadge>
@@ -79,11 +85,11 @@ export function ReservationHistoryLayer({
                                         <StyledHistoryDetailDiffs>
                                             {diffs.map((diff) => (
                                                 <StyledHistoryDiffGrid key={diff.label}>
-                                                    <dt>{diff.label}</dt>
-                                                    <dd>
-                                                        <del>{diff.before}</del>
-                                                        <ins>{diff.after}</ins>
-                                                    </dd>
+                                                    <StyledDiffGridTerm>{diff.label}</StyledDiffGridTerm>
+                                                    <StyledDiffGridDesc>
+                                                        <StyledDiffGridDel>{diff.before}</StyledDiffGridDel>
+                                                        <StyledDiffGridIns>{diff.after}</StyledDiffGridIns>
+                                                    </StyledDiffGridDesc>
                                                 </StyledHistoryDiffGrid>
                                             ))}
                                         </StyledHistoryDetailDiffs>
@@ -130,11 +136,11 @@ const StyledHistoryDetailHeader = styled.div`
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
+`;
 
-    > time {
-        font-size: var(--xsmall-font);
-        color: var(--dark-gray-color);
-    }
+const StyledHistoryTime = styled.time`
+    font-size: var(--xsmall-font);
+    color: var(--dark-gray-color);
 `;
 
 const StyledHistoryTypeBadge = styled(LabelBadge).attrs<{ $type: string }>((props) => ({

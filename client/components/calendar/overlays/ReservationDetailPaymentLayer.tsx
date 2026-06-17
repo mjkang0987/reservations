@@ -1,6 +1,6 @@
 import React from 'react';
 
-import styled from 'styled-components';
+import styled, {css} from 'styled-components';
 
 import type {PaymentMethod} from '../../../utils/reservations';
 import {formatPrice} from '../../../utils/services';
@@ -64,7 +64,7 @@ export function ReservationDetailPaymentLayer({
                     <StyledPaymentEntryList>
                         {paymentEntries.map((entry, index) => (
                             <StyledPaymentEntryRow key={`payment-entry-${index}`}>
-                                <select
+                                <StyledPaymentEntrySelect
                                     id={`payment-entry-${index}-method`}
                                     value={entry.method}
                                     onChange={(e) => onChangeEntryMethod(index, e.target.value as PaymentMethod | '')}
@@ -73,8 +73,8 @@ export function ReservationDetailPaymentLayer({
                                     {paymentMethodOptions.map((option) => (
                                         <option key={option} value={option}>{option}</option>
                                     ))}
-                                </select>
-                                <input
+                                </StyledPaymentEntrySelect>
+                                <StyledPaymentEntryInput
                                     id={`payment-entry-${index}-amount`}
                                     type="text"
                                     inputMode="numeric"
@@ -173,21 +173,28 @@ const StyledPaymentEntryRow = styled.div`
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 4px;
 
-    select,
-    input {
-        height: 30px;
-        padding: 0 10px 0 4px;
-        border: 1px solid var(--light-gray-color);
-        border-radius: 4px;
-        background: var(--white-color);
-        font-size: 12px;
-        color: var(--dark-gray-color);
-        box-sizing: border-box;
-    }
-
     @media (max-width: 640px) {
         grid-template-columns: 1fr;
     }
+`;
+
+const paymentEntryFieldStyles = css`
+    height: 30px;
+    padding: 0 10px 0 4px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 4px;
+    background: var(--white-color);
+    font-size: 12px;
+    color: var(--dark-gray-color);
+    box-sizing: border-box;
+`;
+
+const StyledPaymentEntrySelect = styled.select`
+    ${paymentEntryFieldStyles}
+`;
+
+const StyledPaymentEntryInput = styled.input`
+    ${paymentEntryFieldStyles}
 `;
 
 const StyledPaymentAddButton = styled.button`

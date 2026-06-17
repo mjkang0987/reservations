@@ -40,13 +40,14 @@ function ToastItem({toast, onDismiss}: {toast: Toast; onDismiss: (id: string) =>
 }
 
 const slideIn = keyframes`
-    from { transform: translateY(8px); opacity: 0; }
-    to   { transform: translateY(0);   opacity: 1; }
+    from { transform: translateY(-8px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
 `;
 
 const StyledList = styled.ul`
     position: fixed;
-    bottom: 24px;
+    /* 헤더(약 48px) 아래 컨텐츠 영역 기준 상단에서 50px */
+    top: calc(48px + 50px);
     left: 50%;
     transform: translateX(-50%);
     display: flex;

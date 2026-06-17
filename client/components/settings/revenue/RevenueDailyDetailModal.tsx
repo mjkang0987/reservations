@@ -7,7 +7,9 @@ import {
     StyledDetail,
     StyledFooter,
     StyledHeader,
+    StyledHeaderTitle,
     StyledHeaderTitleGroup,
+    StyledHeaderTitleGroupText,
     StyledOverlay,
     StyledBody,
     StyledBodyInner,
@@ -20,7 +22,7 @@ import type {Designer} from '../../../utils/designers';
 import type {Reservation, ReservationMap} from '../../../utils/reservations';
 import type {CustomerMap} from '../../../utils/customers';
 import type {DailyRevenue} from '../../../utils/revenue';
-import {StyledSummary} from './revenue-styles';
+import {StyledSummary, StyledSummaryStrong} from './revenue-styles';
 import {RevenueReservationList} from './RevenueReservationList';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -70,7 +72,7 @@ export const RevenueDailyDetailModal = ({
         >
             <StyledDailyModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <StyledHeaderTitleGroup><h3>{formatDateLabel(dateKey)} 상세</h3><p>하루 예약 매출과 예약별 상세 내역입니다.</p></StyledHeaderTitleGroup>
+                    <StyledHeaderTitleGroup><StyledHeaderTitle>{formatDateLabel(dateKey)} 상세</StyledHeaderTitle><StyledHeaderTitleGroupText>하루 예약 매출과 예약별 상세 내역입니다.</StyledHeaderTitleGroupText></StyledHeaderTitleGroup>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledDailyBody>
@@ -91,7 +93,7 @@ export const RevenueDailyDetailModal = ({
                 <StyledFooter>
                     <StyledSummary>
                         <span>{daily.count}건</span>
-                        <strong>{formatPrice(daily.total)}</strong>
+                        <StyledSummaryStrong>{formatPrice(daily.total)}</StyledSummaryStrong>
                     </StyledSummary>
                     <StyledActionButton type="button" onClick={onClose}>닫기</StyledActionButton>
                 </StyledFooter>

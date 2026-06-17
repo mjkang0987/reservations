@@ -36,37 +36,37 @@ export const DesignerOffDayMoveConfirmModal = ({
             onClose={onClose}
         >
             <StyledConfirmContent>
-                <dl>
-                    <dt>서비스</dt>
-                    <dd>{reservation.service}</dd>
+                <StyledConfirmList>
+                    <StyledTerm>서비스</StyledTerm>
+                    <StyledDesc>{reservation.service}</StyledDesc>
                     {customerName && (
                         <>
-                            <dt>고객</dt>
-                            <dd>{customerName}</dd>
+                            <StyledTerm>고객</StyledTerm>
+                            <StyledDesc>{customerName}</StyledDesc>
                         </>
                     )}
                     {dateChanged ? (
                         <>
-                            <dt>날짜</dt>
-                            <dd>
+                            <StyledTerm>날짜</StyledTerm>
+                            <StyledDesc>
                                 <StyledChangeRow>
                                     <span>{reservation.date}</span>
                                     <StyledArrow>→</StyledArrow>
                                     <span>{nextReservation.date}</span>
                                 </StyledChangeRow>
-                            </dd>
+                            </StyledDesc>
                         </>
                     ) : (
                         <>
-                            <dt>날짜</dt>
-                            <dd>{reservation.date}</dd>
+                            <StyledTerm>날짜</StyledTerm>
+                            <StyledDesc>{reservation.date}</StyledDesc>
                         </>
                     )}
-                    <dt>변경 후</dt>
-                    <dd>
+                    <StyledTerm>변경 후</StyledTerm>
+                    <StyledDesc>
                         <StyledNewTime>{nextReservation.startTime} ~ {nextReservation.endTime}</StyledNewTime>
-                    </dd>
-                </dl>
+                    </StyledDesc>
+                </StyledConfirmList>
                 <StyledWarningMessage>{warningMessage} 이동하시겠습니까?</StyledWarningMessage>
             </StyledConfirmContent>
         </ConfirmDialog>
@@ -78,24 +78,24 @@ const StyledConfirmContent = styled.div`
     display: flex;
     flex-direction: column;
     gap: 12px;
+`;
 
-    dl {
-        display: grid;
-        grid-template-columns: 60px 1fr;
-        gap: 8px 12px;
-        margin: 0;
-    }
+const StyledConfirmList = styled.dl`
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 8px 12px;
+    margin: 0;
+`;
 
-    dt {
-        font-size: 13px;
-        color: var(--dark-gray-color);
-        font-weight: 500;
-    }
+const StyledTerm = styled.dt`
+    font-size: 13px;
+    color: var(--dark-gray-color);
+    font-weight: 500;
+`;
 
-    dd {
-        margin: 0;
-        font-size: 13px;
-    }
+const StyledDesc = styled.dd`
+    margin: 0;
+    font-size: 13px;
 `;
 
 const StyledWarningMessage = styled.p`

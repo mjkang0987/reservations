@@ -105,8 +105,8 @@ export const PointManageSection = () => {
                         <StyledTabButton type="button" $active={activeTab === 'settings'} onClick={() => setActiveTab('settings')}>설정</StyledTabButton>
                     </StyledTabRow>
                     <StyledTotalBadge>
-                        <span>전체 잔액</span>
-                        <strong>{formatPrice(totalPoints)}</strong>
+                        <StyledTotalLabel>전체 잔액</StyledTotalLabel>
+                        <StyledTotalValue>{formatPrice(totalPoints)}</StyledTotalValue>
                     </StyledTotalBadge>
                 </StyledTopBar>
             </StyledStickyHeader>
@@ -179,15 +179,15 @@ const StyledTotalBadge = styled.div`
     gap: 8px;
     flex-shrink: 0;
     margin-left: auto;
+`;
 
-    span {
-        font-size: 12px;
-        color: var(--dark-gray-color2);
-    }
+const StyledTotalLabel = styled.span`
+    font-size: 12px;
+    color: var(--dark-gray-color2);
+`;
 
-    strong {
-        font-size: 14px;
-    }
+const StyledTotalValue = styled.strong`
+    font-size: 14px;
 `;
 
 const StyledTabRow = styled.div`

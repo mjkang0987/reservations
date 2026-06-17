@@ -104,8 +104,8 @@ const InquiryPage: NextPage = () => {
                         <>
                             {submitted ? (
                                 <StyledSuccess>
-                                    <strong>문의가 접수되었습니다.</strong>
-                                    <span>확인 후 빠르게 답변드리겠습니다.</span>
+                                    <StyledSuccessTitle>문의가 접수되었습니다.</StyledSuccessTitle>
+                                    <StyledSuccessText>확인 후 빠르게 답변드리겠습니다.</StyledSuccessText>
                                     <StyledResetButton type="button" onClick={() => {
                                         setSubmitted(false);
                                         setContent('');
@@ -116,9 +116,9 @@ const InquiryPage: NextPage = () => {
                             ) : (
                                 <StyledForm onSubmit={handleSubmit}>
                                     <StyledFieldGroup>
-                                        <label htmlFor="inquiry-name">
-                                            <strong>이름 <StyledRequired>*</StyledRequired></strong>
-                                        </label>
+                                        <StyledFieldLabel htmlFor="inquiry-name">
+                                            <StyledFieldLabelText>이름 <StyledRequired>*</StyledRequired></StyledFieldLabelText>
+                                        </StyledFieldLabel>
                                         <StyledInput
                                             id="inquiry-name"
                                             type="text"
@@ -128,9 +128,9 @@ const InquiryPage: NextPage = () => {
                                         />
                                     </StyledFieldGroup>
                                     <StyledFieldGroup>
-                                        <label htmlFor="inquiry-email">
-                                            <strong>답변 받으실 이메일</strong>
-                                        </label>
+                                        <StyledFieldLabel htmlFor="inquiry-email">
+                                            <StyledFieldLabelText>답변 받으실 이메일</StyledFieldLabelText>
+                                        </StyledFieldLabel>
                                         <StyledInput
                                             id="inquiry-email"
                                             type="email"
@@ -140,9 +140,9 @@ const InquiryPage: NextPage = () => {
                                         />
                                     </StyledFieldGroup>
                                     <StyledFieldGroup>
-                                        <label htmlFor="inquiry-content">
-                                            <strong>문의 내용 <StyledRequired>*</StyledRequired></strong>
-                                        </label>
+                                        <StyledFieldLabel htmlFor="inquiry-content">
+                                            <StyledFieldLabelText>문의 내용 <StyledRequired>*</StyledRequired></StyledFieldLabelText>
+                                        </StyledFieldLabel>
                                         <StyledTextarea
                                             id="inquiry-content"
                                             placeholder="문의 내용을 입력해 주세요"
@@ -171,8 +171,8 @@ const InquiryPage: NextPage = () => {
                                         <StyledHistoryCard key={inquiry.id}>
                                             <StyledHistoryHead>
                                                 <StyledHistoryMeta>
-                                                    <strong>{inquiry.name}</strong>
-                                                    {inquiry.email && <span>{inquiry.email}</span>}
+                                                    <StyledHistoryName>{inquiry.name}</StyledHistoryName>
+                                                    {inquiry.email && <StyledHistoryEmail>{inquiry.email}</StyledHistoryEmail>}
                                                 </StyledHistoryMeta>
                                                 <StyledHistoryDate>
                                                     {inquiry.createdAt.slice(0, 16).replace('T', ' ')}
@@ -250,15 +250,15 @@ const StyledFieldGroup = styled.div`
     display: flex;
     flex-direction: column;
     gap: 6px;
+`;
 
-    label {
-        font-size: 13px;
-        color: #374151;
-    }
+const StyledFieldLabel = styled.label`
+    font-size: 13px;
+    color: #374151;
+`;
 
-    strong {
-        font-weight: 600;
-    }
+const StyledFieldLabelText = styled.strong`
+    font-weight: 600;
 `;
 
 const StyledRequired = styled.span`
@@ -331,16 +331,16 @@ const StyledSuccess = styled.div`
     align-items: center;
     gap: 8px;
     padding: 40px 20px;
+`;
 
-    strong {
-        font-size: 16px;
-        color: #111827;
-    }
+const StyledSuccessTitle = styled.strong`
+    font-size: 16px;
+    color: #111827;
+`;
 
-    span {
-        font-size: 13px;
-        color: #6b7280;
-    }
+const StyledSuccessText = styled.span`
+    font-size: 13px;
+    color: #6b7280;
 `;
 
 const StyledResetButton = styled.button`
@@ -389,15 +389,15 @@ const StyledHistoryMeta = styled.div`
     @media (max-width: 640px) {
         flex-wrap: wrap;
     }
+`;
 
-    strong {
-        font-size: 13px;
-    }
+const StyledHistoryName = styled.strong`
+    font-size: 13px;
+`;
 
-    span {
-        font-size: 12px;
-        color: var(--dark-gray-color2);
-    }
+const StyledHistoryEmail = styled.span`
+    font-size: 12px;
+    color: var(--dark-gray-color2);
 `;
 
 const StyledHistoryDate = styled.span`

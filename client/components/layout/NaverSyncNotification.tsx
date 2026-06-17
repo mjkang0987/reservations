@@ -205,6 +205,7 @@ import {
     StyledOverlay,
     StyledDetail,
     StyledHeader,
+    StyledHeaderTitle,
     StyledHeaderTitleGroup,
     StyledBody,
     StyledBodyInner,
@@ -345,7 +346,7 @@ const NotificationModal = ({notifications, designers, reservationMap, markRead, 
             <StyledModalDetail ref={dialogRef} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
                     <StyledHeaderTitleGroup>
-                        <h3>전체 알림</h3>
+                        <StyledHeaderTitle>전체 알림</StyledHeaderTitle>
                     </StyledHeaderTitleGroup>
                     {unreadNotifications.length > 0 && (
                         <button type="button" onClick={markAllRead}>모두 읽음</button>

@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 
-import Link from 'next/link';
 import {useRouter} from 'next/router';
 import {signOut, useSession} from 'next-auth/react';
 
@@ -19,7 +18,7 @@ import {AdBanner} from '../ad/AdBanner';
 import {CustomerAddModal} from '../address/CustomerAddModal';
 import {StoreSwitcher} from './StoreSwitcher';
 import {AsideGuestLogout} from './AsideGuestLogout';
-import {clearGuestEntryResolved, clearGuestTermsAgreed} from '../../lib/local-db';
+import {clearGuestConsentAck, clearGuestEntryResolved, clearGuestTermsAgreed} from '../../lib/local-db';
 import {AsideMenuIcon, StyledMenuIcon} from './AsideMenuIcon';
 import {
     StyledAside,
@@ -42,7 +41,10 @@ import {
     StyledInquiryLink,
     StyledAsideAd,
     StyledToggleIcon,
+    StyledToggleSvg,
     StyledLegalLinks,
+    StyledLegalLink,
+    StyledLegalSeparator,
 } from './Aside.styles';
 
 const SETTINGS_SUBMENU = [
@@ -168,9 +170,9 @@ export const Aside = () => {
                         </StyledMenuContent>
                         <StyledToggleIcon $collapsed={!reservationOpen}
                                           aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
+                            <StyledToggleSvg viewBox="0 0 24 24">
                                 <path d="M9 6L15 12L9 18" />
-                            </svg>
+                            </StyledToggleSvg>
                         </StyledToggleIcon>
                     </StyledAccordionToggle>
                     <StyledAccordionContent $open={reservationOpen}>
@@ -216,9 +218,9 @@ export const Aside = () => {
                             </StyledMenuContent>
                             <StyledToggleIcon $collapsed={!settingsOpen}
                                               aria-hidden="true">
-                                <svg viewBox="0 0 24 24">
+                                <StyledToggleSvg viewBox="0 0 24 24">
                                     <path d="M9 6L15 12L9 18" />
-                                </svg>
+                                </StyledToggleSvg>
                             </StyledToggleIcon>
                         </StyledAccordionToggle>
                         <StyledAccordionContent $open={settingsOpen}>
@@ -258,9 +260,15 @@ export const Aside = () => {
                     <span>로그아웃</span>
                 </StyledLogoutButton>
                 <StyledLegalLinks>
-                    <Link href="/terms" onClick={closeMobile}>이용약관</Link>
-                    <span aria-hidden="true">·</span>
-                    <Link href="/privacy" onClick={closeMobile}>개인정보처리방침</Link>
+                    <StyledLegalLink href="/terms" onClick={closeMobile}>이용약관</StyledLegalLink>
+                    <StyledLegalSeparator aria-hidden="true">·</StyledLegalSeparator>
+                    <StyledLegalLink href="/privacy" onClick={closeMobile}>개인정보처리방침</StyledLegalLink>
+                    {!isGuest && (
+                        <>
+                            <StyledLegalSeparator aria-hidden="true">·</StyledLegalSeparator>
+                            <StyledLegalLink href="/dpa" onClick={closeMobile}>개인정보 처리위탁</StyledLegalLink>
+                        </>
+                    )}
                 </StyledLegalLinks>
                 {showCustomerAdd && (
                     <CustomerAddModal onClose={() => setShowCustomerAdd(false)} />
@@ -272,7 +280,9 @@ export const Aside = () => {
                                           // 데이터와 함께 게스트 약관 동의·진입 플래그도 초기화 (다음 게스트 시작 시 재동의)
                                           clearGuestTermsAgreed();
                                           clearGuestEntryResolved();
-                                          router.push('/login');
+                                          clearGuestConsentAck();
+                                          // 하드 리로드로 인메모리 store까지 초기화 (router.push는 모듈 store가 남아 데이터가 보임)
+                                          window.location.href = '/login';
                                       }} />
                 )}
                 <StyledAsideAd>

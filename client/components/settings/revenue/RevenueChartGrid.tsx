@@ -7,17 +7,23 @@ import {EMPTY_TEXT} from '../settings-styles';
 import {StyledColorSwatch} from './revenue-styles';
 import {
     StyledChartGrid, StyledChartCard, StyledChartHeader, StyledChartEmpty,
+    StyledChartHeaderTitle, StyledChartHeaderMeta,
     StyledLineChartBox, StyledChartTooltip, StyledLineChartFrame, StyledYAxis,
+    StyledChartTooltipLabel, StyledChartTooltipValue, StyledYAxisLabel,
     StyledLineChartStage, StyledChartHorizontalGuide, StyledLineChart,
     StyledChartGuide, StyledChartPointHalo, StyledChartPointButton, StyledChartAxis,
     StyledBarChartList, StyledBarRow, StyledBarHeaderRow, StyledBarLabel,
-    StyledBarValue, StyledBarTrack, StyledBarFill,
+    StyledBarLabelText, StyledBarValue, StyledBarTrack, StyledBarFill,
     StyledShareSection, StyledShareSectionTitle, StyledShareBar, StyledShareSegment,
-    StyledShareLegend, StyledShareLegendItem,
+    StyledShareLegend, StyledShareLegendItem, StyledShareLegendItemValue,
     StyledDonutColumnWrap, StyledPaymentChartWrap, StyledDonutChart,
+    StyledDonutChartCenter, StyledDonutChartValue, StyledDonutChartLabel,
     StyledLegendList, StyledLegendItem, StyledLegendInlineLabel,
+    StyledLegendInlineLabelStrong, StyledLegendInlineLabelText,
     StyledOperationSummary, StyledOperationList, StyledClickableOperationRow,
+    StyledOperationSummaryLabel, StyledOperationSummaryValue,
     StyledOperationLabel, StyledChartRevenueMetaLabel,
+    StyledOperationLabelName, StyledOperationLabelSub,
     StyledOperationCustomerButton, StyledOperationRate,
     REVENUE_CHART_WIDTH, REVENUE_CHART_HEIGHT,
 } from './revenue-chart-styles';
@@ -131,8 +137,8 @@ export const RevenueChartGrid = ({
             {/* Line chart */}
             <StyledChartCard $hero>
                 <StyledChartHeader>
-                    <strong>기간별 매출 추이</strong>
-                    <span>{fromDateKey} ~ {toDateKeyValue}</span>
+                    <StyledChartHeaderTitle>기간별 매출 추이</StyledChartHeaderTitle>
+                    <StyledChartHeaderMeta>{fromDateKey} ~ {toDateKeyValue}</StyledChartHeaderMeta>
                 </StyledChartHeader>
                 {seriesLength === 0 ? (
                     <StyledChartEmpty>{EMPTY_TEXT}</StyledChartEmpty>
@@ -141,15 +147,15 @@ export const RevenueChartGrid = ({
                         <StyledLineChartBox>
                             {hoveredPoint && (
                                 <StyledChartTooltip $leftRatio={hoveredPoint.xRatio} $topRatio={hoveredPoint.yRatio}>
-                                    <strong>{hoveredPoint.dateKey}</strong>
-                                    <span>{formatPrice(hoveredPoint.total)}</span>
+                                    <StyledChartTooltipLabel>{hoveredPoint.dateKey}</StyledChartTooltipLabel>
+                                    <StyledChartTooltipValue>{formatPrice(hoveredPoint.total)}</StyledChartTooltipValue>
                                 </StyledChartTooltip>
                             )}
                             <StyledLineChartFrame>
                                 <StyledYAxis>
-                                    <span className="top">{formatPrice(lineMax)}</span>
-                                    <span className="middle">{formatPrice(Math.round(lineMax / 2))}</span>
-                                    <span className="bottom">{formatPrice(0)}</span>
+                                    <StyledYAxisLabel className="top">{formatPrice(lineMax)}</StyledYAxisLabel>
+                                    <StyledYAxisLabel className="middle">{formatPrice(Math.round(lineMax / 2))}</StyledYAxisLabel>
+                                    <StyledYAxisLabel className="bottom">{formatPrice(0)}</StyledYAxisLabel>
                                 </StyledYAxis>
                                 <StyledLineChartStage>
                                     <StyledChartHorizontalGuide $topRatio={0} />
@@ -196,18 +202,18 @@ export const RevenueChartGrid = ({
             {/* Payment donut */}
             <StyledChartCard $autoHeight $hero>
                 <StyledChartHeader>
-                    <strong>결제수단 비중</strong>
-                    <span>결제완료 기준</span>
+                    <StyledChartHeaderTitle>결제수단 비중</StyledChartHeaderTitle>
+                    <StyledChartHeaderMeta>결제완료 기준</StyledChartHeaderMeta>
                 </StyledChartHeader>
                 {paymentChartItems.length === 0 ? (
                     <StyledChartEmpty>{EMPTY_TEXT}</StyledChartEmpty>
                 ) : (
                     <StyledPaymentChartWrap>
                         <StyledDonutChart $gradient={paymentDonutGradient}>
-                            <div>
-                                <strong>{formatPrice(paidTotal)}</strong>
-                                <span>결제합계</span>
-                            </div>
+                            <StyledDonutChartCenter>
+                                <StyledDonutChartValue>{formatPrice(paidTotal)}</StyledDonutChartValue>
+                                <StyledDonutChartLabel>결제합계</StyledDonutChartLabel>
+                            </StyledDonutChartCenter>
                         </StyledDonutChart>
                         <StyledLegendList>
                             {paymentChartItems.map((item) => {
@@ -219,9 +225,9 @@ export const RevenueChartGrid = ({
                                     >
                                         <StyledLegendInlineLabel>
                                             <StyledColorSwatch $color={item.color} />
-                                            <span>{item.method}</span>
-                                            <strong>{formatPrice(item.total)}</strong>
-                                            <span>{percent}%</span>
+                                            <StyledLegendInlineLabelText>{item.method}</StyledLegendInlineLabelText>
+                                            <StyledLegendInlineLabelStrong>{formatPrice(item.total)}</StyledLegendInlineLabelStrong>
+                                            <StyledLegendInlineLabelText>{percent}%</StyledLegendInlineLabelText>
                                         </StyledLegendInlineLabel>
                                     </StyledLegendItem>
                                 );
@@ -234,18 +240,18 @@ export const RevenueChartGrid = ({
             {/* Channel donut */}
             <StyledChartCard>
                 <StyledChartHeader>
-                    <strong>예약비중</strong>
-                    <span>전화 · 방문 · 네이버</span>
+                    <StyledChartHeaderTitle>예약비중</StyledChartHeaderTitle>
+                    <StyledChartHeaderMeta>전화 · 방문 · 네이버</StyledChartHeaderMeta>
                 </StyledChartHeader>
                 {channelTotalCount === 0 ? (
                     <StyledChartEmpty>{EMPTY_TEXT}</StyledChartEmpty>
                 ) : (
                     <StyledDonutColumnWrap>
                         <StyledDonutChart $gradient={channelDonutGradient}>
-                            <div>
-                                <strong>{channelTotalCount}건</strong>
-                                <span>전체예약</span>
-                            </div>
+                            <StyledDonutChartCenter>
+                                <StyledDonutChartValue>{channelTotalCount}건</StyledDonutChartValue>
+                                <StyledDonutChartLabel>전체예약</StyledDonutChartLabel>
+                            </StyledDonutChartCenter>
                         </StyledDonutChart>
                         <StyledLegendList>
                             {channelChartItems.map((item) => {
@@ -257,9 +263,9 @@ export const RevenueChartGrid = ({
                                     >
                                         <StyledLegendInlineLabel>
                                             <StyledColorSwatch $color={item.color} />
-                                            <span>{item.channel}</span>
-                                            <strong>{item.count}건</strong>
-                                            <span>{percent}%</span>
+                                            <StyledLegendInlineLabelText>{item.channel}</StyledLegendInlineLabelText>
+                                            <StyledLegendInlineLabelStrong>{item.count}건</StyledLegendInlineLabelStrong>
+                                            <StyledLegendInlineLabelText>{percent}%</StyledLegendInlineLabelText>
                                         </StyledLegendInlineLabel>
                                     </StyledLegendItem>
                                 );
@@ -272,8 +278,8 @@ export const RevenueChartGrid = ({
             {/* Designer bar */}
             <StyledChartCard>
                 <StyledChartHeader>
-                    <strong>디자이너별 매출</strong>
-                    <span>{designerKey === 'all' ? '전체 기준' : '선택 디자이너 기준'}</span>
+                    <StyledChartHeaderTitle>디자이너별 매출</StyledChartHeaderTitle>
+                    <StyledChartHeaderMeta>{designerKey === 'all' ? '전체 기준' : '선택 디자이너 기준'}</StyledChartHeaderMeta>
                 </StyledChartHeader>
                 {designerChartItems.length === 0 ? (
                     <StyledChartEmpty>{EMPTY_TEXT}</StyledChartEmpty>
@@ -292,7 +298,7 @@ export const RevenueChartGrid = ({
                                             <StyledShareLegendItem key={`legend-${item.designerId ?? 'none'}`}>
                                                 <StyledColorSwatch $color={item.color} />
                                                 <span>{item.name}</span>
-                                                <strong>{Math.round(item.pct)}%</strong>
+                                                <StyledShareLegendItemValue>{Math.round(item.pct)}%</StyledShareLegendItemValue>
                                             </StyledShareLegendItem>
                                         ))}
                                     </StyledShareLegend>
@@ -317,7 +323,7 @@ export const RevenueChartGrid = ({
                                         <StyledBarHeaderRow>
                                             <StyledBarLabel>
                                                 <StyledColorSwatch $color={item.color} />
-                                                <span>{item.name}</span>
+                                                <StyledBarLabelText>{item.name}</StyledBarLabelText>
                                             </StyledBarLabel>
                                             <StyledBarValue>{formatPrice(item.total)}</StyledBarValue>
                                         </StyledBarHeaderRow>
@@ -335,12 +341,12 @@ export const RevenueChartGrid = ({
             {/* Cancellation rate */}
             <StyledChartCard>
                 <StyledChartHeader>
-                    <strong>디자이너별 취소율</strong>
-                    <span>기간 내 전체 예약 기준</span>
+                    <StyledChartHeaderTitle>디자이너별 취소율</StyledChartHeaderTitle>
+                    <StyledChartHeaderMeta>기간 내 전체 예약 기준</StyledChartHeaderMeta>
                 </StyledChartHeader>
                 <StyledOperationSummary>
-                    <span>전체 취소 {totalCancelledCount}건</span>
-                    <strong>{totalCancelledRate}%</strong>
+                    <StyledOperationSummaryLabel>전체 취소 {totalCancelledCount}건</StyledOperationSummaryLabel>
+                    <StyledOperationSummaryValue>{totalCancelledRate}%</StyledOperationSummaryValue>
                 </StyledOperationSummary>
                 {designerCancellationItems.length === 0 ? (
                     <StyledChartEmpty>{EMPTY_TEXT}</StyledChartEmpty>
@@ -354,9 +360,9 @@ export const RevenueChartGrid = ({
                                 <StyledOperationLabel>
                                     <StyledChartRevenueMetaLabel>
                                         <StyledColorSwatch $color={item.color} />
-                                        <span>{item.name}</span>
+                                        <StyledOperationLabelName>{item.name}</StyledOperationLabelName>
                                     </StyledChartRevenueMetaLabel>
-                                    <small>{item.total}건 중 {item.cancelled}건</small>
+                                    <StyledOperationLabelSub>{item.total}건 중 {item.cancelled}건</StyledOperationLabelSub>
                                 </StyledOperationLabel>
                                 <StyledOperationRate>{item.rate}%</StyledOperationRate>
                             </StyledClickableOperationRow>
@@ -368,12 +374,12 @@ export const RevenueChartGrid = ({
             {/* Noshow rate */}
             <StyledChartCard>
                 <StyledChartHeader>
-                    <strong>고객별 노쇼율</strong>
-                    <span>기간 내 전체 예약 기준</span>
+                    <StyledChartHeaderTitle>고객별 노쇼율</StyledChartHeaderTitle>
+                    <StyledChartHeaderMeta>기간 내 전체 예약 기준</StyledChartHeaderMeta>
                 </StyledChartHeader>
                 <StyledOperationSummary>
-                    <span>전체 노쇼 {totalNoshowCount}건</span>
-                    <strong>{totalNoshowRate}%</strong>
+                    <StyledOperationSummaryLabel>전체 노쇼 {totalNoshowCount}건</StyledOperationSummaryLabel>
+                    <StyledOperationSummaryValue>{totalNoshowRate}%</StyledOperationSummaryValue>
                 </StyledOperationSummary>
                 {customerNoshowItems.length === 0 ? (
                     <StyledChartEmpty>{EMPTY_TEXT}</StyledChartEmpty>
@@ -396,9 +402,9 @@ export const RevenueChartGrid = ({
                                             {item.customer.name}
                                         </StyledOperationCustomerButton>
                                     ) : (
-                                        <span>고객 미지정</span>
+                                        <StyledOperationLabelName>고객 미지정</StyledOperationLabelName>
                                     )}
-                                    <small>{item.total}건 중 {item.noshow}건</small>
+                                    <StyledOperationLabelSub>{item.total}건 중 {item.noshow}건</StyledOperationLabelSub>
                                 </StyledOperationLabel>
                                 <StyledOperationRate>{item.rate}%</StyledOperationRate>
                             </StyledClickableOperationRow>

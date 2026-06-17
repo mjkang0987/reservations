@@ -12,6 +12,7 @@ import {
     OVERLAY_Z_INDEX,
     StyledDetail,
     StyledHeader,
+    StyledHeaderTitle,
     StyledBody,
     StyledBodyInner,
     StyledForm,
@@ -96,7 +97,7 @@ export const ReservationCreate = ({initial, customerMap, onClose, onSave}: Reser
                                              data-layer-id={layerDataId}>
         <StyledDetail ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
             <StyledHeader>
-                <h3>예약 추가</h3>
+                <StyledHeaderTitle>예약 추가</StyledHeaderTitle>
                 <CloseIconButton onClick={onClose} />
             </StyledHeader>
 

@@ -3,13 +3,16 @@ import {POINT_HISTORY_LABELS, formatTel} from '../../../utils/customers';
 import {formatPrice} from '../../../utils/services';
 import {CloseIconButton} from '../../ui/CloseIconButton';
 import {ColorPickerButton} from '../../ui/ColorPickerButton';
-import {StyledHeader} from './ModalStyles';
+import {StyledHeader, StyledHeaderTitle} from './ModalStyles';
 import {
     StyledAddressMemoSection,
+    StyledAddressMemoTitle,
     StyledAddressMemoList,
     StyledAddressMemoItem,
     StyledTagEditor,
     StyledTagInputRow,
+    StyledTagInput,
+    StyledTagAddButton,
     StyledColorRow,
     StyledTagRemoveButton,
     StyledEditError,
@@ -17,6 +20,8 @@ import {
     StyledPointHistoryList,
     StyledPointHistoryItem,
     StyledPointHistoryTop,
+    StyledPointHistoryType,
+    StyledPointHistoryDelta,
     StyledPointHistoryMeta,
     StyledPointHistoryOverlay,
     StyledPointHistoryModal,
@@ -26,8 +31,12 @@ import {
     StyledUnmergeModal,
     StyledUnmergeContent,
     StyledUnmergeMessage,
+    StyledUnmergeHighlight,
     StyledUnmergeList,
     StyledUnmergeItem,
+    StyledUnmergeName,
+    StyledUnmergeTel,
+    StyledUnmergeDate,
     StyledUnmergeFooter,
 } from './CustomerDetail.styles';
 
@@ -42,8 +51,8 @@ export function PointHistoryItem({entry, onClick}: {entry: PointHistoryEntry; on
             onClick={() => onClick(entry)}
         >
             <StyledPointHistoryTop>
-                <strong>{POINT_HISTORY_LABELS[entry.type]}</strong>
-                <span>{entry.delta > 0 ? '+' : ''}{formatPrice(entry.delta)}</span>
+                <StyledPointHistoryType>{POINT_HISTORY_LABELS[entry.type]}</StyledPointHistoryType>
+                <StyledPointHistoryDelta>{entry.delta > 0 ? '+' : ''}{formatPrice(entry.delta)}</StyledPointHistoryDelta>
             </StyledPointHistoryTop>
             <StyledPointHistoryMeta>
                 <span>{entry.description}</span>
@@ -67,7 +76,7 @@ export function CustomerPointHistoryModal({pointHistories, onEntryClick, onClose
         <StyledPointHistoryOverlay onClick={onClose}>
             <StyledPointHistoryModal onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <h3>적립금 이력 ({pointHistories.length})</h3>
+                    <StyledHeaderTitle>적립금 이력 ({pointHistories.length})</StyledHeaderTitle>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledPointHistoryModalContent>
@@ -111,20 +120,20 @@ export function CustomerMemoTagSection({
 }: MemoTagSectionProps) {
     return (
         <StyledAddressMemoSection>
-            <h4>고객 메모</h4>
+            <StyledAddressMemoTitle>고객 메모</StyledAddressMemoTitle>
             {isEditing && (
                 <StyledTagEditor>
                     <StyledTagInputRow>
-                        <input
+                        <StyledTagInput
                             id="customer-edit-memo-tag"
                             type="text"
                             value={newTagText}
                             placeholder="메모 태그 입력"
                             onChange={(e) => onNewTagTextChange(e.target.value)}
                         />
-                        <button type="button"
+                        <StyledTagAddButton type="button"
                                 onClick={onAddTag}>추가
-                        </button>
+                        </StyledTagAddButton>
                     </StyledTagInputRow>
                     <StyledColorRow>
                         {MEMO_TAG_COLORS.map((color) => (
@@ -184,19 +193,19 @@ export function CustomerUnmergeModal({customerName, histories, isUnmerging, onCo
         <StyledUnmergeOverlay onClick={onClose}>
             <StyledUnmergeModal onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <h3>고객 병합 분리</h3>
+                    <StyledHeaderTitle>고객 병합 분리</StyledHeaderTitle>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledUnmergeContent>
                     <StyledUnmergeMessage>
-                        다음 고객이 <strong>{customerName}</strong>에 병합되었습니다. 분리하면 원래 고객이 복원됩니다.
+                        다음 고객이 <StyledUnmergeHighlight>{customerName}</StyledUnmergeHighlight>에 병합되었습니다. 분리하면 원래 고객이 복원됩니다.
                     </StyledUnmergeMessage>
                     <StyledUnmergeList>
                         {histories.map((h) => (
                             <StyledUnmergeItem key={h.id}>
-                                <strong>{h.sourceName}</strong>
-                                <span>{h.sourceTel ? formatTel(h.sourceTel) : '연락처 없음'}</span>
-                                <span className="date">{h.mergedAt.slice(0, 10).replace(/-/g, '.')}</span>
+                                <StyledUnmergeName>{h.sourceName}</StyledUnmergeName>
+                                <StyledUnmergeTel>{h.sourceTel ? formatTel(h.sourceTel) : '연락처 없음'}</StyledUnmergeTel>
+                                <StyledUnmergeDate>{h.mergedAt.slice(0, 10).replace(/-/g, '.')}</StyledUnmergeDate>
                             </StyledUnmergeItem>
                         ))}
                     </StyledUnmergeList>

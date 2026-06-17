@@ -11,7 +11,7 @@ export function ToggleSwitch({checked, onChange, label, description}: Props) {
     return (
         <StyledRow>
             <StyledLabel>
-                <span>{label}</span>
+                <StyledLabelText>{label}</StyledLabelText>
                 {description && <StyledDesc>{description}</StyledDesc>}
             </StyledLabel>
             <StyledSwitch
@@ -44,12 +44,12 @@ const StyledLabel = styled.label`
     flex-direction: column;
     gap: 3px;
     cursor: default;
+`;
 
-    span {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--dark-gray-color);
-    }
+const StyledLabelText = styled.span`
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dark-gray-color);
 `;
 
 const StyledDesc = styled.span`

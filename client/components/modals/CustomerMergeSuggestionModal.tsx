@@ -19,6 +19,7 @@ import {
     StyledFooter,
     StyledHeader,
     StyledHeaderTitleGroup,
+    StyledHeaderTitleGroupText,
     StyledOverlay,
     useDialogAccessibility,
 } from '../calendar/overlays/ModalStyles';
@@ -144,10 +145,10 @@ export const CustomerMergeSuggestionModal = ({
                 <StyledHeader>
                     <StyledHeaderTitleGroup>
                         <h3>같은 고객인가요?</h3>
-                        <p>
+                        <StyledHeaderTitleGroupText>
                             이름 패턴이 유사한 고객이 {allIds.length}명 발견되었습니다.
                             {isMulti && ' 병합할 고객을 선택하세요.'}
-                        </p>
+                        </StyledHeaderTitleGroupText>
                     </StyledHeaderTitleGroup>
                     <CloseIconButton onClick={onDismiss} />
                 </StyledHeader>
@@ -202,17 +203,17 @@ export const CustomerMergeSuggestionModal = ({
                                     <StyledExtraInfo>
                                         <StyledDetailRow>
                                             <StyledDetailItem>
-                                                <dt>예약</dt>
-                                                <dd>{resCount}건</dd>
+                                                <StyledDetailLabel>예약</StyledDetailLabel>
+                                                <StyledDetailValue>{resCount}건</StyledDetailValue>
                                             </StyledDetailItem>
                                             <StyledDetailItem>
-                                                <dt>적립금</dt>
-                                                <dd>{(customer.points ?? 0).toLocaleString()}원</dd>
+                                                <StyledDetailLabel>적립금</StyledDetailLabel>
+                                                <StyledDetailValue>{(customer.points ?? 0).toLocaleString()}원</StyledDetailValue>
                                             </StyledDetailItem>
                                             {customer.firstVisitDate && (
                                                 <StyledDetailItem>
-                                                    <dt>첫방문</dt>
-                                                    <dd>{formatDate(customer.firstVisitDate)}</dd>
+                                                    <StyledDetailLabel>첫방문</StyledDetailLabel>
+                                                    <StyledDetailValue>{formatDate(customer.firstVisitDate)}</StyledDetailValue>
                                                 </StyledDetailItem>
                                             )}
                                         </StyledDetailRow>
@@ -225,9 +226,9 @@ export const CustomerMergeSuggestionModal = ({
                                         )}
                                         {hasNotes && (
                                             <StyledNotes>
-                                                {customer.allergyNote && <span>알레르기: {customer.allergyNote}</span>}
-                                                {customer.preferenceNote && <span>선호: {customer.preferenceNote}</span>}
-                                                {customer.claimNote && <span>클레임: {customer.claimNote}</span>}
+                                                {customer.allergyNote && <StyledNoteItem>알레르기: {customer.allergyNote}</StyledNoteItem>}
+                                                {customer.preferenceNote && <StyledNoteItem>선호: {customer.preferenceNote}</StyledNoteItem>}
+                                                {customer.claimNote && <StyledNoteItem>클레임: {customer.claimNote}</StyledNoteItem>}
                                             </StyledNotes>
                                         )}
                                         {lastRes && (
@@ -370,16 +371,16 @@ const StyledDetailItem = styled.div`
     display: flex;
     gap: 4px;
     font-size: 11px;
+`;
 
-    dt {
-        color: var(--dark-gray-color2);
-    }
+const StyledDetailLabel = styled.dt`
+    color: var(--dark-gray-color2);
+`;
 
-    dd {
-        margin: 0;
-        color: #0f172a;
-        font-weight: 600;
-    }
+const StyledDetailValue = styled.dd`
+    margin: 0;
+    color: #0f172a;
+    font-weight: 600;
 `;
 
 const StyledTagList = styled.div`
@@ -405,12 +406,12 @@ const StyledNotes = styled.div`
     font-size: 11px;
     color: var(--dark-gray-color);
     line-height: 1.4;
+`;
 
-    > span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+const StyledNoteItem = styled.span`
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 `;
 
 const StyledCardSection = styled.div`

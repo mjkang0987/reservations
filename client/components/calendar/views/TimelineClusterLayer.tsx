@@ -12,6 +12,7 @@ import {
     StyledBodyInner,
     StyledDetail,
     StyledHeader,
+    StyledHeaderTitle,
     StyledOverlay,
     useDialogAccessibility,
     useLayerInstanceId,
@@ -71,7 +72,7 @@ export function TimelineClusterLayer({
                                 onClick={(event) => event.stopPropagation()}>
                 <StyledHeader>
                     <div>
-                        <h3>{cluster.reservations.length}건 예약</h3>
+                        <StyledHeaderTitle>{cluster.reservations.length}건 예약</StyledHeaderTitle>
                         <StyledClusterSubtitle>
                             {`${pad(Math.floor(cluster.startMinutes / 60))}:${pad(cluster.startMinutes % 60)} ~ ${pad(Math.floor(cluster.endMinutes / 60))}:${pad(cluster.endMinutes % 60)}`}
                         </StyledClusterSubtitle>

@@ -23,24 +23,24 @@ export const RevenueKpiGrid = ({
 }: RevenueKpiGridProps) => (
     <StyledKpiGrid>
         <StyledKpiCard onClick={() => onMetricClick('sales')}>
-            <span>총 매출</span>
-            <strong>{formatPrice(total)}</strong>
+            <StyledKpiLabel>총 매출</StyledKpiLabel>
+            <StyledKpiValue>{formatPrice(total)}</StyledKpiValue>
         </StyledKpiCard>
         <StyledKpiCard onClick={() => onMetricClick('count')}>
-            <span>예약 건수</span>
-            <strong>{count}건</strong>
+            <StyledKpiLabel>예약 건수</StyledKpiLabel>
+            <StyledKpiValue>{count}건</StyledKpiValue>
         </StyledKpiCard>
         <StyledKpiCard onClick={() => onMetricClick('new')}>
-            <span>신규 고객 수</span>
-            <strong>{newCustomerCount}명</strong>
+            <StyledKpiLabel>신규 고객 수</StyledKpiLabel>
+            <StyledKpiValue>{newCustomerCount}명</StyledKpiValue>
         </StyledKpiCard>
         <StyledKpiCard onClick={() => onMetricClick('returning')}>
-            <span>재방문 고객 수</span>
-            <strong>{returningCustomerCount}명</strong>
+            <StyledKpiLabel>재방문 고객 수</StyledKpiLabel>
+            <StyledKpiValue>{returningCustomerCount}명</StyledKpiValue>
         </StyledKpiCard>
         <StyledKpiCard onClick={() => onMetricClick('paid')}>
-            <span>결제완료</span>
-            <strong>{formatPrice(paidTotal)}</strong>
+            <StyledKpiLabel>결제완료</StyledKpiLabel>
+            <StyledKpiValue>{formatPrice(paidTotal)}</StyledKpiValue>
         </StyledKpiCard>
     </StyledKpiGrid>
 );
@@ -77,14 +77,14 @@ const StyledKpiCard = styled.div`
         background: linear-gradient(180deg, #f5f8ff 0%, #edf2ff 100%);
     }
     }
+`;
 
-    span {
-        font-size: 11px;
-        color: var(--dark-gray-color2);
-    }
+const StyledKpiLabel = styled.span`
+    font-size: 11px;
+    color: var(--dark-gray-color2);
+`;
 
-    strong {
-        font-size: 18px;
-        color: var(--black-color);
-    }
+const StyledKpiValue = styled.strong`
+    font-size: 18px;
+    color: var(--black-color);
 `;

@@ -50,7 +50,7 @@ export function AddressCustomerSummary({customer, stats, serviceColorMap, checke
                         {customer.name}
                     </StyledNameButton>
                 ) : (
-                    <strong>{customer.name}</strong>
+                    <StyledName>{customer.name}</StyledName>
                 )}
                 <StyledTel><StyledTelLink href={`tel:${customer.tel}`} onClick={(e) => e.stopPropagation()}>{formatTel(customer.tel)}</StyledTelLink></StyledTel>
                 <StyledRecentService>
@@ -87,6 +87,12 @@ const StyledNameButton = styled.button`
             color: var(--blue-color);
         }
     }
+`;
+
+const StyledName = styled.strong`
+    flex-shrink: 0;
+    font-size: var(--font);
+    font-weight: 500;
 `;
 
 const StyledTelLink = styled.a`
@@ -130,7 +136,7 @@ const StyledSummaryRow = styled.div`
     top: 52px;
 
     @media (hover: hover) and (pointer: fine) {
-        &:hover strong,
+        &:hover ${StyledName},
         &:hover ${StyledNameButton} {
             color: var(--blue-color);
         }
@@ -143,12 +149,6 @@ const StyledInlineRow = styled.div`
     gap: 10px;
     flex: 1;
     min-width: 0;
-
-    > strong {
-        flex-shrink: 0;
-        font-size: var(--font);
-        font-weight: 500;
-    }
 `;
 
 const StyledTel = styled.span`

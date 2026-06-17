@@ -13,11 +13,11 @@ interface Props {
 export const PointHistoryTab = ({customersWithPoints, handlePointHistoryClick, openCustomerDetail}: Props) => (
     <StyledHistorySection>
         <StyledHistoryHeader>
-            <div>
-                <strong>현재 적립금 보유 고객 전체 내역</strong>
-                <span>현재 잔액이 남아있는 고객만 모아서 전체 적립/차감/충전 이력을 표시합니다.</span>
-            </div>
-            <em>{customersWithPoints.length}명</em>
+            <StyledHistoryHeaderInfo>
+                <StyledHistoryHeaderTitle>현재 적립금 보유 고객 전체 내역</StyledHistoryHeaderTitle>
+                <StyledHistoryHeaderDesc>현재 잔액이 남아있는 고객만 모아서 전체 적립/차감/충전 이력을 표시합니다.</StyledHistoryHeaderDesc>
+            </StyledHistoryHeaderInfo>
+            <StyledHistoryCount>{customersWithPoints.length}명</StyledHistoryCount>
         </StyledHistoryHeader>
         {customersWithPoints.length === 0 ? (
             <StyledHistoryEmpty>현재 적립금이 남아있는 고객이 없습니다.</StyledHistoryEmpty>
@@ -29,12 +29,12 @@ export const PointHistoryTab = ({customersWithPoints, handlePointHistoryClick, o
                     return (
                         <StyledHistoryCustomerCard key={`point-history-${customer.id}`}>
                             <StyledHistoryCustomerHead>
-                                <div>
+                                <StyledHistoryCustomerName>
                                     <StyledCustomerNameButton type="button" onClick={() => openCustomerDetail(customer.id)}>
                                         {customer.name}
                                     </StyledCustomerNameButton>
                                     <StyledTelLink href={`tel:${customer.tel}`}>{formatTel(customer.tel)}</StyledTelLink>
-                                </div>
+                                </StyledHistoryCustomerName>
                                 <StyledHistoryPoint>{formatPrice(customer.points ?? 0)}</StyledHistoryPoint>
                             </StyledHistoryCustomerHead>
                             {histories.length === 0 ? (
@@ -48,13 +48,13 @@ export const PointHistoryTab = ({customersWithPoints, handlePointHistoryClick, o
                                             onClick={() => handlePointHistoryClick(history)}
                                         >
                                             <StyledHistoryTop>
-                                                <strong>{POINT_HISTORY_LABELS[history.type]}</strong>
-                                                <span>{history.delta > 0 ? '+' : ''}{formatPrice(history.delta)}</span>
+                                                <StyledHistoryTopLabel>{POINT_HISTORY_LABELS[history.type]}</StyledHistoryTopLabel>
+                                                <StyledHistoryTopDelta>{history.delta > 0 ? '+' : ''}{formatPrice(history.delta)}</StyledHistoryTopDelta>
                                             </StyledHistoryTop>
                                             <StyledHistoryMeta>
-                                                <span>{history.description}</span>
-                                                <span>잔액 {formatPrice(history.balance)}</span>
-                                                <span>{history.createdAt.slice(0, 16).replace('T', ' ')}</span>
+                                                <StyledHistoryMetaItem>{history.description}</StyledHistoryMetaItem>
+                                                <StyledHistoryMetaItem>잔액 {formatPrice(history.balance)}</StyledHistoryMetaItem>
+                                                <StyledHistoryMetaItem>{history.createdAt.slice(0, 16).replace('T', ' ')}</StyledHistoryMetaItem>
                                             </StyledHistoryMeta>
                                         </StyledHistoryItem>
                                     ))}
@@ -83,32 +83,32 @@ const StyledHistoryHeader = styled.div`
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
+`;
 
-    div {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
+const StyledHistoryHeaderInfo = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+`;
 
-    strong {
-        font-size: 14px;
-        color: var(--black-color);
-    }
+const StyledHistoryHeaderTitle = styled.strong`
+    font-size: 14px;
+    color: var(--black-color);
+`;
 
-    span {
-        font-size: 12px;
-        color: var(--dark-gray-color2);
-        line-height: 1.45;
-    }
+const StyledHistoryHeaderDesc = styled.span`
+    font-size: 12px;
+    color: var(--dark-gray-color2);
+    line-height: 1.45;
+`;
 
-    em {
-        flex-shrink: 0;
-        font-style: normal;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--blue-color);
-        white-space: nowrap;
-    }
+const StyledHistoryCount = styled.em`
+    flex-shrink: 0;
+    font-style: normal;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue-color);
+    white-space: nowrap;
 `;
 
 const StyledHistoryCustomerList = styled.div`
@@ -133,22 +133,22 @@ const StyledHistoryCustomerHead = styled.div`
     justify-content: space-between;
     gap: 12px;
 
-    div {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-
-        @media (max-width: 640px) {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 2px;
-        }
-    }
-
     span {
         font-size: 12px;
         color: var(--dark-gray-color2);
+    }
+`;
+
+const StyledHistoryCustomerName = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+
+    @media (max-width: 640px) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
     }
 `;
 
@@ -190,28 +190,28 @@ const StyledHistoryTop = styled.div`
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+`;
 
-    strong {
-        font-size: 12px;
-        color: var(--dark-gray-color);
-    }
+const StyledHistoryTopLabel = styled.strong`
+    font-size: 12px;
+    color: var(--dark-gray-color);
+`;
 
-    span {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--blue-color);
-    }
+const StyledHistoryTopDelta = styled.span`
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue-color);
 `;
 
 const StyledHistoryMeta = styled.div`
     display: flex;
     flex-wrap: wrap;
     gap: 6px 10px;
+`;
 
-    span {
-        font-size: 11px;
-        color: var(--dark-gray-color2);
-    }
+const StyledHistoryMetaItem = styled.span`
+    font-size: 11px;
+    color: var(--dark-gray-color2);
 `;
 
 const StyledHistoryEmpty = styled.div`

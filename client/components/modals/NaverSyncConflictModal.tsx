@@ -14,6 +14,7 @@ import {
     StyledFooter,
     StyledHeader,
     StyledHeaderTitleGroup,
+    StyledHeaderTitleGroupText,
     StyledModalContent,
     StyledOverlay,
     StyledStatusBadge,
@@ -39,8 +40,10 @@ import {
     StyledUnresolvedMessage,
     StyledUnresolvedActions,
     StyledReasonTitle,
+    StyledReasonTitleHint,
     StyledReasonList,
     StyledReasonOption,
+    StyledReasonRadio,
     StyledReasonMemo,
     StyledReasonSummary,
 } from './NaverSyncConflictModal.styles';
@@ -252,7 +255,7 @@ export const NaverSyncConflictModal = ({
                 <StyledHeader>
                     <StyledHeaderTitleGroup>
                         <h3>{isConfirmed ? '예약 시간 중복 처리 완료' : '예약 시간 중복 안내'}</h3>
-                        <p>{isConfirmed ? '처리 완료된 예약 중복 내역입니다.' : '네이버 예약 동기화 중 시간이 겹치는 예약이 발견되었습니다.'}</p>
+                        <StyledHeaderTitleGroupText>{isConfirmed ? '처리 완료된 예약 중복 내역입니다.' : '네이버 예약 동기화 중 시간이 겹치는 예약이 발견되었습니다.'}</StyledHeaderTitleGroupText>
                     </StyledHeaderTitleGroup>
                     <CloseIconButton onClick={onDismiss} />
                 </StyledHeader>
@@ -341,11 +344,11 @@ export const NaverSyncConflictModal = ({
                             {isUnresolved && (
                                 <StyledUnresolvedMessage>예약 중복이 수정되지 않았습니다.</StyledUnresolvedMessage>
                             )}
-                            <StyledReasonTitle>처리 사유 <span>(선택)</span></StyledReasonTitle>
+                            <StyledReasonTitle>처리 사유 <StyledReasonTitleHint>(선택)</StyledReasonTitleHint></StyledReasonTitle>
                             <StyledReasonList>
                                 {CONFLICT_REASON_PRESETS.map((preset) => (
                                     <StyledReasonOption key={preset}>
-                                        <input type="radio"
+                                        <StyledReasonRadio type="radio"
                                                name="conflict-reason"
                                                checked={selectedReason === preset}
                                                onChange={() => setSelectedReason(preset)} />

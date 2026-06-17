@@ -25,8 +25,8 @@ export const PointSettingsTab = ({pointSettingsDraft, setPointSettingsDraft, isE
         <StyledPolicyCard>
             <StyledPolicyHeader>
                 <div>
-                    <strong>적립 방식</strong>
-                    <p>적립금이 쌓이는 기본 방식을 설정합니다.</p>
+                    <StyledPolicyTitle>적립 방식</StyledPolicyTitle>
+                    <StyledPolicyDesc>적립금이 쌓이는 기본 방식을 설정합니다.</StyledPolicyDesc>
                 </div>
                 {!isEditingPolicy && (
                     <StyledEditBtn
@@ -51,14 +51,14 @@ export const PointSettingsTab = ({pointSettingsDraft, setPointSettingsDraft, isE
                             onChange={(e) => setPointSettingsDraft((prev) => ({...prev, enableServiceRate: e.target.checked}))}
                         />
                         <div>
-                            <strong>서비스 금액 일정 퍼센트 적립</strong>
-                            <span>결제완료 시 적립금 결제를 제외한 금액 기준으로 자동 적립됩니다.</span>
+                            <StyledPolicyOptionTitle>서비스 금액 일정 퍼센트 적립</StyledPolicyOptionTitle>
+                            <StyledPolicyOptionDesc>결제완료 시 적립금 결제를 제외한 금액 기준으로 자동 적립됩니다.</StyledPolicyOptionDesc>
                         </div>
                     </StyledPolicyOption>
                     {pointSettingsDraft.enableServiceRate && (
                         <StyledPolicyBody>
                             <StyledRateRow>
-                                <label htmlFor="point-service-rate">적립 퍼센트</label>
+                                <StyledRateLabel htmlFor="point-service-rate">적립 퍼센트</StyledRateLabel>
                                 <StyledRateInput
                                     id="point-service-rate"
                                     type="text"
@@ -73,7 +73,7 @@ export const PointSettingsTab = ({pointSettingsDraft, setPointSettingsDraft, isE
                                         }));
                                     }}
                                 />
-                                <em>%</em>
+                                <StyledRateUnit>%</StyledRateUnit>
                             </StyledRateRow>
                         </StyledPolicyBody>
                     )}
@@ -88,8 +88,8 @@ export const PointSettingsTab = ({pointSettingsDraft, setPointSettingsDraft, isE
                             onChange={(e) => setPointSettingsDraft((prev) => ({...prev, enableRecharge: e.target.checked}))}
                         />
                         <div>
-                            <strong>충전하는 방식</strong>
-                            <span>고객별 적립/차감으로 직접 충전하고 관리합니다.</span>
+                            <StyledPolicyOptionTitle>충전하는 방식</StyledPolicyOptionTitle>
+                            <StyledPolicyOptionDesc>고객별 적립/차감으로 직접 충전하고 관리합니다.</StyledPolicyOptionDesc>
                         </div>
                     </StyledPolicyOption>
                 </StyledPolicyBlock>
@@ -121,7 +121,7 @@ export const PointSettingsTab = ({pointSettingsDraft, setPointSettingsDraft, isE
         {pointSettingsDraft.enableRecharge && (
             <StyledPolicyCard>
                 <StyledRechargeHeader>
-                    <strong>충전 기준</strong>
+                    <StyledRechargeTitle>충전 기준</StyledRechargeTitle>
                     <StyledAddRuleButton
                         type="button"
                         disabled={!isEditingPolicy}
@@ -140,7 +140,7 @@ export const PointSettingsTab = ({pointSettingsDraft, setPointSettingsDraft, isE
                     {pointSettingsDraft.rechargeRules.map((rule, index) => (
                         <StyledRechargeRow key={`recharge-rule-${index}`}>
                             <StyledRechargeField htmlFor={`point-recharge-${index}-base`}>
-                                <span>기준금액</span>
+                                <StyledRechargeFieldLabel>기준금액</StyledRechargeFieldLabel>
                                 <StyledRateInput
                                     id={`point-recharge-${index}-base`}
                                     type="text"
@@ -161,7 +161,7 @@ export const PointSettingsTab = ({pointSettingsDraft, setPointSettingsDraft, isE
                             </StyledRechargeField>
                             <StyledRechargePlus>+</StyledRechargePlus>
                             <StyledRechargeField htmlFor={`point-recharge-${index}-bonus`}>
-                                <span>추가금</span>
+                                <StyledRechargeFieldLabel>추가금</StyledRechargeFieldLabel>
                                 <StyledRateInput
                                     id={`point-recharge-${index}-bonus`}
                                     type="text"
@@ -218,18 +218,18 @@ const StyledPolicyHeader = styled.div`
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
+`;
 
-    strong {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 14px;
-    }
+const StyledPolicyTitle = styled.strong`
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+`;
 
-    p {
-        margin: 0;
-        color: var(--dark-gray-color2);
-        font-size: 12px;
-    }
+const StyledPolicyDesc = styled.p`
+    margin: 0;
+    color: var(--dark-gray-color2);
+    font-size: 12px;
 `;
 
 const StyledPolicyOptions = styled.div`
@@ -255,18 +255,18 @@ const StyledPolicyOption = styled.label`
     gap: 10px;
     align-items: start;
     cursor: pointer;
+`;
 
-    strong {
-        display: block;
-        margin-bottom: 2px;
-        font-size: 13px;
-    }
+const StyledPolicyOptionTitle = styled.strong`
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+`;
 
-    span {
-        color: var(--dark-gray-color2);
-        font-size: 12px;
-        line-height: 1.45;
-    }
+const StyledPolicyOptionDesc = styled.span`
+    color: var(--dark-gray-color2);
+    font-size: 12px;
+    line-height: 1.45;
 `;
 
 const StyledPolicyBody = styled.div`
@@ -282,12 +282,18 @@ const StyledRateRow = styled.div`
     grid-template-columns: auto 72px auto;
     gap: 8px;
     align-items: center;
+`;
 
-    span, em, label {
-        font-size: 12px;
-        color: var(--dark-gray-color);
-        font-style: normal;
-    }
+const StyledRateLabel = styled.label`
+    font-size: 12px;
+    color: var(--dark-gray-color);
+    font-style: normal;
+`;
+
+const StyledRateUnit = styled.em`
+    font-size: 12px;
+    color: var(--dark-gray-color);
+    font-style: normal;
 `;
 
 const StyledRateInput = styled.input`
@@ -301,10 +307,10 @@ const StyledRechargeHeader = styled.div`
     justify-content: space-between;
     gap: 12px;
     align-items: center;
+`;
 
-    strong {
-        font-size: 13px;
-    }
+const StyledRechargeTitle = styled.strong`
+    font-size: 13px;
 `;
 
 const StyledRechargeList = styled.div`
@@ -328,11 +334,11 @@ const StyledRechargeField = styled.label`
     display: flex;
     flex-direction: column;
     gap: 6px;
+`;
 
-    span {
-        font-size: 12px;
-        color: var(--dark-gray-color2);
-    }
+const StyledRechargeFieldLabel = styled.span`
+    font-size: 12px;
+    color: var(--dark-gray-color2);
 `;
 
 const StyledRechargePlus = styled.span`

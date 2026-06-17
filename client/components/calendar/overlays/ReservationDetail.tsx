@@ -25,6 +25,7 @@ import {
     StyledOverlay,
     StyledDetail,
     StyledHeader,
+    StyledHeaderTitle,
     StyledFooter,
     StyledActionButton,
     useDialogAccessibility,
@@ -65,6 +66,9 @@ import {
     StyledRestoreOverlay,
     StyledRestoreModal,
     StyledRestoreBody,
+    StyledRestoreList,
+    StyledRestoreTerm,
+    StyledRestoreDesc,
     StyledRestoreMessage,
 } from './ReservationDetail.styles';
 
@@ -695,21 +699,21 @@ export const ReservationDetail = ({
         <StyledRestoreOverlay onClick={() => setIsRestoringOpen(false)}>
             <StyledRestoreModal onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <h3>예약 전환</h3>
+                    <StyledHeaderTitle>예약 전환</StyledHeaderTitle>
                     <CloseIconButton onClick={() => setIsRestoringOpen(false)} />
                 </StyledHeader>
                 <StyledRestoreBody>
                     <StyledRestoreMessage>취소된 예약을 되돌리시겠습니까?</StyledRestoreMessage>
-                    <dl>
-                        <dt>서비스</dt>
-                        <dd>{reservation.service}</dd>
-                        <dt>날짜</dt>
-                        <dd>{reservation.date}</dd>
-                        <dt>시간</dt>
-                        <dd>{reservation.startTime} ~ {reservation.endTime}</dd>
-                        <dt>고객명</dt>
-                        <dd>{customer?.name ?? '-'}</dd>
-                    </dl>
+                    <StyledRestoreList>
+                        <StyledRestoreTerm>서비스</StyledRestoreTerm>
+                        <StyledRestoreDesc>{reservation.service}</StyledRestoreDesc>
+                        <StyledRestoreTerm>날짜</StyledRestoreTerm>
+                        <StyledRestoreDesc>{reservation.date}</StyledRestoreDesc>
+                        <StyledRestoreTerm>시간</StyledRestoreTerm>
+                        <StyledRestoreDesc>{reservation.startTime} ~ {reservation.endTime}</StyledRestoreDesc>
+                        <StyledRestoreTerm>고객명</StyledRestoreTerm>
+                        <StyledRestoreDesc>{customer?.name ?? '-'}</StyledRestoreDesc>
+                    </StyledRestoreList>
                 </StyledRestoreBody>
                 <StyledFooter>
                     <StyledActionButton type="button" onClick={() => setIsRestoringOpen(false)}>취소</StyledActionButton>

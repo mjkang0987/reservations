@@ -44,9 +44,17 @@ export const StyledChartHeader = styled.div`
     align-items: flex-start;
     justify-content: space-between;
     gap: 8px;
+`;
 
-    strong { font-size: 14px; color: var(--black-color); }
-    span { font-size: 11px; color: var(--dark-gray-color2); text-align: right; }
+export const StyledChartHeaderTitle = styled.strong`
+    font-size: 14px;
+    color: var(--black-color);
+`;
+
+export const StyledChartHeaderMeta = styled.span`
+    font-size: 11px;
+    color: var(--dark-gray-color2);
+    text-align: right;
 `;
 
 export const StyledChartEmpty = styled.div`
@@ -109,9 +117,18 @@ export const StyledChartTooltip = styled.div<{ $leftRatio: number; $topRatio: nu
         border-bottom: 1px solid rgba(45, 127, 249, 0.14);
         transform: translateX(-50%) rotate(45deg);
     }
+`;
 
-    strong { font-size: 11px; color: var(--dark-gray-color2); font-weight: 600; }
-    span { font-size: 13px; font-weight: 800; color: var(--blue-color); }
+export const StyledChartTooltipLabel = styled.strong`
+    font-size: 11px;
+    color: var(--dark-gray-color2);
+    font-weight: 600;
+`;
+
+export const StyledChartTooltipValue = styled.span`
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--blue-color);
 `;
 
 export const StyledLineChartFrame = styled.div`
@@ -127,10 +144,17 @@ export const StyledYAxis = styled.div`
     position: relative;
     height: 190px;
 
-    span { position: absolute; left: 0; font-size: 11px; color: var(--dark-gray-color2); line-height: 1; }
     .top { top: 0; transform: translateY(-50%); }
     .middle { top: 50%; transform: translateY(-50%); }
     .bottom { top: 100%; transform: translateY(-50%); }
+`;
+
+export const StyledYAxisLabel = styled.span`
+    position: absolute;
+    left: 0;
+    font-size: 11px;
+    color: var(--dark-gray-color2);
+    line-height: 1;
 `;
 
 export const StyledLineChartStage = styled.div`
@@ -230,7 +254,12 @@ export const StyledBarLabel = styled.div`
     min-width: 0;
     font-size: 12px;
     color: var(--dark-gray-color);
-    > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+`;
+
+export const StyledBarLabelText = styled.span`
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 `;
 
 export const StyledBarValue = styled.span`
@@ -294,11 +323,11 @@ export const StyledShareLegendItem = styled.span`
     gap: 4px;
     font-size: 11px;
     color: var(--dark-gray-color);
+`;
 
-    > strong {
-        font-weight: 600;
-        color: var(--black-color);
-    }
+export const StyledShareLegendItemValue = styled.strong`
+    font-weight: 600;
+    color: var(--black-color);
 `;
 
 /* ── Donut charts ── */
@@ -342,14 +371,28 @@ export const StyledDonutChart = styled.div<{ $gradient: string }>`
         box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
     }
 
-    > div {
-        position: absolute; inset: 0; z-index: 1;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 4px; text-align: center;
-    }
+`;
 
-    strong { font-size: 14px; color: var(--black-color); }
-    span { font-size: 11px; color: var(--dark-gray-color2); }
+export const StyledDonutChartCenter = styled.div`
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+`;
+
+export const StyledDonutChartValue = styled.strong`
+    font-size: 14px;
+    color: var(--black-color);
+`;
+
+export const StyledDonutChartLabel = styled.span`
+    font-size: 11px;
+    color: var(--dark-gray-color2);
 `;
 
 export const StyledLegendList = styled.div`
@@ -379,9 +422,16 @@ export const StyledLegendInlineLabel = styled.div`
     border: 1px solid var(--light-gray-color);
     border-radius: 999px;
     background: var(--white-color);
+`;
 
-    strong { font-size: 12px; color: var(--black-color); }
-    > span { font-size: 11px; color: var(--dark-gray-color2); }
+export const StyledLegendInlineLabelStrong = styled.strong`
+    font-size: 12px;
+    color: var(--black-color);
+`;
+
+export const StyledLegendInlineLabelText = styled.span`
+    font-size: 11px;
+    color: var(--dark-gray-color2);
 `;
 
 /* ── Operation rows (cancellation / noshow) ── */
@@ -394,9 +444,16 @@ export const StyledOperationSummary = styled.div`
     padding: 10px 12px;
     border-radius: 8px;
     background: #f6f8fc;
+`;
 
-    span { font-size: 12px; color: var(--dark-gray-color2); }
-    strong { font-size: 18px; color: var(--black-color); }
+export const StyledOperationSummaryLabel = styled.span`
+    font-size: 12px;
+    color: var(--dark-gray-color2);
+`;
+
+export const StyledOperationSummaryValue = styled.strong`
+    font-size: 18px;
+    color: var(--black-color);
 `;
 
 export const StyledOperationList = styled.div`
@@ -431,9 +488,17 @@ export const StyledOperationLabel = styled.div`
     flex-direction: column;
     gap: 4px;
     min-width: 0;
+`;
 
-    span { font-size: 13px; color: var(--dark-gray-color); font-weight: 600; }
-    small { font-size: 11px; color: var(--dark-gray-color2); }
+export const StyledOperationLabelName = styled.span`
+    font-size: 13px;
+    color: var(--dark-gray-color);
+    font-weight: 600;
+`;
+
+export const StyledOperationLabelSub = styled.small`
+    font-size: 11px;
+    color: var(--dark-gray-color2);
 `;
 
 export const StyledChartRevenueMetaLabel = styled.span`

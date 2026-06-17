@@ -192,11 +192,11 @@ export const StyledSummary = styled.div`
     background: var(--bg-subtle-88);
     font-size: 13px;
     color: var(--dark-gray-color2);
+`;
 
-    strong {
-        font-size: 16px;
-        color: var(--blue-color);
-    }
+export const StyledSummaryStrong = styled.strong`
+    font-size: 16px;
+    color: var(--blue-color);
 `;
 
 /* ── Customer info grid (metric modal) ── */
@@ -207,21 +207,21 @@ export const StyledCustomerInfoGrid = styled.div`
     gap: 8px;
     width: 100%;
 
-    span {
-        display: flex;
-        gap: 6px;
-        border-radius: 10px;
-        background: var(--bg-subtle-92);
-        font-size: 12px;
-        color: var(--dark-gray-color);
-    }
-
-    strong {
-        color: var(--dark-gray-color2);
-        font-weight: 600;
-    }
-
     @media (max-width: 640px) {
         grid-template-columns: 1fr;
     }
+`;
+
+export const StyledCustomerInfoGridItem = styled.span`
+    display: flex;
+    gap: 6px;
+    border-radius: 10px;
+    background: var(--bg-subtle-92);
+    font-size: 12px;
+    color: var(--dark-gray-color);
+`;
+
+export const StyledCustomerInfoGridStrong = styled.strong`
+    color: var(--dark-gray-color2);
+    font-weight: 600;
 `;

@@ -9,7 +9,9 @@ import {
     StyledConfirmOverlay,
     StyledFooter,
     StyledHeader,
+    StyledHeaderTitle,
     StyledHeaderTitleGroup,
+    StyledHeaderTitleGroupText,
     useDialogAccessibility,
     useLayerInstanceId,
 } from '../calendar/overlays/ModalStyles';
@@ -82,11 +84,11 @@ export const ConfirmDialog = ({
                 <StyledHeader>
                     {description ? (
                         <StyledHeaderTitleGroup>
-                            <h3>{title}</h3>
-                            <p>{description}</p>
+                            <StyledHeaderTitle>{title}</StyledHeaderTitle>
+                            <StyledHeaderTitleGroupText>{description}</StyledHeaderTitleGroupText>
                         </StyledHeaderTitleGroup>
                     ) : (
-                        <h3>{title}</h3>
+                        <StyledHeaderTitle>{title}</StyledHeaderTitle>
                     )}
                     {showCloseButton && <CloseIconButton onClick={onClose} />}
                 </StyledHeader>

@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 
+import Link from 'next/link';
 import {useRouter} from 'next/router';
 import {useSession} from 'next-auth/react';
 
@@ -9,11 +10,13 @@ import {useNaverBookingSync} from '../../hooks/useNaverBookingSync';
 import {fetchGmailStatus} from '../../lib/gmail-status';
 import type {GmailStatus} from '../../lib/gmail-status';
 import {PageHero} from '../ui/PageHero';
+import {ConfirmDialog} from '../ui/ConfirmDialog';
 import {StyledSettingsCard, StyledSettingsCardTitle, StyledSaveBtn} from './settings-styles';
 import {
     StyledConfirmOverlay,
     StyledConfirmModal,
     StyledHeader,
+    StyledHeaderTitle,
     StyledFooter,
     StyledActionButton,
 } from '../calendar/overlays/ModalStyles';
@@ -34,9 +37,10 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export function NaverBookingSection() {
     const router = useRouter();
-    const {data: session} = useSession();
+    const {data: session, status} = useSession();
     const {sync, syncing, isActive} = useNaverBookingSync();
 
+    const isGuest = status === 'unauthenticated';
     const hasRole = session?.user?.role === 'owner';
 
     const [gmailStatus, setGmailStatus] = useState<GmailStatus | null>(null);
@@ -44,6 +48,7 @@ export function NaverBookingSection() {
     const [errorReason, setErrorReason] = useState<string | null>(null);
     const [justConnected, setJustConnected] = useState(false);
     const [disconnecting, setDisconnecting] = useState(false);
+    const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
     useEffect(() => {
         const raw = localStorage.getItem('naver-sync-last');
@@ -51,8 +56,10 @@ export function NaverBookingSection() {
     }, [syncing]);
 
     useEffect(() => {
+        // 게스트·미인증은 Gmail 상태 조회 불가(401) → 인증된 사용자만 호출
+        if (status !== 'authenticated') return;
         fetchGmailStatus(true).then(setGmailStatus);
-    }, []);
+    }, [status]);
 
     // OAuth 리다이렉트 결과 처리 (성공 배지 / 실패 안내 레이어)
     useEffect(() => {
@@ -73,6 +80,7 @@ export function NaverBookingSection() {
     }, []);
 
     const handleDisconnect = useCallback(async () => {
+        setShowDisconnectConfirm(false);
         setDisconnecting(true);
         try {
             const res = await fetch('/api/gmail/disconnect', {method: 'POST'});
@@ -91,6 +99,17 @@ export function NaverBookingSection() {
         <div>
             <PageHero eyebrow="설정" title="네이버예약 연동" subtitle="Gmail을 통해 네이버 예약을 자동으로 일정표에 반영합니다." />
 
+            {isGuest && (
+                <StyledSettingsCard>
+                    <StyledSettingsCardTitle>연동 상태</StyledSettingsCardTitle>
+                    <StyledGuestNotice>
+                        게스트 모드에서는 네이버 예약 연동을 사용할 수 없습니다. <StyledGuestEm>① SNS 계정을 연동</StyledGuestEm>한 뒤 <StyledGuestEm>② Gmail 계정까지 연동</StyledGuestEm>하면 네이버 예약 메일이 자동으로 동기화됩니다.
+                    </StyledGuestNotice>
+                    <StyledGuestLink href="/settings/sns">① SNS 계정 연동하러 가기 →</StyledGuestLink>
+                </StyledSettingsCard>
+            )}
+
+            {!isGuest && (
             <StyledSettingsCard>
                 <StyledSettingsCardTitle>연동 상태</StyledSettingsCardTitle>
 
@@ -100,7 +119,7 @@ export function NaverBookingSection() {
                         {gmailStatus === null
                             ? '연동 상태를 확인하는 중...'
                             : connected
-                                ? <>Gmail 연동됨{gmailStatus.email ? <>: <strong>{gmailStatus.email}</strong></> : null}</>
+                                ? <>Gmail 연동됨{gmailStatus.email ? <>: <StyledCheckEmail>{gmailStatus.email}</StyledCheckEmail></> : null}</>
                                 : 'Gmail 연동이 필요합니다. 로그인 계정과 다른 Google 계정도 사용할 수 있습니다.'
                         }
                     </StyledCheckText>
@@ -111,7 +130,7 @@ export function NaverBookingSection() {
                                     <StyledGhostBtn type="button" onClick={handleConnect}>
                                         다른 계정으로 연동
                                     </StyledGhostBtn>
-                                    <StyledGhostBtn type="button" $danger disabled={disconnecting} onClick={handleDisconnect}>
+                                    <StyledGhostBtn type="button" $danger disabled={disconnecting} onClick={() => setShowDisconnectConfirm(true)}>
                                         {disconnecting ? '해제 중...' : '연동 해제'}
                                     </StyledGhostBtn>
                                 </>
@@ -150,31 +169,32 @@ export function NaverBookingSection() {
                     </StyledActiveRow>
                 )}
             </StyledSettingsCard>
+            )}
 
             <StyledSettingsCard>
                 <StyledSettingsCardTitle>동작 방식</StyledSettingsCardTitle>
                 <StyledGuideList>
-                    <li>Gmail 계정을 연동하면 해당 메일함에서 네이버 예약 이메일을 자동으로 읽어옵니다.</li>
-                    <li>예약 확정·취소 이메일을 파싱해 일정표에 자동 반영합니다.</li>
-                    <li>동기화는 로그인 시 1회 + 매 정시 자동 실행됩니다 (최소 30분 간격).</li>
-                    <li>디자이너 이름이 일치하지 않으면 자동으로 새 디자이너를 생성합니다.</li>
-                    <li>등록되지 않은 서비스명은 자동으로 서비스에 추가됩니다.</li>
+                    <StyledGuideItem>Gmail 계정을 연동하면 해당 메일함에서 네이버 예약 이메일을 자동으로 읽어옵니다.</StyledGuideItem>
+                    <StyledGuideItem>예약 확정·취소 이메일을 파싱해 일정표에 자동 반영합니다.</StyledGuideItem>
+                    <StyledGuideItem>동기화는 로그인 시 1회 + 매 정시 자동 실행됩니다 (최소 30분 간격).</StyledGuideItem>
+                    <StyledGuideItem>디자이너 이름이 일치하지 않으면 자동으로 새 디자이너를 생성합니다.</StyledGuideItem>
+                    <StyledGuideItem>등록되지 않은 서비스명은 자동으로 서비스에 추가됩니다.</StyledGuideItem>
                 </StyledGuideList>
             </StyledSettingsCard>
 
             <StyledSettingsCard>
                 <StyledSettingsCardTitle>주의사항</StyledSettingsCardTitle>
                 <StyledGuideList>
-                    <li>네이버예약 알림 이메일을 연동한 Gmail 계정으로 수신하도록 설정해야 합니다.</li>
-                    <li>Gmail 읽기 권한이 필요합니다 (연동 시 동의).</li>
-                    <li>로그인에 사용하는 Google 계정과 다른 계정으로도 연동할 수 있습니다.</li>
+                    <StyledGuideItem>네이버예약 알림 이메일을 연동한 Gmail 계정으로 수신하도록 설정해야 합니다.</StyledGuideItem>
+                    <StyledGuideItem>Gmail 읽기 권한이 필요합니다 (연동 시 동의).</StyledGuideItem>
+                    <StyledGuideItem>로그인에 사용하는 Google 계정과 다른 계정으로도 연동할 수 있습니다.</StyledGuideItem>
                 </StyledGuideList>
             </StyledSettingsCard>
 
             {errorReason && (
                 <StyledConfirmOverlay>
                     <StyledConfirmModal>
-                        <StyledHeader><h3>Gmail 연동 실패</h3></StyledHeader>
+                        <StyledHeader><StyledHeaderTitle>Gmail 연동 실패</StyledHeaderTitle></StyledHeader>
                         <StyledModalBody>
                             <StyledErrorText>{ERROR_MESSAGES[errorReason] ?? ERROR_MESSAGES.unknown}</StyledErrorText>
                         </StyledModalBody>
@@ -189,6 +209,18 @@ export function NaverBookingSection() {
                     </StyledConfirmModal>
                 </StyledConfirmOverlay>
             )}
+
+            {showDisconnectConfirm && (
+                <ConfirmDialog
+                    title="네이버예약 연동 해제"
+                    message={'Gmail 연동을 해제하면 네이버 예약이 더 이상 자동으로 동기화되지 않습니다.\n해제하시겠습니까?'}
+                    confirmLabel="연동 해제"
+                    confirmVariant="danger"
+                    layerKey="naver-disconnect"
+                    onConfirm={handleDisconnect}
+                    onClose={() => setShowDisconnectConfirm(false)}
+                />
+            )}
         </div>
     );
 }
@@ -196,6 +228,26 @@ export function NaverBookingSection() {
 
 const StyledSyncBtn = styled(StyledSaveBtn)`
     flex-shrink: 0;
+`;
+
+const StyledGuestNotice = styled.p`
+    margin: 8px 0 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--dark-gray-color);
+`;
+
+const StyledGuestEm = styled.strong`
+    font-weight: 600;
+    color: var(--black-color);
+`;
+
+const StyledGuestLink = styled(Link)`
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--blue-color);
+    text-decoration: underline;
 `;
 
 const StyledCheckRow = styled.div`
@@ -221,11 +273,11 @@ const StyledCheckText = styled.span`
     line-height: 1.5;
     flex: 1;
     min-width: 0;
+`;
 
-    strong {
-        font-weight: 600;
-        color: var(--black-color);
-    }
+const StyledCheckEmail = styled.strong`
+    font-weight: 600;
+    color: var(--black-color);
 `;
 
 const StyledGmailActions = styled.div`
@@ -301,10 +353,10 @@ const StyledGuideList = styled.ol`
     display: flex;
     flex-direction: column;
     gap: 8px;
+`;
 
-    li {
-        font-size: 14px;
-        color: var(--dark-gray-color);
-        line-height: 1.6;
-    }
+const StyledGuideItem = styled.li`
+    font-size: 14px;
+    color: var(--dark-gray-color);
+    line-height: 1.6;
 `;

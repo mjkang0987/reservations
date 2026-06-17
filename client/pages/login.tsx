@@ -122,7 +122,7 @@ export default function LoginPage({providerIds, isDatabaseConfigured, loginError
                 <StyledSubtitle>SNS 계정으로 로그인</StyledSubtitle>
                 {displayError && ERROR_MESSAGES[displayError] && (
                     <StyledLoginError>
-                        <strong>{ERROR_MESSAGES[displayError]}</strong>
+                        <StyledLoginErrorText>{ERROR_MESSAGES[displayError]}</StyledLoginErrorText>
                     </StyledLoginError>
                 )}
                 <StyledInviteSection>
@@ -372,14 +372,14 @@ const StyledLoginError = styled.div`
     border-radius: 10px;
     background: #fff1f2;
     text-align: center;
+`;
 
-    strong {
-        display: block;
-        font-size: 13px;
-        font-weight: 600;
-        line-height: 1.5;
-        color: #9f1239;
-    }
+const StyledLoginErrorText = styled.strong`
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: #9f1239;
 `;
 
 const StyledSecondaryButton = styled.button`

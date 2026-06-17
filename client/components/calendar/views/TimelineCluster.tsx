@@ -45,7 +45,7 @@ export function TimelineCluster({
                     onToggle();
                 }}
             >
-                <strong>{cluster.reservations.length}건예약</strong>
+                <StyledOverlapCount>{cluster.reservations.length}건예약</StyledOverlapCount>
                 {designerBadges.map((badge, index) => (
                     <DesignerLabel key={`${cluster.id}-${index}`} color={badge.color} name={badge.name} />
                 ))}
@@ -83,9 +83,9 @@ const StyledOverlapButton = styled.button`
         align-items: flex-start;
         padding: 4px 2px;
     }
+`;
 
-    strong {
-        font-size: var(--small-font);
-        font-weight: 700;
-    }
+const StyledOverlapCount = styled.strong`
+    font-size: var(--small-font);
+    font-weight: 700;
 `;

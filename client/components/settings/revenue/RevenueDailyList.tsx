@@ -11,6 +11,7 @@ import {
     StyledList,
     StyledRevenueEmpty,
     StyledSummary,
+    StyledSummaryStrong,
 } from './revenue-styles';
 import {RevenueReservationList} from './RevenueReservationList';
 
@@ -115,7 +116,7 @@ export const RevenueDailyList = ({
             </StyledList>
             <StyledRevenueSummary>
                 <span>{rangeCount}건</span>
-                <strong>{formatPrice(rangeTotal)}</strong>
+                <StyledSummaryStrong>{formatPrice(rangeTotal)}</StyledSummaryStrong>
             </StyledRevenueSummary>
         </>
     );

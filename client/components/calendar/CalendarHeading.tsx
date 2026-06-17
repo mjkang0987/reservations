@@ -79,7 +79,7 @@ const StyledDateElement = styled.span`
   display: inline-flex;
   font-size: var(--big-font);
 
-  + span {
+  & + & {
     &:before {
       content: "/";
       display: inline-flex;
