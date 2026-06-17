@@ -64,9 +64,11 @@ class ReservationDocument extends Document {
                           href="/favicon/apple-icon-180x180.png" />
                     <link rel="manifest"
                           href="/favicon/manifest.json" />
-                    <script async
-                            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-                            crossOrigin="anonymous" />
+                    {process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
+                        <script async
+                                src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
+                                crossOrigin="anonymous" />
+                    )}
                 </Head>
                 <body>
                 <Main />

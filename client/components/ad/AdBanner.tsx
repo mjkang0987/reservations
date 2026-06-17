@@ -8,6 +8,9 @@ declare global {
     }
 }
 
+// 실제 AdSense 퍼블리셔 ID가 설정된 경우에만 광고를 로드 (미설정 시 400 방지)
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+
 interface AdBannerProps {
     adSlot: string;
     adFormat?: 'auto' | 'horizontal' | 'vertical' | 'rectangle';
@@ -22,9 +25,10 @@ export const AdBanner = ({
     style
 }: AdBannerProps) => {
     const adRef = useRef<HTMLModElement>(null);
+    const enabled = !!ADSENSE_CLIENT && !!adSlot;
 
     useEffect(() => {
-        if (process.env.NODE_ENV === 'development') return;
+        if (process.env.NODE_ENV === 'development' || !enabled) return;
         const el = adRef.current;
         if (!el || el.dataset.adsbygoogleStatus) return;
         try {
@@ -32,7 +36,7 @@ export const AdBanner = ({
         } catch {
             // AdSense not loaded
         }
-    }, []);
+    }, [enabled]);
 
     if (process.env.NODE_ENV === 'development') {
         return (
@@ -42,11 +46,14 @@ export const AdBanner = ({
         );
     }
 
+    // 운영이지만 AdSense ID/슬롯 미설정 → 렌더하지 않음
+    if (!enabled) return null;
+
     return (
         <ins ref={adRef}
              className="adsbygoogle"
              style={{display: 'block', ...style}}
-             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-client={ADSENSE_CLIENT}
              data-ad-slot={adSlot}
              data-ad-format={adFormat}
              data-full-width-responsive={fullWidthResponsive} />

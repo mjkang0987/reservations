@@ -181,7 +181,7 @@ export default function LayoutComponent({children}: NodeType) {
                         {children}
                     </StyledMain>
                     <StyledFooterAd>
-                        <AdBanner adSlot="FOOTER_SLOT_ID" adFormat="horizontal" />
+                        <AdBanner adSlot={process.env.NEXT_PUBLIC_ADSENSE_FOOTER_SLOT ?? ''} adFormat="horizontal" />
                     </StyledFooterAd>
                     {createReservationInitial && selectedReservations.length === 0 && (
                         <ReservationCreate initial={createReservationInitial}
