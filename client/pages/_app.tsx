@@ -131,9 +131,24 @@ function AppContent({Component, pageProps}: AppContentProps) {
                     await update();
                     window.location.reload();
                 } else if (res.status === 409) {
-                    // 기존 데이터 있는 매장 → 병합/삭제 레이어 표시
-                    const data = await res.json() as {storeName?: string};
-                    setMigrationData({snapshot, storeName: data.storeName ?? ''});
+                    // 기존 데이터 있는 매장 → 병합/삭제 결정 필요.
+                    // 단, 병합 대상은 게스트가 만든 '실제 레코드'(고객/예약/서비스/디자이너)뿐이다.
+                    // 매장명만 입력했거나 온보딩을 건너뛴(빈) 스냅샷은 합칠 게 없으므로
+                    // 레이어를 띄우지 않고 로컬을 정리한 뒤 기존 매장으로 그대로 진입한다.
+                    const hasRealData = snapshot.customers.length > 0
+                        || snapshot.reservations.length > 0
+                        || snapshot.services.length > 0
+                        || snapshot.designers.length > 0;
+
+                    if (hasRealData) {
+                        const data = await res.json() as {storeName?: string};
+                        setMigrationData({snapshot, storeName: data.storeName ?? ''});
+                    } else {
+                        const clean = createDefaultLocalDbSnapshot();
+                        saveLocalDbSnapshot(clean);
+                        await update();
+                        window.location.reload();
+                    }
                 } else {
                     localSyncDone.current = false;
                 }

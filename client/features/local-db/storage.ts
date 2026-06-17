@@ -37,6 +37,7 @@ export function createDefaultLocalDbSnapshot(): LocalDbSnapshot {
         categoryBaseColors: {},
         designers: [],
         storeSettings: DEFAULT_STORE_SETTINGS,
+        onboarded: false,
     });
 }
 
