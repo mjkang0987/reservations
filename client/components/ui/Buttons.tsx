@@ -29,6 +29,10 @@ const StyledSquareButton = styled.button <Props>`
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     font-size: var(--small-font);
+
+    &:active {
+        background-color: var(--gray-color2);
+    }
 `;
 
 export const ButtonSquare: React.FC<Props> = ({children, ...props}) => {
