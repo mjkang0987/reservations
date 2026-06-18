@@ -1,14 +1,21 @@
+-- 0001_init — 베이스라인 (기존 11개 마이그레이션 스쿼시).
+-- 개발 중 db push/migrate 혼용으로 생긴 드리프트를 정리하고 현재 schema.prisma 와
+-- 100% 일치하는 단일 init 으로 재생성. prisma migrate diff --from-empty 로 생성됨.
+
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateEnum
-CREATE TYPE "MembershipRole" AS ENUM ('owner', 'manager', 'staff');
+CREATE TYPE "MembershipRole" AS ENUM ('owner', 'staff');
 
 -- CreateEnum
 CREATE TYPE "ReservationStatus" AS ENUM ('active', 'completed', 'cancelled', 'noshow');
 
 -- CreateEnum
-CREATE TYPE "PaymentMethod" AS ENUM ('cash', 'cash_receipt', 'card', 'naver_pay', 'local_currency', 'local_currency_receipt', 'voucher', 'points');
+CREATE TYPE "PaymentMethod" AS ENUM ('cash', 'cash_receipt', 'card', 'naver_pay', 'local_currency', 'local_currency_receipt', 'voucher', 'points', 'discount', 'naver_deposit');
+
+-- CreateEnum
+CREATE TYPE "ReservationChannel" AS ENUM ('naver', 'walk_in', 'phone');
 
 -- CreateEnum
 CREATE TYPE "PointHistoryType" AS ENUM ('manual_add', 'manual_subtract', 'recharge', 'payment_use', 'payment_earn', 'payment_adjust');
@@ -20,6 +27,7 @@ CREATE TYPE "DesignerStatus" AS ENUM ('active', 'on_leave', 'resigned');
 CREATE TABLE "Store" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "shopType" TEXT,
     "onboarded" BOOLEAN NOT NULL DEFAULT false,
     "categoryBaseColorsJson" JSONB NOT NULL DEFAULT '{}',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -35,10 +43,26 @@ CREATE TABLE "User" (
     "nickname" TEXT NOT NULL,
     "name" TEXT,
     "image" TEXT,
+    "agreedTermsVersion" TEXT,
+    "agreedTermsAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "GmailConnection" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "accessToken" TEXT NOT NULL,
+    "refreshToken" TEXT,
+    "tokenExpiresAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "GmailConnection_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -47,6 +71,9 @@ CREATE TABLE "AuthAccount" (
     "userId" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
     "providerSub" TEXT NOT NULL,
+    "accessToken" TEXT,
+    "refreshToken" TEXT,
+    "tokenExpiresAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -167,6 +194,10 @@ CREATE TABLE "Reservation" (
     "memo" TEXT,
     "paymentCompleted" BOOLEAN NOT NULL DEFAULT false,
     "pointEarned" INTEGER NOT NULL DEFAULT 0,
+    "naverBookingId" TEXT,
+    "naverBookingUrl" TEXT,
+    "naverDeposit" INTEGER,
+    "channel" "ReservationChannel" NOT NULL DEFAULT 'phone',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -234,6 +265,61 @@ CREATE TABLE "StoreClosedDate" (
     CONSTRAINT "StoreClosedDate_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Invite" (
+    "id" TEXT NOT NULL,
+    "storeId" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "role" "MembershipRole" NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "usedAt" TIMESTAMP(3),
+    "usedById" TEXT,
+    "createdBy" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Invite_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CustomerMergeHistory" (
+    "id" TEXT NOT NULL,
+    "storeId" TEXT NOT NULL,
+    "sourceCustomerJson" JSONB NOT NULL,
+    "targetCustomerJson" JSONB NOT NULL,
+    "movedReservationIds" JSONB NOT NULL DEFAULT '[]',
+    "movedPointHistoryIds" JSONB NOT NULL DEFAULT '[]',
+    "addedMemoTagIds" JSONB NOT NULL DEFAULT '[]',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "CustomerMergeHistory_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ConflictResolution" (
+    "id" TEXT NOT NULL,
+    "storeId" TEXT NOT NULL,
+    "conflictKey" TEXT NOT NULL,
+    "reason" TEXT NOT NULL,
+    "memo" TEXT,
+    "resolvedBy" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ConflictResolution_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Inquiry" (
+    "id" TEXT NOT NULL,
+    "storeId" TEXT,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL DEFAULT '',
+    "content" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Inquiry_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -241,10 +327,13 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "User_nickname_key" ON "User"("nickname");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AuthAccount_provider_providerSub_key" ON "AuthAccount"("provider", "providerSub");
+CREATE UNIQUE INDEX "GmailConnection_userId_key" ON "GmailConnection"("userId");
 
 -- CreateIndex
-CREATE INDEX "AuthAccount_userId_idx" ON "AuthAccount"("userId");
+CREATE UNIQUE INDEX "AuthAccount_userId_provider_key" ON "AuthAccount"("userId", "provider");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AuthAccount_provider_providerSub_key" ON "AuthAccount"("provider", "providerSub");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Membership_userId_storeId_key" ON "Membership"("userId", "storeId");
@@ -274,6 +363,9 @@ CREATE INDEX "Reservation_storeId_date_idx" ON "Reservation"("storeId", "date");
 CREATE UNIQUE INDEX "Reservation_storeId_legacyId_key" ON "Reservation"("storeId", "legacyId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Reservation_storeId_naverBookingId_key" ON "Reservation"("storeId", "naverBookingId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "StorePointSettings_storeId_key" ON "StorePointSettings"("storeId");
 
 -- CreateIndex
@@ -282,14 +374,29 @@ CREATE UNIQUE INDEX "StoreBusinessHour_storeId_dayIndex_key" ON "StoreBusinessHo
 -- CreateIndex
 CREATE UNIQUE INDEX "StoreClosedDate_storeId_date_key" ON "StoreClosedDate"("storeId", "date");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Invite_code_key" ON "Invite"("code");
+
+-- CreateIndex
+CREATE INDEX "CustomerMergeHistory_storeId_idx" ON "CustomerMergeHistory"("storeId");
+
+-- CreateIndex
+CREATE INDEX "ConflictResolution_storeId_idx" ON "ConflictResolution"("storeId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ConflictResolution_storeId_conflictKey_key" ON "ConflictResolution"("storeId", "conflictKey");
+
 -- AddForeignKey
-ALTER TABLE "Membership" ADD CONSTRAINT "Membership_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "GmailConnection" ADD CONSTRAINT "GmailConnection_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AuthAccount" ADD CONSTRAINT "AuthAccount_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Membership" ADD CONSTRAINT "Membership_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Membership" ADD CONSTRAINT "Membership_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Customer" ADD CONSTRAINT "Customer_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -313,22 +420,22 @@ ALTER TABLE "DesignerSchedule" ADD CONSTRAINT "DesignerSchedule_designerId_fkey"
 ALTER TABLE "Service" ADD CONSTRAINT "Service_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_designerId_fkey" FOREIGN KEY ("designerId") REFERENCES "Designer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Reservation" ADD CONSTRAINT "Reservation_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ReservationPaymentEntry" ADD CONSTRAINT "ReservationPaymentEntry_reservationId_fkey" FOREIGN KEY ("reservationId") REFERENCES "Reservation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ReservationHistory" ADD CONSTRAINT "ReservationHistory_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ReservationHistory" ADD CONSTRAINT "ReservationHistory_reservationId_fkey" FOREIGN KEY ("reservationId") REFERENCES "Reservation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ReservationHistory" ADD CONSTRAINT "ReservationHistory_reservationId_fkey" FOREIGN KEY ("reservationId") REFERENCES "Reservation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ReservationHistory" ADD CONSTRAINT "ReservationHistory_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StorePointSettings" ADD CONSTRAINT "StorePointSettings_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -338,3 +445,13 @@ ALTER TABLE "StoreBusinessHour" ADD CONSTRAINT "StoreBusinessHour_storeId_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "StoreClosedDate" ADD CONSTRAINT "StoreClosedDate_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invite" ADD CONSTRAINT "Invite_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invite" ADD CONSTRAINT "Invite_usedById_fkey" FOREIGN KEY ("usedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invite" ADD CONSTRAINT "Invite_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
