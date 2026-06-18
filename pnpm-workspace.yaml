@@ -1,0 +1,7 @@
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+# pnpm 11+ 설정 위치 (package.json의 pnpm 필드는 더 이상 읽지 않음)
+# 보안 패치용 override — 88eaaf9(의존성 취약점 정리)에서 이전.
+overrides:
+  '@hono/node-server': '>=1.19.13' # prisma dev 도구 경유

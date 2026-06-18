@@ -7,10 +7,5 @@
   "devDependencies": {
     "@types/nodemailer": "^8.0.0",
     "prisma": "^7.8.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "@hono/node-server": ">=1.19.13"
-    }
   }
 }

@@ -1,0 +1,16 @@
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+# pnpm 11+ 설정 위치 (package.json의 pnpm 필드는 더 이상 읽지 않음)
+# 보안 패치용 override 모음 — 88eaaf9(의존성 취약점 정리)에서 이전.
+overrides:
+  brace-expansion: 5.0.6 # ReDoS 패치
+  postcss: 8.5.13
+  react: 19.2.7
+  react-dom: 19.2.7
+  '@hono/node-server': '>=1.19.13' # prisma dev 도구 경유
+  # eslint 도구 경유 sourceMappingURL 파일읽기 패치. 상한 <8로 막아
+  # 갓 배포된 babel 8 메이저(minimumReleaseAge 위반)로 점프하지 않게 함.
+  '@babel/core': '>=7.29.6 <8'
