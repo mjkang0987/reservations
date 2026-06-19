@@ -35,6 +35,8 @@ if (process.env.AUTH_GOOGLE_ID && !process.env.AUTH_GOOGLE_ID.startsWith('REPLAC
     providers.push(Google({
         clientId: process.env.AUTH_GOOGLE_ID,
         clientSecret: process.env.AUTH_GOOGLE_SECRET,
+        // 최소 수집: 이름·이메일·프로필이미지 미수신. openid(계정 식별 sub)만 요청.
+        authorization: {params: {scope: 'openid'}},
     }));
 if (process.env.AUTH_KAKAO_ID && !process.env.AUTH_KAKAO_ID.startsWith('REPLACE'))
     providers.push(Kakao({
