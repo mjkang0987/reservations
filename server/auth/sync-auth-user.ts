@@ -83,7 +83,8 @@ async function generateFallbackUniqueNickname(): Promise<string> {
 // 닉네임은 트랜잭션 밖(prisma)에서 미리 유니크하게 확정한다.
 // 트랜잭션 내부에서 create 실패 후 재시도하면 Postgres가 트랜잭션을 abort하여
 // 이후 모든 쿼리가 25P02(current transaction is aborted)로 막히기 때문.
-// 닉네임·이름 모두 랜덤 자동생성한다. SNS(Google 등) 표시이름은 사용하지 않음.
+// 표시용 닉네임은 항상 랜덤 생성한다(SNS 표시이름을 닉네임으로 쓰지 않음).
+// 실제 이름/이메일/이미지는 별도로 저장하되 화면엔 이 랜덤 닉네임만 노출.
 async function resolveUniqueNickname(): Promise<string> {
     try {
         return await generateUniqueNickname();
@@ -102,7 +103,8 @@ async function createUserWithNickname(
         data: {
             email: data.email,
             nickname,
-            name: nickname,
+            // 표시는 랜덤 닉네임으로 하되, 수집한 실제 이름은 저장(미노출). 없으면 닉네임으로 폴백.
+            name: data.displayName ?? nickname,
             image: data.image,
             accounts: {create: {provider: data.provider, providerSub: data.providerSub}},
         },

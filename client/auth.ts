@@ -35,8 +35,8 @@ if (process.env.AUTH_GOOGLE_ID && !process.env.AUTH_GOOGLE_ID.startsWith('REPLAC
     providers.push(Google({
         clientId: process.env.AUTH_GOOGLE_ID,
         clientSecret: process.env.AUTH_GOOGLE_SECRET,
-        // 최소 수집: 이름·이메일·프로필이미지 미수신. openid(계정 식별 sub)만 요청.
-        authorization: {params: {scope: 'openid'}},
+        // 기본 scope(openid email profile) 사용 — 이메일·이름·프로필이미지를 수집해 저장.
+        // 단, 화면 표시는 랜덤 닉네임으로 하고 실명/이메일은 노출하지 않음(sync-auth-user 참고).
     }));
 if (process.env.AUTH_KAKAO_ID && !process.env.AUTH_KAKAO_ID.startsWith('REPLACE'))
     providers.push(Kakao({
