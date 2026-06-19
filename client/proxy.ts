@@ -10,6 +10,7 @@ export default auth((req) => {
         pathname.startsWith('/api/') ||
         pathname.startsWith('/_next') ||
         pathname.startsWith('/login') ||
+        pathname.startsWith('/about') ||
         pathname.startsWith('/logout') ||
         pathname.startsWith('/consent') ||
         pathname.startsWith('/terms') ||

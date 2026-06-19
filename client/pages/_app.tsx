@@ -166,7 +166,7 @@ function AppContent({Component, pageProps}: AppContentProps) {
         const path = router.pathname;
 
         // 로그인 / 약관 문서는 자유 접근
-        if (path === '/login' || path === '/terms' || path === '/privacy' || path === '/logout') return;
+        if (path === '/login' || path === '/about' || path === '/terms' || path === '/privacy' || path === '/logout') return;
 
         const consented = getGuestTermsVersion() === CURRENT_TERMS_VERSION;
         // 영구 동의는 온보딩 완료 시점에 기록되므로, 온보딩 진입 가드는 세션 ack도 허용
