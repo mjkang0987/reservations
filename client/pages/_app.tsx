@@ -187,8 +187,10 @@ function AppContent({Component, pageProps}: AppContentProps) {
             return;
         }
 
-        // 로컬 데이터 없음 → 로그인으로 (아직 게스트로 커밋 안 함, 동의 불필요)
-        if (!hasGuestData()) {
+        // 미인증 + (게스트 데이터 없음 || 이번 세션에 게스트 모드를 선택하지 않음) → 로그인으로.
+        // 옛 localStorage 게스트 흔적만으로 /consent 에 끌려가지 않게 함
+        // (예: SNS 로그인 중단 후 복귀 시 약관동의 페이지 강제 진입 방지).
+        if (!hasGuestData() || !isGuestEntryResolved()) {
             router.replace('/login');
             return;
         }
