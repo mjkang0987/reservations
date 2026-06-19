@@ -83,13 +83,8 @@ async function generateFallbackUniqueNickname(): Promise<string> {
 // 닉네임은 트랜잭션 밖(prisma)에서 미리 유니크하게 확정한다.
 // 트랜잭션 내부에서 create 실패 후 재시도하면 Postgres가 트랜잭션을 abort하여
 // 이후 모든 쿼리가 25P02(current transaction is aborted)로 막히기 때문.
-async function resolveUniqueNickname(displayName?: string | null): Promise<string> {
-    const trimmed = displayName?.trim();
-    if (trimmed && trimmed.length >= 2) {
-        const nickname = trimmed.slice(0, 20);
-        const existing = await prisma.user.findUnique({where: {nickname}, select: {id: true}});
-        if (!existing) return nickname;
-    }
+// 닉네임·이름 모두 랜덤 자동생성한다. SNS(Google 등) 표시이름은 사용하지 않음.
+async function resolveUniqueNickname(): Promise<string> {
     try {
         return await generateUniqueNickname();
     } catch {
@@ -101,7 +96,7 @@ async function createUserWithNickname(
     data: {email: string | null; image: string | null; provider: string; providerSub: string; displayName?: string | null},
     tx: Prisma.TransactionClient,
 ): Promise<{id: string; nickname: string; email: string | null; image: string | null}> {
-    const nickname = await resolveUniqueNickname(data.displayName);
+    const nickname = await resolveUniqueNickname();
     // 단일 create — 충돌 시 throw하여 트랜잭션이 깔끔히 롤백되도록 한다(재시도하지 않음).
     return await tx.user.create({
         data: {
