@@ -339,4 +339,23 @@ Phase 1(API 이전) 먼저 — 위험이 낮고 즉시 경계가 깔끔해짐. P
 ## 주의 / 후속
 - 개별 광고 유닛(`AdBanner`)은 **슬롯 ID**(`NEXT_PUBLIC_ADSENSE_FOOTER_SLOT`/`AUTH_SLOT`)가 있어야 `<ins>`가 렌더됨 — 슬롯은 AdSense 콘솔에서 발급 후 env 설정 필요. 그 전까지는 페이지 레벨(자동 광고)만 동작.
 - AdSense 사이트 승인 + 콘솔에서 자동광고 ON 필요.
+
+---
+
+# run.app 도메인 정규화 + 온보딩 로고 링크
+
+> **진행 현황 (2026-06-20, 완료)**: 구현·검증·푸시(`claude/angdae-issue-gym218`). 온보딩 로고 링크(`6ba521b`), run.app 정규화 리다이렉트.
+
+## 배경
+- 네이버앱이 Cloud Run 기본 URL(`tas-...run.app`)로 연결됨. 이 URL 접속은 OAuth 콜백/세션 쿠키/AdSense가 모두 `takeaseat.co.kr` 기준이라 **로그인이 깨짐**.
+
+## 구현 (완료)
+- `proxy.ts`: host가 `*.run.app`이면 같은 경로로 `https://takeaseat.co.kr`로 **308 영구 리다이렉트**. matcher에서 `login` 제외 해제(로그인 페이지도 정규화 적용).
+- `onboarding/index.tsx`: 헤더 로고 → 루트(/) 링크(로그인 화면과 동일).
+
+## 검증 (next start, Host 헤더 시뮬레이션)
+- `Host: tas-...run.app` → `/about`·`/login?invite=...` 모두 308 → `takeaseat.co.kr`(경로·쿼리 보존). 일반 Host는 200. `next build` 그린.
+
+## 후속 (코드 외)
+- 네이버 스마트플레이스/예약에 등록된 사이트 URL을 `https://takeaseat.co.kr`로 교체(근본).
  
