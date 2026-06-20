@@ -1,6 +1,7 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 
 import type {NextPage} from 'next';
+import Link from 'next/link';
 import {useRouter} from 'next/router';
 import {useSession} from 'next-auth/react';
 
@@ -213,7 +214,9 @@ const OnboardingPage: NextPage = () => {
             <SeoHead title="초기 설정" />
             <StyledCard>
                 <StyledCardHeader>
-                    <StyledBrandLogo src="/logo/logo-black.svg" alt="TAS" />
+                    <StyledBrandLink href="/" aria-label="홈으로 이동">
+                        <StyledBrandLogo src="/logo/logo-black.svg" alt="TAS" />
+                    </StyledBrandLink>
                     {step !== 0 && (
                         <StyledStepRow>
                             {visibleSteps.map((s, i) => (
@@ -400,6 +403,11 @@ const StyledCardHeader = styled.div`
     display: flex;
     flex-direction: column;
     gap: 10px;
+`;
+
+const StyledBrandLink = styled(Link)`
+    display: inline-block;
+    line-height: 0;
 `;
 
 const StyledBrandLogo = styled.img`
