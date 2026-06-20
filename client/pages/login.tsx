@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react';
 
+import Link from 'next/link';
 import {useRouter} from 'next/router';
 
 import {signIn, signOut, useSession} from 'next-auth/react';
@@ -120,7 +121,9 @@ export default function LoginPage({providerIds, isDatabaseConfigured, loginError
             )}
             <StyledCard>
                 <StyledTitle>
-                    <StyledBrandLogo src="/logo/logo-black.svg" alt="TAS" />
+                    <StyledBrandLink href="/" aria-label="홈으로 이동">
+                        <StyledBrandLogo src="/logo/logo-black.svg" alt="TAS" />
+                    </StyledBrandLink>
                 </StyledTitle>
                 <StyledSubtitle>SNS 계정으로 로그인</StyledSubtitle>
                 {displayError && ERROR_MESSAGES[displayError] && (
@@ -289,6 +292,11 @@ const StyledCard = styled.div`
 
 const StyledTitle = styled.h1`
     margin: 0 0 8px;
+`;
+
+const StyledBrandLink = styled(Link)`
+    display: inline-block;
+    line-height: 0;
 `;
 
 const StyledBrandLogo = styled.img`
