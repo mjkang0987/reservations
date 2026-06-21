@@ -45,7 +45,9 @@ export const GuidedTour = ({steps, open, onClose}: GuidedTourProps) => {
             const el = document.getElementById(steps[i].targetId);
             if (el) {
                 const r = el.getBoundingClientRect();
-                if (r.width > 0 && r.height > 0) {
+                // 크기 있고 뷰포트 안에 실제로 보이는 대상만 사용(접힌 패널 등 화면 밖이면 스킵)
+                const inView = r.bottom > 0 && r.right > 0 && r.top < window.innerHeight && r.left < window.innerWidth;
+                if (r.width > 0 && r.height > 0 && inView) {
                     if (i !== index) {
                         setIndex(i);
                         return;

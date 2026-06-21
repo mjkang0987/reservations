@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import type {GetServerSideProps, NextPage} from 'next';
 
@@ -96,23 +96,39 @@ const Home: NextPage<HomeProps> = (props) => {
     }, [selectedReservations, setCreateReservationInitial]);
 
     // 사용 안내 투어: 온보딩 후 메인 첫 진입 시 1회 자동 + Aside '사용 안내' 버튼(이벤트)으로 재실행
+    const setAside = useCalendarStore((s) => s.setAside);
     const [tourOpen, setTourOpen] = useState(false);
+    const asideWasVisibleRef = useRef(false);
+
+    // 투어 시작: aside가 접혀 있으면 대상 버튼이 width:0로 잘려 스포트라이트가 어긋나므로,
+    // 먼저 aside를 펼치고 레이아웃이 안정된 뒤(transition 0.25s) 투어를 연다.
+    const startTour = useCallback(() => {
+        asideWasVisibleRef.current = useCalendarStore.getState().aside.isVisible;
+        setAside((prev) => ({...prev, isVisible: true}));
+        setTimeout(() => setTourOpen(true), 320);
+    }, [setAside]);
+
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        const start = () => setTourOpen(true);
+        const start = () => startTour();
         window.addEventListener('tas:start-tour', start);
         let timer: ReturnType<typeof setTimeout> | undefined;
         if (!localStorage.getItem(TOUR_DONE_KEY)) {
-            timer = setTimeout(() => setTourOpen(true), 800);
+            timer = setTimeout(start, 800);
         }
         return () => {
             window.removeEventListener('tas:start-tour', start);
             if (timer) clearTimeout(timer);
         };
-    }, []);
+    }, [startTour]);
+
     const closeTour = () => {
         if (typeof window !== 'undefined') localStorage.setItem(TOUR_DONE_KEY, '1');
         setTourOpen(false);
+        // 투어 시작 전 aside가 접혀 있었으면 원래대로 되돌림
+        if (!asideWasVisibleRef.current) {
+            setAside((prev) => ({...prev, isVisible: false}));
+        }
     };
 
     return (<>
