@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const storeId = session.user.storeId;
     const userId = session.user.id;
-    const userRole = session.user.role as 'owner' | 'staff' | undefined;
+    const userRole = session.user.role as 'owner' | 'manager' | 'staff' | undefined;
 
     if (req.method === 'GET') {
         const members = await prisma.membership.findMany({

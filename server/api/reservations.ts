@@ -251,8 +251,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'DELETE') {
-        // 영구 삭제(되돌릴 수 없음)는 오너 전용.
-        if (!requireRole(session, 'owner', res)) return;
+        // 예약 영구 삭제는 매니저 이상(매니저·오너).
+        if (!requireRole(session, 'manager', res)) return;
 
         const {id} = req.body as { id: number };
 

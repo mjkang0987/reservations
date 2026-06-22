@@ -11,7 +11,7 @@ declare module 'next-auth' {
         user: {
             id: string;
             provider: string;
-            role?: 'owner' | 'staff';
+            role?: 'owner' | 'manager' | 'staff';
             storeId?: string;
             onboarded?: boolean;
             termsVersion?: string;
@@ -25,7 +25,7 @@ declare module 'next-auth/jwt' {
     interface JWT {
         userId?: string;
         provider?: string;
-        role?: 'owner' | 'staff';
+        role?: 'owner' | 'manager' | 'staff';
         storeId?: string;
         preferredStoreId?: string;
         onboarded?: boolean;

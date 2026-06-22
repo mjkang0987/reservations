@@ -100,7 +100,7 @@ export const ReservationDetail = ({
                                   }: ReservationDetailProps) => {
     const router = useRouter();
     const {data: session} = useSession();
-    const canDelete = !!onDelete && session?.user?.role === 'owner';
+    const canDelete = !!onDelete && (session?.user?.role === 'owner' || session?.user?.role === 'manager');
     const storeReservationMap = useCalendarStore((s) => s.reservationMap);
     const effectiveReservationMap = useMemo(
         () => Object.keys(storeReservationMap).length > 0 ? storeReservationMap : reservationMapProp,

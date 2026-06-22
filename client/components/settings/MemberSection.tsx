@@ -57,11 +57,13 @@ type Member = {
 
 const ROLE_OPTIONS = [
     {value: 'owner', label: '오너'},
+    {value: 'manager', label: '매니저'},
     {value: 'staff', label: '멤버'},
 ] as const;
 
 const ROLE_TONE: Record<string, LabelBadgeTone> = {
     owner: 'purple',
+    manager: 'info',
     staff: 'neutral',
 };
 
