@@ -27,6 +27,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({customers});
     }
 
+    if (req.method === 'POST') {
+        // 단일 고객 빠른 저장 — 신규 고객을 만든 직후 예약을 추가할 때, 전체 목록
+        // PUT(느림)이 끝나기 전에 예약 POST가 먼저 도착해 'Customer not found'(400)가
+        // 나던 문제를 막기 위함. 호출 측은 이 응답을 await한 뒤 예약을 POST한다.
+        if (!requireRole(session, 'staff', res)) return;
+
+        const {customer} = req.body as { customer: Customer };
+        if (!customer || typeof customer.id !== 'number') {
+            return res.status(400).json({error: 'Invalid customer payload'});
+        }
+
+        const data = {
+            name: customer.name,
+            tel: customer.tel,
+            points: customer.points ?? 0,
+            firstVisitDate: customer.firstVisitDate ? new Date(`${customer.firstVisitDate}T00:00:00`) : null,
+            allergyNote: customer.allergyNote ?? null,
+            claimNote: customer.claimNote ?? null,
+            preferenceNote: customer.preferenceNote ?? null,
+        };
+
+        await prisma.customer.upsert({
+            where: {storeId_legacyId: {storeId: session.storeId, legacyId: customer.id}},
+            update: data,
+            create: {storeId: session.storeId, legacyId: customer.id, ...data},
+        });
+
+        return res.status(201).json({ok: true, id: customer.id});
+    }
+
     if (req.method === 'PUT') {
         if (!requireRole(session, 'staff', res)) return;
 
@@ -146,6 +176,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({customers});
     }
 
-    res.setHeader('Allow', ['GET', 'PUT']);
+    res.setHeader('Allow', ['GET', 'POST', 'PUT']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

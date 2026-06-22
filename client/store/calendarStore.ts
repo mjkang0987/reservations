@@ -19,6 +19,7 @@ import {
 } from './calendarStoreDesignerHelpers';
 import {
     syncCustomerSettings,
+    persistNewCustomer,
     syncDesignerSettings,
     syncReservationState,
     syncServiceSettings,
@@ -152,7 +153,7 @@ export interface CalendarState {
     setRouterSlice: (v: RouterSlice | ((prev: RouterSlice) => RouterSlice)) => void;
     setReservationMap: (map: ReservationMap) => void;
     setCustomerMap: (map: CustomerMap) => void;
-    addCustomer: (customer: Customer) => void;
+    addCustomer: (customer: Customer) => Promise<void>;
     updateCustomer: (
         customerId: number,
         patch: Partial<Customer>,
@@ -326,7 +327,8 @@ export const useCalendarStore = create<CalendarState>((set) => ({
             return {customerMap: nextCustomerMap};
         }),
 
-    addCustomer: (customer) =>
+    addCustomer: (customer) => {
+        let toSync: Customer[] | null = null;
         set((state) => {
             const nextCustomerMap = {
                 ...state.customerMap,
@@ -334,10 +336,13 @@ export const useCalendarStore = create<CalendarState>((set) => ({
             };
             const normalizedCustomerMap = syncCustomerFirstVisitDates(nextCustomerMap, state.reservationMap);
             if (Object.keys(normalizedCustomerMap).length > 0) {
-                syncCustomerSettings(Object.values(normalizedCustomerMap));
+                toSync = Object.values(normalizedCustomerMap);
             }
             return {customerMap: normalizedCustomerMap};
-        }),
+        });
+        // 단건 저장(빠름) + await 가능 → 신규 고객을 서버에 먼저 만든 뒤 예약 POST.
+        return toSync ? persistNewCustomer(customer, toSync) : Promise.resolve();
+    },
 
     updateCustomer: (customerId, patch, pointHistory) =>
         set((state) => {

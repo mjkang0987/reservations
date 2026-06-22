@@ -88,27 +88,45 @@ function syncToServer(
     endpoint: string,
     payload: unknown,
     localDbUpdater: (current: LocalDbSnapshot) => LocalDbSnapshot,
-): void {
+): Promise<void> {
     if (shouldUseLocalDb()) {
         updateLocalDbSnapshot(localDbUpdater);
-        return;
+        return Promise.resolve();
     }
 
-    fetch(endpoint, {
+    return fetch(endpoint, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload),
-    }).catch(() => {
+    }).then(() => undefined).catch(() => {
         // Preserve local UX even if sync fails; server data can be retried later.
     });
 }
 
 export function syncDesignerSettings(designers: Designer[]): void {
-    syncToServer('/api/designers', {designers}, (c) => ({...c, designers}));
+    void syncToServer('/api/designers', {designers}, (c) => ({...c, designers}));
 }
 
-export function syncCustomerSettings(customers: Customer[]): void {
-    syncToServer('/api/customers', {customers}, (c) => ({...c, customers}));
+// 서버 저장이 끝나면 resolve. 신규 고객을 만든 직후 예약을 POST해야 하는 경우,
+// 호출 측에서 await 해 고객이 서버에 먼저 존재하도록 보장한다.
+export function syncCustomerSettings(customers: Customer[]): Promise<void> {
+    return syncToServer('/api/customers', {customers}, (c) => ({...c, customers}));
+}
+
+// 신규 고객 1명만 빠르게 저장(서버는 단일 POST). 전체 목록 PUT(고객 수에 비례해 수 초)
+// 대신 단건이라 수십 ms 안에 끝나고, await 가능해 직후 예약 POST 시 'Customer not found'를
+// 막는다. 로컬 모드에선 스냅샷의 전체 고객 배열을 갱신한다.
+export function persistNewCustomer(customer: Customer, allCustomers: Customer[]): Promise<void> {
+    if (shouldUseLocalDb()) {
+        updateLocalDbSnapshot((current) => ({...current, customers: allCustomers}));
+        return Promise.resolve();
+    }
+
+    return fetch('/api/customers', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({customer}),
+    }).then(() => undefined).catch(() => {});
 }
 
 export function syncStoreSettings(storeSettings: StoreSettings): void {

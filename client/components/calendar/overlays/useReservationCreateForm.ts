@@ -187,7 +187,7 @@ export function useReservationCreateForm({
         return null;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const validationError = validate();
         if (validationError) {
             setError(validationError);
@@ -208,7 +208,9 @@ export function useReservationCreateForm({
                 pointHistories: [],
             };
 
-            addCustomer(nextCustomer);
+            // 신규 고객을 서버에 먼저 저장(await)한 뒤 예약을 POST해야
+            // 'Customer not found'(400)가 나지 않는다. (단건 저장이라 빠름)
+            await addCustomer(nextCustomer);
             resolvedCustomerId = nextCustomer.id;
         }
 
