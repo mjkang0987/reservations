@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const session = await getApiSession(req, res);
     if (!requireRole(session, 'owner', res)) return;
 
-    const {token: accessToken, reason: tokenFailReason} = await getValidAccessTokenWithReason(session.userId);
+    const {token: accessToken, reason: tokenFailReason} = await getValidAccessTokenWithReason(session.storeId);
     if (!accessToken) {
         return res.status(200).json({
             error: tokenFailReason === 'token_expired' ? 'gmail_token_expired' : 'gmail_not_connected',

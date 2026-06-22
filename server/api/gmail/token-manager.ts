@@ -7,12 +7,14 @@ interface GoogleTokens {
 }
 
 export async function saveGmailConnection(
-    userId: string,
+    storeId: string,
+    connectedByUserId: string,
     email: string,
     tokens: GoogleTokens,
 ): Promise<void> {
     const update: Record<string, unknown> = {
         email,
+        connectedByUserId,
         accessToken: tokens.accessToken,
         tokenExpiresAt: tokens.expiresAt,
     };
@@ -23,10 +25,11 @@ export async function saveGmailConnection(
     }
 
     await prisma.gmailConnection.upsert({
-        where: {userId},
+        where: {storeId},
         update,
         create: {
-            userId,
+            storeId,
+            connectedByUserId,
             email,
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
@@ -35,23 +38,23 @@ export async function saveGmailConnection(
     });
 }
 
-export async function getGmailConnection(userId: string): Promise<{email: string} | null> {
+export async function getGmailConnection(storeId: string): Promise<{email: string; connectedByUserId: string | null} | null> {
     const connection = await prisma.gmailConnection.findUnique({
-        where: {userId},
-        select: {email: true},
+        where: {storeId},
+        select: {email: true, connectedByUserId: true},
     });
     return connection;
 }
 
-export async function deleteGmailConnection(userId: string): Promise<void> {
-    await prisma.gmailConnection.deleteMany({where: {userId}});
+export async function deleteGmailConnection(storeId: string): Promise<void> {
+    await prisma.gmailConnection.deleteMany({where: {storeId}});
 }
 
 type TokenFailReason = 'not_connected' | 'no_refresh_token' | 'token_expired';
 
-export async function getValidAccessTokenWithReason(userId: string): Promise<{token: string | null; reason: TokenFailReason | null}> {
+export async function getValidAccessTokenWithReason(storeId: string): Promise<{token: string | null; reason: TokenFailReason | null}> {
     const connection = await prisma.gmailConnection.findUnique({
-        where: {userId},
+        where: {storeId},
         select: {
             accessToken: true,
             refreshToken: true,
@@ -82,7 +85,7 @@ export async function getValidAccessTokenWithReason(userId: string): Promise<{to
     }
 
     await prisma.gmailConnection.update({
-        where: {userId},
+        where: {storeId},
         data: {
             accessToken: refreshed.accessToken,
             tokenExpiresAt: refreshed.expiresAt,

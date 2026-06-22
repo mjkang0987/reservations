@@ -18,6 +18,7 @@ model Store {
   updatedAt              DateTime             @updatedAt
   customers              Customer[]
   designers              Designer[]
+  gmailConnection        GmailConnection?
   invites                Invite[]
   memberships            Membership[]
   reservations           Reservation[]
@@ -42,19 +43,21 @@ model User {
   invitesUsed     Invite[]      @relation("InviteUsedBy")
   invitesCreated  Invite[]      @relation("InviteCreatedBy")
   memberships     Membership[]
-  gmailConnection GmailConnection?
+  gmailConnections GmailConnection[] @relation("GmailConnectionConnectedBy")
 }
 
 model GmailConnection {
-  id             String    @id @default(cuid())
-  userId         String    @unique
-  email          String
-  accessToken    String
-  refreshToken   String?
-  tokenExpiresAt DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(cuid())
+  storeId           String    @unique
+  connectedByUserId String?
+  email             String
+  accessToken       String
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  store             Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  connectedBy       User?     @relation("GmailConnectionConnectedBy", fields: [connectedByUserId], references: [id], onDelete: SetNull)
 }
 
 model AuthAccount {

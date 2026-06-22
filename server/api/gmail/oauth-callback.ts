@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const email = tokens.id_token ? parseIdTokenEmail(tokens.id_token) : null;
 
-        await saveGmailConnection(session.userId, email ?? '', {
+        await saveGmailConnection(session.storeId, session.userId, email ?? '', {
             accessToken: tokens.access_token,
             refreshToken: tokens.refresh_token ?? null,
             expiresAt: tokens.expires_in

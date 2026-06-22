@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(401).json({error: 'Unauthorized'});
     }
 
-    const connection = await getGmailConnection(session.userId);
+    const connection = await getGmailConnection(session.storeId);
     return res.status(200).json({
         connected: !!connection,
         email: connection?.email ?? null,

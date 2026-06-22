@@ -12,6 +12,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const session = await getApiSession(req, res);
     if (!requireRole(session, 'owner', res)) return;
 
-    await deleteGmailConnection(session.userId);
+    await deleteGmailConnection(session.storeId);
     return res.status(200).json({ok: true});
 }

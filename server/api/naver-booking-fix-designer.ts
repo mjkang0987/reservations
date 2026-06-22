@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({error: 'reservationIds 배열이 필요합니다'});
     }
 
-    const {token: accessToken, reason: tokenFailReason} = await getValidAccessTokenWithReason(session.userId);
+    const {token: accessToken, reason: tokenFailReason} = await getValidAccessTokenWithReason(session.storeId);
     if (!accessToken) {
         return res.status(200).json({
             error: tokenFailReason === 'token_expired' ? 'gmail_token_expired' : 'gmail_not_connected',
