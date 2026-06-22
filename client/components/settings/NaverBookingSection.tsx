@@ -213,7 +213,7 @@ export function NaverBookingSection() {
             {showDisconnectConfirm && (
                 <ConfirmDialog
                     title="네이버예약 연동 해제"
-                    message={'Gmail 연동을 해제하면 네이버 예약이 더 이상 자동으로 동기화되지 않습니다.\n해제하시겠습니까?'}
+                    message={'Gmail 연동을 해제하면 예약이 더 이상 자동으로 동기화되지 않습니다.\n해제하시겠습니까?'}
                     confirmLabel="연동 해제"
                     confirmVariant="danger"
                     layerKey="naver-disconnect"

@@ -207,7 +207,7 @@ export const Header = () => {
                             <StyledSyncButton type="button"
                                               onClick={sync}
                                               disabled={syncing}
-                                              aria-label="네이버 예약 동기화">
+                                              aria-label="예약 동기화">
                                 <StyledSyncIcon $syncing={syncing}
                                                 width="16"
                                                 height="16"
@@ -253,7 +253,7 @@ export const Header = () => {
                         <StyledSyncButton type="button"
                                           onClick={sync}
                                           disabled={syncing}
-                                          aria-label="네이버 예약 동기화">
+                                          aria-label="예약 동기화">
                             <StyledSyncIcon $syncing={syncing}
                                             width="16"
                                             height="16"
