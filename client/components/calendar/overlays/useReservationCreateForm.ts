@@ -194,7 +194,10 @@ export function useReservationCreateForm({
             return;
         }
 
-        let nextCustomerId = customerId;
+        // 신규 고객은 훅 상단에서 계산한 nextCustomerId(max+1)를 사용한다.
+        // (과거엔 여기서 customerId(미선택=0)로 섀도잉해 모든 신규 고객이
+        //  legacyId 0 한 칸에 덮어써지는 치명적 버그가 있었음)
+        let resolvedCustomerId = customerId;
 
         if (customerMode === 'new') {
             const nextCustomer: Customer = {
@@ -206,7 +209,7 @@ export function useReservationCreateForm({
             };
 
             addCustomer(nextCustomer);
-            nextCustomerId = nextCustomer.id;
+            resolvedCustomerId = nextCustomer.id;
         }
 
         const reservation: Reservation = {
@@ -215,7 +218,7 @@ export function useReservationCreateForm({
             startTime: form.startTime,
             endTime: form.endTime,
             service: form.service,
-            customerId: nextCustomerId,
+            customerId: resolvedCustomerId,
             ...(form.designerId ? {designerId: form.designerId} : {}),
             status: 'active',
             price: form.price,
