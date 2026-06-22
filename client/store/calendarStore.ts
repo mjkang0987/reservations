@@ -309,21 +309,20 @@ export const useCalendarStore = create<CalendarState>((set) => ({
             router: typeof v === 'function' ? v(state.router) : v
         })),
 
+    // 이 세터들은 서버/로컬에서 "로드한" 데이터를 스토어에 반영하는 용도다.
+    // 과거엔 부작용으로 syncCustomerSettings(전체 고객 upsert PUT)를 호출했는데,
+    // 이 때문에 병합으로 서버에서 삭제한 source 고객이 stale 목록 PUT으로 되살아나는
+    // 버그가 있었다(예약은 옮겨지고 빈 고객만 남음). 로드 시엔 다시 PUT하지 않는다.
+    // 실제 고객 변경(addReservation/addCustomer/updateCustomer 등)은 각자 직접 동기화한다.
     setReservationMap: (reservationMap) =>
         set((state) => {
             const nextCustomerMap = syncCustomerFirstVisitDates(state.customerMap, reservationMap);
-            if (Object.keys(nextCustomerMap).length > 0) {
-                syncCustomerSettings(Object.values(nextCustomerMap));
-            }
             return {reservationMap, customerMap: nextCustomerMap};
         }),
 
     setCustomerMap: (customerMap) =>
         set((state) => {
             const nextCustomerMap = syncCustomerFirstVisitDates(customerMap, state.reservationMap);
-            if (Object.keys(nextCustomerMap).length > 0) {
-                syncCustomerSettings(Object.values(nextCustomerMap));
-            }
             return {customerMap: nextCustomerMap};
         }),
 
