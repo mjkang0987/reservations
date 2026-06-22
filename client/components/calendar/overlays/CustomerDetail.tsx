@@ -1,7 +1,9 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import {createPortal} from 'react-dom';
+import {useSession} from 'next-auth/react';
 
+import {ConfirmDialog} from '../../ui/ConfirmDialog';
 import type {Customer, CustomerMemoTag, PointHistoryEntry} from '../../../utils/customers';
 import type {Reservation, ReservationMap} from '../../../utils/reservations';
 
@@ -95,7 +97,11 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
     const categoryBaseColorMap = useCalendarStore((s) => s.categoryBaseColorMap);
     const designers = useCalendarStore((s) => s.designers);
     const updateCustomer = useCalendarStore((s) => s.updateCustomer);
+    const deleteCustomer = useCalendarStore((s) => s.deleteCustomer);
     const setCustomerMap = useCalendarStore((s) => s.setCustomerMap);
+    const {data: session} = useSession();
+    const isOwner = session?.user?.role === 'owner';
+    const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
     const toast = useToastStore((s) => s.show);
     const modalRoot = document.getElementById('modal-root');
     const {layerId, layerDataId} = useLayerInstanceId('customer-detail');
@@ -283,6 +289,11 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                             )}
                             <StyledHeaderActionButton type="button"
                                                       onClick={handleStartEdit}>수정</StyledHeaderActionButton>
+                            {isOwner && (
+                                <StyledHeaderActionButton type="button"
+                                                          $danger
+                                                          onClick={() => setIsDeleteConfirm(true)}>삭제</StyledHeaderActionButton>
+                            )}
                         </>
                     )}
                     <StyledHeaderCloseButton onClick={onClose} />
@@ -382,6 +393,20 @@ export const CustomerDetail = ({customer, reservationMap, onClose, onReservation
                               isUnmerging={isUnmerging}
                               onConfirm={handleUnmerge}
                               onClose={() => setIsUnmergeConfirm(false)} />
+    )}
+    {isDeleteConfirm && (
+        <ConfirmDialog title="고객 삭제"
+                       message={customerReservations.length > 0
+                           ? `${customer.name} 고객을 삭제하면 예약 ${customerReservations.length}건과 적립금·메모도 함께 영구 삭제됩니다. 되돌릴 수 없습니다.`
+                           : `${customer.name} 고객을 영구 삭제합니다. 되돌릴 수 없습니다.`}
+                       confirmLabel="삭제"
+                       confirmVariant="danger"
+                       onConfirm={() => {
+                           deleteCustomer(customer.id);
+                           setIsDeleteConfirm(false);
+                           onClose();
+                       }}
+                       onClose={() => setIsDeleteConfirm(false)} />
     )}
     </>, modalRoot);
 };

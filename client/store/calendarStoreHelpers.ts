@@ -129,6 +129,24 @@ export function persistNewCustomer(customer: Customer, allCustomers: Customer[])
     }).then(() => undefined).catch(() => {});
 }
 
+// 고객 영구 삭제. 서버에선 그 고객의 예약·적립금·메모가 cascade로 함께 삭제된다.
+export function deleteCustomerOnServer(customerId: number): Promise<void> {
+    if (shouldUseLocalDb()) {
+        updateLocalDbSnapshot((current) => ({
+            ...current,
+            customers: current.customers.filter((c) => c.id !== customerId),
+            reservations: current.reservations.filter((r) => r.customerId !== customerId),
+        }));
+        return Promise.resolve();
+    }
+
+    return fetch('/api/customers', {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: customerId}),
+    }).then(() => undefined).catch(() => {});
+}
+
 export function syncStoreSettings(storeSettings: StoreSettings): void {
     syncToServer('/api/store', storeSettings, (c) => ({...c, storeSettings}));
 }

@@ -176,6 +176,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({customers});
     }
 
-    res.setHeader('Allow', ['GET', 'POST', 'PUT']);
+    if (req.method === 'DELETE') {
+        // 고객 영구 삭제(되돌릴 수 없음)는 오너 전용.
+        // 해당 고객의 예약·적립금이력·메모태그는 cascade로 함께 삭제된다.
+        if (!requireRole(session, 'owner', res)) return;
+
+        const {id} = req.body as { id: number };
+        if (typeof id !== 'number' || Number.isNaN(id)) {
+            return res.status(400).json({error: 'Invalid customer id'});
+        }
+
+        const customer = await prisma.customer.findUnique({
+            where: {storeId_legacyId: {storeId: session.storeId, legacyId: id}},
+            select: {id: true},
+        });
+        if (!customer) {
+            return res.status(404).json({error: 'Customer not found'});
+        }
+
+        await prisma.customer.delete({where: {id: customer.id}});
+        return res.status(200).json({ok: true});
+    }
+
+    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

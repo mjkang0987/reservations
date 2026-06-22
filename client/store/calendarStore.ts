@@ -20,6 +20,7 @@ import {
 import {
     syncCustomerSettings,
     persistNewCustomer,
+    deleteCustomerOnServer,
     syncDesignerSettings,
     syncReservationState,
     syncServiceSettings,
@@ -159,6 +160,7 @@ export interface CalendarState {
         patch: Partial<Customer>,
         pointHistory?: Array<Omit<PointHistoryEntry, 'id' | 'balance' | 'createdAt'>> | Omit<PointHistoryEntry, 'id' | 'balance' | 'createdAt'>
     ) => void;
+    deleteCustomer: (customerId: number) => void;
     setSelectedReservation: (v: number | null) => void;
     setSelectedReservations: (v: number[]) => void;
     openReservationDetail: (reservation: Reservation) => void;
@@ -385,6 +387,20 @@ export const useCalendarStore = create<CalendarState>((set) => ({
             }
             return {customerMap: normalizedCustomerMap};
         }),
+
+    deleteCustomer: (customerId) => {
+        set((state) => {
+            const nextCustomerMap = {...state.customerMap};
+            delete nextCustomerMap[customerId];
+            // 서버 cascade와 일치하도록 그 고객의 예약도 로컬에서 제거
+            const nextReservationMap: ReservationMap = {};
+            for (const [date, list] of Object.entries(state.reservationMap)) {
+                nextReservationMap[date] = list.filter((r) => r.customerId !== customerId);
+            }
+            return {customerMap: nextCustomerMap, reservationMap: nextReservationMap};
+        });
+        deleteCustomerOnServer(customerId);
+    },
 
     setSelectedReservation: (selectedReservation) => set({selectedReservation}),
 
