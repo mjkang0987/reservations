@@ -28,6 +28,12 @@ export interface SyncNotification {
     type?: 'sync' | 'cancel' | 'conflict';
     conflictKey?: string;
     conflictStatus?: 'pending' | 'deferred' | 'confirmed';
+    // confirmed가 된 경로: 'manual'(오너가 사유 입력해 처리) | 'auto'(예약 변경으로 자동 해소)
+    resolvedBy?: 'manual' | 'auto';
+    resolvedAt?: string;
+    // 수동 처리 시 입력한 사유·메모 (내역 자체 완결 표시용)
+    resolutionReason?: string;
+    resolutionMemo?: string;
 }
 
 interface SyncedEntry {
@@ -162,11 +168,13 @@ export function useNaverBookingSync() {
         const detected = detectConflictsFromStore();
         const detectedKeys = new Set(detected.map(conflictKey));
 
-        // 실제로 더 이상 겹치지 않는 pending/deferred conflict 알림을 자동 confirmed 처리
+        // 실제로 더 이상 겹치지 않는 pending/deferred conflict 알림을 자동 해소(confirmed) 처리.
+        // 저장된 충돌쌍도 함께 정리해 다음 로드에서 재주입(깜빡임)되지 않게 한다.
         const {syncNotifications: currentNotifications, updateConflictNotificationStatus: autoConfirm} = useCalendarStore.getState();
         for (const n of currentNotifications) {
             if (n.type === 'conflict' && n.conflictStatus !== 'confirmed' && n.conflictKey && !detectedKeys.has(n.conflictKey)) {
-                autoConfirm(n.conflictKey, 'confirmed');
+                autoConfirm(n.conflictKey, 'confirmed', 'auto');
+                removeActiveConflictPair(n.conflictKey);
             }
         }
 
@@ -425,8 +433,8 @@ export function useNaverBookingSync() {
         if (currentConflict) {
             const key = conflictKey(currentConflict);
             const trimmedReason = reason?.trim();
+            const trimmedMemo = memo?.trim() || undefined;
             if (trimmedReason) {
-                const trimmedMemo = memo?.trim() || undefined;
                 setConflictResolutions((prev) => ({...prev, [key]: {reason: trimmedReason, memo: trimmedMemo}}));
                 fetch('/api/conflict-resolution', {
                     method: 'POST',
@@ -434,7 +442,7 @@ export function useNaverBookingSync() {
                     body: JSON.stringify({conflictKey: key, reason: trimmedReason, memo: trimmedMemo}),
                 }).catch(() => {});
             }
-            updateConflictNotificationStatus(key, 'confirmed');
+            updateConflictNotificationStatus(key, 'confirmed', 'manual', {reason: trimmedReason, memo: trimmedMemo});
             removeActiveConflictPair(key);
             // 확인 시 해당 알림 읽음 처리
             const notification = notifications.find((n) => n.type === 'conflict' && n.conflictKey === key);

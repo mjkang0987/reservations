@@ -199,7 +199,7 @@ export interface CalendarState {
     addSyncNotifications: (items: SyncNotification[]) => void;
     markSyncNotificationRead: (id: string) => void;
     markSyncNotificationsRead: () => void;
-    updateConflictNotificationStatus: (conflictKey: string, status: 'pending' | 'deferred' | 'confirmed') => void;
+    updateConflictNotificationStatus: (conflictKey: string, status: 'pending' | 'deferred' | 'confirmed', resolvedBy?: 'manual' | 'auto', resolution?: {reason?: string; memo?: string}) => void;
     replaceMockConflictNotifications: (items: SyncNotification[]) => void;
     clearSyncNotifications: () => void;
     initSyncNotifications: () => void;
@@ -819,14 +819,22 @@ export const useCalendarStore = create<CalendarState>((set) => ({
             return {syncNotifications: next};
         }),
 
-    updateConflictNotificationStatus: (conflictKey, status) =>
+    updateConflictNotificationStatus: (conflictKey, status, resolvedBy, resolution) =>
         set((state) => {
             const next = state.syncNotifications.map((notification) => {
                 if (notification.conflictKey !== conflictKey) return notification;
                 return {
                     ...notification,
                     conflictStatus: status,
-                    ...(status === 'confirmed' ? {read: true} : {}),
+                    ...(status === 'confirmed'
+                        ? {
+                            read: true,
+                            resolvedBy: resolvedBy ?? notification.resolvedBy ?? 'manual',
+                            resolvedAt: notification.resolvedAt ?? new Date().toISOString(),
+                            ...(resolution?.reason ? {resolutionReason: resolution.reason} : {}),
+                            ...(resolution?.memo ? {resolutionMemo: resolution.memo} : {}),
+                        }
+                        : {}),
                 };
             });
             saveSyncNotifications(next);

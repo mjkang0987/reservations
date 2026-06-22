@@ -7,6 +7,7 @@ import type {ReservationMap} from '../../features/reservations/model';
 import type {Designer} from '../../utils/designers';
 import {DesignerLabel} from '../ui/DesignerLabel';
 import {LabelBadge} from '../ui/LabelBadge';
+import {ConflictResolutionDetailModal} from '../modals/ConflictResolutionDetailModal';
 
 interface Props {
     notifications: SyncNotification[];
@@ -31,9 +32,9 @@ function getDesignerColor(designerName: string, designers: Designer[]): string {
     return designer?.color ?? 'var(--unassigned-color)';
 }
 
-function getConflictStatusLabel(status?: SyncNotification['conflictStatus']): string {
-    if (status === 'deferred') return '보류';
-    if (status === 'confirmed') return '확인';
+function getConflictStatusLabel(n: SyncNotification): string {
+    if (n.conflictStatus === 'deferred') return '보류';
+    if (n.conflictStatus === 'confirmed') return n.resolvedBy === 'auto' ? '자동 해소' : '처리완료';
     return '대기';
 }
 
@@ -147,7 +148,7 @@ export const NaverSyncNotification = ({
                                                 <span className="name">{n.designerName || '미지정'}</span>{' '}
                                                 <span className="suffix">디자이너로 중복 예약 발생했습니다.</span>{' '}
                                                 <StyledConflictTag>중복예약</StyledConflictTag>{' '}
-                                                <StyledStatusTag $status={n.conflictStatus}>{getConflictStatusLabel(n.conflictStatus)}</StyledStatusTag>
+                                                <StyledStatusTag $status={n.conflictStatus}>{getConflictStatusLabel(n)}</StyledStatusTag>
                                             </span>
                                         </StyledConflictItemText>
                                     ) : (
@@ -258,6 +259,7 @@ interface ModalProps {
 
 const NotificationModal = ({notifications, designers, reservationMap, markRead, markAllRead, onSelectReservation, onSelectConflict, onClose}: ModalProps) => {
     const dialogRef = useDialogAccessibility<HTMLDivElement>(onClose);
+    const [resolvedDetail, setResolvedDetail] = useState<SyncNotification | null>(null);
 
     const now = Date.now();
     // 중복예약: 미해결은 항상, 확인된 건 7일 이내
@@ -280,6 +282,11 @@ const NotificationModal = ({notifications, designers, reservationMap, markRead, 
     const handleClick = (n: SyncNotification) => {
         markRead(n.id);
         if (n.type === 'conflict' && n.conflictKey) {
+            // 이미 해결된(confirmed) 충돌은 읽기전용 내역으로, 미해결은 인터랙티브 해결 모달로.
+            if (n.conflictStatus === 'confirmed') {
+                setResolvedDetail(n);
+                return;
+            }
             onSelectConflict(n.conflictKey);
             onClose();
             return;
@@ -305,7 +312,7 @@ const NotificationModal = ({notifications, designers, reservationMap, markRead, 
                     <span className="name">{n.designerName || '미지정'}</span>{' '}
                     <span className="suffix">디자이너로 중복 예약 발생했습니다.</span>{' '}
                     <StyledConflictTag>중복예약</StyledConflictTag>{' '}
-                    <StyledStatusTag $status={n.conflictStatus}>{getConflictStatusLabel(n.conflictStatus)}</StyledStatusTag>
+                    <StyledStatusTag $status={n.conflictStatus}>{getConflictStatusLabel(n)}</StyledStatusTag>
                 </span>
             </StyledConflictItemText>
             <StyledDesignerMeta>
@@ -342,51 +349,59 @@ const NotificationModal = ({notifications, designers, reservationMap, markRead, 
         : null;
     if (!modalRoot) return null;
 
-    return createPortal(
-        <StyledModalOverlay onClick={onClose} role="dialog" aria-modal="true">
-            <StyledModalDetail ref={dialogRef} onClick={(e) => e.stopPropagation()}>
-                <StyledHeader>
-                    <StyledHeaderTitleGroup>
-                        <StyledHeaderTitle>전체 알림</StyledHeaderTitle>
-                    </StyledHeaderTitleGroup>
-                    {unreadNotifications.length > 0 && (
-                        <button type="button" onClick={markAllRead}>모두 읽음</button>
-                    )}
-                </StyledHeader>
-                <StyledBody>
-                    <StyledModalBodyInner>
-                        {isEmpty && (
-                            <StyledEmpty>알림이 없습니다</StyledEmpty>
-                        )}
+    return (
+        <>
+            {createPortal(
+                <StyledModalOverlay onClick={onClose} role="dialog" aria-modal="true">
+                    <StyledModalDetail ref={dialogRef} onClick={(e) => e.stopPropagation()}>
+                        <StyledHeader>
+                            <StyledHeaderTitleGroup>
+                                <StyledHeaderTitle>전체 알림</StyledHeaderTitle>
+                            </StyledHeaderTitleGroup>
+                            {unreadNotifications.length > 0 && (
+                                <button type="button" onClick={markAllRead}>모두 읽음</button>
+                            )}
+                        </StyledHeader>
+                        <StyledBody>
+                            <StyledModalBodyInner>
+                                {isEmpty && (
+                                    <StyledEmpty>알림이 없습니다</StyledEmpty>
+                                )}
 
-                        {conflictNotifications.length > 0 && (
-                            <StyledSection>
-                                <StyledSectionLabel>중복예약</StyledSectionLabel>
-                                {conflictNotifications.map(renderConflictItem)}
-                            </StyledSection>
-                        )}
+                                {conflictNotifications.length > 0 && (
+                                    <StyledSection>
+                                        <StyledSectionLabel>중복예약</StyledSectionLabel>
+                                        {conflictNotifications.map(renderConflictItem)}
+                                    </StyledSection>
+                                )}
 
-                        {unreadNotifications.length > 0 && (
-                            <StyledSection>
-                                <StyledSectionLabel>미확인 알람</StyledSectionLabel>
-                                {unreadNotifications.map((n) => renderRegularItem(n, '안읽음'))}
-                            </StyledSection>
-                        )}
+                                {unreadNotifications.length > 0 && (
+                                    <StyledSection>
+                                        <StyledSectionLabel>미확인 알람</StyledSectionLabel>
+                                        {unreadNotifications.map((n) => renderRegularItem(n, '안읽음'))}
+                                    </StyledSection>
+                                )}
 
-                        {readNotifications.length > 0 && (
-                            <StyledSection>
-                                <StyledSectionLabel>확인 알람</StyledSectionLabel>
-                                {readNotifications.map((n) => renderRegularItem(n, '읽음'))}
-                            </StyledSection>
-                        )}
-                    </StyledModalBodyInner>
-                </StyledBody>
-                <StyledFooter>
-                    <StyledActionButton type="button" onClick={onClose}>닫기</StyledActionButton>
-                </StyledFooter>
-            </StyledModalDetail>
-        </StyledModalOverlay>,
-        modalRoot,
+                                {readNotifications.length > 0 && (
+                                    <StyledSection>
+                                        <StyledSectionLabel>확인 알람</StyledSectionLabel>
+                                        {readNotifications.map((n) => renderRegularItem(n, '읽음'))}
+                                    </StyledSection>
+                                )}
+                            </StyledModalBodyInner>
+                        </StyledBody>
+                        <StyledFooter>
+                            <StyledActionButton type="button" onClick={onClose}>닫기</StyledActionButton>
+                        </StyledFooter>
+                    </StyledModalDetail>
+                </StyledModalOverlay>,
+                modalRoot,
+            )}
+            {resolvedDetail && (
+                <ConflictResolutionDetailModal notification={resolvedDetail}
+                                               onClose={() => setResolvedDetail(null)} />
+            )}
+        </>
     );
 };
 
