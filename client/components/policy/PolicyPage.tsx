@@ -3,6 +3,7 @@ import {useRouter} from 'next/router';
 import styled from 'styled-components';
 
 import {POLICIES, type PolicySlug} from '../../content/policies';
+import {SITE_NAME} from '../../lib/seo';
 import {PageHero} from '../ui/PageHero';
 import {SeoHead} from '../ui/SeoHead';
 import {StyledContainer, StyledSection} from '../mypage/mypage.styles';
@@ -17,7 +18,7 @@ export function PolicyPage({slug}: {slug: PolicySlug}) {
 
     return (
         <StyledSection>
-            <SeoHead title={navTitle} />
+            <SeoHead title={navTitle} description={`${SITE_NAME} ${navTitle}`} path={`/${slug}`} />
             <StyledContainer>
                 <StyledHeader>
                     <PageHero eyebrow="정책" title={navTitle} />

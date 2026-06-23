@@ -2,7 +2,7 @@ import Document, {Html, Head, Main, NextScript, DocumentContext} from 'next/docu
 
 import {ServerStyleSheet} from 'styled-components';
 
-import {SITE_DESCRIPTION, SITE_KEYWORDS, SITE_OG_DESCRIPTION, SITE_OG_IMAGE, SITE_OG_IMAGE_HEIGHT, SITE_OG_IMAGE_WIDTH, SITE_TITLE, SITE_TWITTER_DESCRIPTION, SITE_URL} from '../lib/seo';
+import {SITE_KEYWORDS, SITE_OG_DESCRIPTION, SITE_OG_IMAGE, SITE_OG_IMAGE_HEIGHT, SITE_OG_IMAGE_WIDTH, SITE_TITLE, SITE_TWITTER_DESCRIPTION, SITE_URL} from '../lib/seo';
 import {ADSENSE_CLIENT} from '../lib/ads';
 
 class ReservationDocument extends Document {
@@ -36,8 +36,6 @@ class ReservationDocument extends Document {
         return (
             <Html lang="ko">
                 <Head>
-                    <link rel="canonical" href={SITE_URL} />
-                    <meta name="description" content={SITE_DESCRIPTION} />
                     <meta name="keywords" content={SITE_KEYWORDS} />
                     <meta name="author" content="TAS" />
                     <meta property="og:type" content="website" />

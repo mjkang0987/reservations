@@ -16,7 +16,11 @@ const FEATURES: Feature[] = [
 export default function AboutPage() {
     return (
         <StyledWrapper>
-            <SeoHead title="서비스 소개" />
+            <SeoHead
+                title="서비스 소개"
+                description="미용실·뷰티샵을 위한 예약·고객 관리 서비스 TAS. 네이버·당근 등 여러 플랫폼의 예약을 한 곳에서 통합 관리하세요."
+                path="/about"
+            />
             <StyledMain>
                 <StyledHero>
                     <StyledBrandLogo src="/logo/logo-black.svg" alt="Take a Seat" />
