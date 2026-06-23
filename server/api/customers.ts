@@ -3,6 +3,7 @@ import type {NextApiRequest, NextApiResponse} from 'next';
 import {prisma} from '../db/prisma';
 import {getApiSession, requireRole} from '../auth/api-session';
 import {dbCustomerToFrontend} from '../db/mappers';
+import {notifySlackOpsError} from '../notify/slack';
 import type {Customer, PointHistoryType} from '../../client/features/customers/model';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -170,6 +171,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }, {timeout: 30000, maxWait: 10000});
         } catch (error) {
             console.error('PUT /api/customers 저장 실패:', error);
+            await notifySlackOpsError('PUT /api/customers (저장)', error);
             return res.status(500).json({error: 'Failed to save customers'});
         }
 

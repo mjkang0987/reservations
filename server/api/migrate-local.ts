@@ -2,6 +2,7 @@ import type {NextApiRequest, NextApiResponse} from 'next';
 
 import {prisma} from '../db/prisma';
 import {getApiSession} from '../auth/api-session';
+import {notifySlackOpsError} from '../notify/slack';
 import {frontendReservationStatusToDb, frontendPaymentMethodToDb, frontendChannelToDb} from '../db/mappers';
 import type {Designer} from '../../client/features/designers/model';
 import type {Customer} from '../../client/features/customers/model';
@@ -232,6 +233,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
     } catch (error) {
         console.error('[migrate-local] 마이그레이션 실패:', error);
+        await notifySlackOpsError('POST /api/migrate-local', error);
         return res.status(500).json({error: '마이그레이션에 실패했습니다.'});
     }
 }

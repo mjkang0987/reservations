@@ -2,6 +2,7 @@ import type {NextApiRequest, NextApiResponse} from 'next';
 
 import {auth} from '../../../client/auth';
 import {prisma} from '../../db/prisma';
+import {notifySlackOpsError} from '../../notify/slack';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'DELETE') {
@@ -32,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(200).json({ok: true});
     } catch (error) {
         console.error('Account deletion failed:', error);
+        await notifySlackOpsError('DELETE /api/account/delete', error);
         res.status(500).json({error: 'Failed to delete account'});
     }
 }

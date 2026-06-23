@@ -3,6 +3,7 @@ import type {NextApiRequest, NextApiResponse} from 'next';
 import {auth} from '../../../client/auth';
 import {prisma} from '../../db/prisma';
 import {ROLE_PRIORITY} from '../../auth/roles';
+import {notifySlackOpsError} from '../../notify/slack';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'POST') {
@@ -102,6 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(409).json({error: '이미 병합된 상태입니다.'});
         }
         console.error('[merge] Account merge failed:', error);
+        await notifySlackOpsError('POST /api/account/merge', error);
         return res.status(500).json({error: '병합에 실패했습니다.'});
     }
 }

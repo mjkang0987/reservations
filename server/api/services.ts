@@ -4,6 +4,7 @@ import {Prisma} from '../../client/prisma/generated/prisma/client';
 import {prisma} from '../db/prisma';
 import {getApiSession, requireRole} from '../auth/api-session';
 import {dbServiceToFrontend} from '../db/mappers';
+import {notifySlackOpsError} from '../notify/slack';
 import type {ServiceItem} from '../../client/features/services/model';
 
 interface ServiceData {
@@ -97,6 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(400).json({error: error.message});
             }
 
+            await notifySlackOpsError('PUT /api/services (저장)', error);
             throw error;
         }
 

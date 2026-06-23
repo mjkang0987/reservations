@@ -12,6 +12,7 @@ import {dbReservationToFrontend} from '../db/mappers';
 import {reservationIncludeWithNames} from '../db/prisma-includes';
 import {calcEndTime, getLastNaverSyncTimestamp} from './gmail/helpers';
 import {findByNameContains} from '../utils/string-matching';
+import {notifySlackOps} from '../notify/slack';
 
 const DEFAULT_DURATION = 30;
 const DESIGNER_COLORS = [
@@ -208,6 +209,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } catch (err) {
             errors.push(`Error processing cancellation email ${cancelMessageIds[i]}: ${String(err)}`);
         }
+    }
+
+    // 동기화 실패(파싱/생성/취소 오류)는 운영 채널로 1건 요약 전송.
+    // 폴링이 반복되므로 건별이 아닌 폴링 1회당 요약으로 노이즈를 줄인다.
+    if (errors.length > 0) {
+        const head = errors.slice(0, 5).map((e) => `• ${e}`).join('\n');
+        const more = errors.length > 5 ? `\n…외 ${errors.length - 5}건` : '';
+        await notifySlackOps(`🛑 *네이버 동기화 실패* (${errors.length}건)\n${head}${more}`);
     }
 
     return res.status(200).json({synced, cancelled, skipped, errors});
