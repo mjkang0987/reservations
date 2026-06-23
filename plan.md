@@ -4,7 +4,52 @@
 
 ---
 
-(현재 진행 중인 작업 없음 — 현 규모의 실제 문제는 ①②로 해결·배포됨. 아래는 다가오는 작업.)
+## 진행 중 — 캘린더 타임라인: 영업시간 연동 + 뷰별 시간범위 + 표시 개선
+
+### 배경
+- 캘린더 시간축(`store.time.start/end`)이 코드 고정 `10~20`. `setTime` 호출이 어디에도 없음 → **영업시간 설정과 완전 분리**.
+- 영업시간 편집 UI(`components/settings/StoreManageSection.tsx`)·저장(`PUT /api/store` → DB `StoreBusinessHour`)은 **이미 존재**하나, 저장돼도 캘린더 화면엔 미반영(항상 10~20).
+- 동시에: 30분 간격이 좁음 / 현재시간 바가 오래 두면 어긋남 / 빈 곳 클릭 예약추가 시각 불일치 문제 병행.
+
+### 결정 사항
+- **영업시간 설정 1개를 기준**으로 삼고, **뷰별 범위는 코드 규칙으로 파생** (설정 UI 추가 없음).
+  - Day: 앞뒤 1시간 확장 (영업 10~20 → **9~21**)
+  - Three / Week: 영업시간 그대로 (**10~20**)
+
+### 구현 항목
+
+#### A. 영업시간 → 캘린더 축 연동 + 뷰별 파생 (이번 핵심, **미착수**)
+- 신규 순수함수 `getTimelineRange(viewType, businessHours)`:
+  - `"HH:MM"` → 정수 시: `start = floor(open)`, `end = ceil(close)`
+  - 뷰별 패딩 상수 `{ day: 1, three: 0, week: 0 }` 적용 후 `0~24` 클램프
+- 적용처: `Timeline.tsx`·`TimelineTitle.tsx`가 `time.start/end` 대신 이 함수 결과 사용(`view.type` + `storeSettings.businessHours` 구독). 드래그·클릭에도 동일 range 전달.
+- `store.time.start/end` 정적값은 레거시화(`is12Hour`는 유지). 파생 방식이라 `setTime` 도입 불필요.
+- 미결: 영업시간이 분 단위(예 10:30)일 때 floor/ceil로 충분한지(축은 시 단위). Day 확장폭(±1h) 최종 확인.
+
+#### B. 표시/동작 개선 (이미 작업, **로컬 워킹트리·미커밋**)
+- ① 30분=50px(1시간=100px) 확대. 높이를 `TIMELINE_HOUR_HEIGHT`/`_MINUTE_HEIGHT`/`_HALF_HOUR_HEIGHT`로 단일화(`utils/constants.ts`), 흩어진 `80`·`4/3` 매직넘버 제거.
+- ② 현재시간 바: CSS `down` 애니메이션 의존 제거 → 30초 주기 + `visibilitychange`/`focus` 재계산으로 위치 직접 지정(백그라운드/절전 후 드리프트 해결).
+- ③ 빈 곳 클릭 예약추가 좌표식 수정: `(clientY - rect.top - blockOffset) / 분당높이` (paddingTop 빼지 않음 — absolute 자식은 padding 영향 없음). 카드/현재시간 바 렌더 좌표와 일치.
+  - 마감(end) 줄 클릭은 `end-1`로 클램프됨(영업종료 시각 시작 예약 불가 — 의도). 검증은 중간 시각으로.
+  - 임시 디버그 로그(`Timeline.tsx [CLICKDBG]`) 존재 → **검증 후 제거 필요**.
+
+### 영향 파일
+- 신규: `client/utils/timelineRange.ts`
+- 수정: `Timeline.tsx`, `TimelineTitle.tsx`, `useTimelineDrag.ts`, `timelineInteractions.ts`, `utils/constants.ts`, `styles/globalStyle.ts`
+
+### 검증
+- 영업시간 변경 → 일/3일/주 축이 규칙대로 즉시 반영.
+- 중간 시각 클릭 → 예약추가 시작시각 일치(디버그 로그 실측 후 확정).
+- 현재시간 바: 탭 백그라운드/복귀 후 정확.
+
+### 리스크
+- 눈금선↔블록 정렬차(±수 px) 가능 → 실측 후 `blockOffset`/마진 보정.
+- 영업시간 외 판정은 디자이너 근무시간(`DesignerSchedule`)만 사용 — 본 작업 범위 밖(불변).
+
+### 진행 상태
+- 이번 푸시: **계획만**. B(①②③)는 로컬 미커밋, A는 미착수.
+
+---
 
 ## 다가오는 작업 — 읽기 과부하/페이징(③) + 매출 서버화(A)
 
