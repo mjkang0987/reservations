@@ -549,17 +549,20 @@ export const useCalendarStore = create<CalendarState>((set) => ({
                 : synced;
         });
 
-        // 변경된 예약 영속화: 로컬 모드는 스냅샷, 원격은 변경 건마다 PUT (전체 예약이 메모리에 있음)
+        // 변경된 예약 영속화: 로컬 모드는 스냅샷, 원격은 일괄 PUT 1회(서버가 한 트랜잭션으로 처리).
+        // 과거: 변경 건마다 개별 PUT 동시 발사 + 무음 실패 → 풀 고갈·Slack 도배·부분 유실.
         if (updates.length > 0) {
             syncReservationState(nextReservationMap, reservationHistory);
             if (!shouldUseLocalDb()) {
-                for (const change of updates) {
-                    fetch('/api/reservations', {
-                        method: 'PUT',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(change),
-                    }).catch(() => {});
-                }
+                fetch('/api/reservations', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({updates}),
+                })
+                    .then((res) => {
+                        if (!res.ok) console.error('[updateService] 예약 일괄 갱신 실패:', res.status);
+                    })
+                    .catch((err) => console.error('[updateService] 예약 일괄 갱신 요청 실패:', err));
             }
         }
 

@@ -107,6 +107,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'PUT') {
         if (!requireRole(session, 'staff', res)) return;
 
+        // 일괄 분기: 서비스 카탈로그 수정으로 다수 예약의 시술명·가격·종료시각만 바뀌는 경우.
+        // 한 트랜잭션으로 N건 update + 이력 기록. Slack 미발송(카탈로그 변경은 매장 알림 대상 아님),
+        // 클라가 N개 개별 PUT을 동시 발사하던 것을 단일 요청으로 대체(풀 고갈·알림 도배·무음 유실 제거).
+        const batch = (req.body as {updates?: Array<{prev: Reservation; updated: Reservation}>}).updates;
+        if (Array.isArray(batch)) {
+            if (batch.length === 0) return res.status(200).json({count: 0});
+
+            const dbRows = await prisma.reservation.findMany({
+                where: {storeId: session.storeId, legacyId: {in: batch.map(({prev}) => prev.id)}},
+                select: {id: true, legacyId: true},
+            });
+            const cuidByLegacy = new Map(dbRows.map((r) => [r.legacyId, r.id]));
+
+            const ops = batch.flatMap(({prev, updated}) => {
+                const dbId = cuidByLegacy.get(prev.id);
+                if (!dbId) return []; // DB에 없는 예약(이미 삭제 등)은 건너뜀
+
+                return [
+                    prisma.reservation.update({
+                        where: {id: dbId},
+                        data: {
+                            serviceSummary: updated.service,
+                            price: updated.price ?? 0,
+                            endTime: updated.endTime,
+                        },
+                    }),
+                    prisma.reservationHistory.create({
+                        data: {
+                            storeId: session.storeId,
+                            reservationId: dbId,
+                            beforeJson: prev as object,
+                            afterJson: updated as object,
+                        },
+                    }),
+                ];
+            });
+
+            await prisma.$transaction(ops);
+            return res.status(200).json({count: ops.length / 2});
+        }
+
         const {prev, updated} = req.body as { prev: Reservation; updated: Reservation };
 
         if (updated.status === 'completed' && !hasCompletedPayment(updated)) {
