@@ -4,35 +4,34 @@
 
 ## 배경 / 문제
 
-서비스 저장 API(`server/api/services.ts` PUT)가 서비스 1개만 추가/수정해도
-**매장 전체 서비스를 deleteMany로 전부 지운 뒤 `for...await create`로 한 개씩 재삽입**한다.
-- N+1 insert: 서비스 수에 비례한 왕복.
-- **트랜잭션 없음** → delete 후 create 중간에 실패하면 서비스가 통째로 날아갈 수 있음(데이터 유실).
-
-최근 고객 PUT 비효율 제거(58111b8)와 같은 계열의 문제. 그중 데이터 유실 위험이 겸해 있는
-서비스 서버부터 최소 변경으로 먼저 처리한다.
+디자이너 저장 API(`server/api/designers.ts` PUT)가 전체 디자이너 목록을 받아
+**디자이너마다 upsert + 그 디자이너의 요일 스케줄(최대 7개)마다 upsert**를 한다.
+- 쿼리 수: `1 deleteMany(삭제분) + N upsert(디자이너) + N×최대7 upsert(스케줄)` ≈ **N×8**.
+- 트랜잭션으로 묶여 있어 데이터 유실은 없지만(서비스와 달리 원자성은 이미 확보),
+  스케줄 N+1이 가장 큰 왕복 비용. 어제 고객(58111b8)·서비스(e5ce020)와 같은 계열.
 
 ## 범위 / 결정사항
 
-- 이번 작업 범위: **`server/api/services.ts` PUT 핸들러만**. 클라이언트(전체 카탈로그 전송)는
-  이번에 건드리지 않는다(서비스 개수는 보통 수십 개라 페이로드는 수용 가능, 별도 작업으로 분리).
-- 자연키는 `(storeId, name)`, 프론트 `ServiceItem`엔 id 없음. 예약은 서비스명을 **문자열**로
-  저장(Service FK 없음) → Service row의 id/createdAt가 매번 바뀌어도 참조 무결성 깨지지 않음.
-  따라서 "전체 삭제 후 재생성" 의미(semantic)는 유지해도 안전.
-- 최소 변경 방침: diff 재작성 같은 큰 구조 변경 대신, **기존 delete-all + recreate를
-  `$transaction`으로 감싸 원자화**하고, `for create` 루프를 **`createMany` 단일 호출**로 교체.
-  → 쿼리 수: `1 deleteMany + N create + 1 update` → `1 deleteMany + 1 createMany + 1 update`(총 3).
-  → 원자성 확보로 데이터 유실 위험 제거.
+- 이번 작업 범위: **`server/api/designers.ts` PUT 핸들러만**. 클라이언트(전체 목록 전송)는
+  이번에 건드리지 않는다(디자이너 수는 보통 한 자리라 페이로드는 수용 가능).
+- **디자이너 행 자체는 upsert 유지**: 예약(`Reservation.designerId`)이 Designer를 FK로 참조 →
+  서비스처럼 delete-recreate하면 예약-디자이너 연결이 끊긴다. 행을 보존해야 함.
+  (삭제 대상 디자이너의 예약 연결 차단 검증도 그대로 유지)
+- **스케줄만 일괄 교체**: 디자이너별 요일 upsert(N×7) 대신, 루프에서 스케줄 row를 모아
+  업서트된 디자이너들의 스케줄을 `deleteMany` 후 `createMany` 단일 호출로 재삽입.
+  → 스케줄 쿼리: `N×7 upsert` → `1 deleteMany + 1 createMany`.
+  → 전체: `N×8` → `N(디자이너 upsert) + 3`.
 
 ## 구현 항목
 
 ### 서버
 
-- `server/api/services.ts` PUT (현재 71~89行):
-  - `prisma.$transaction(async (tx) => { ... })`로 deleteMany·createMany·store.update를 묶는다.
-  - `for (const service ...) create` → `tx.service.createMany({data: normalizedServices.map(...)})`.
-  - 빈 배열일 때 createMany 생략(전체 삭제만).
-  - 검증 로직(중복명/빈 값)·권한 체크는 트랜잭션 밖에 그대로 둔다.
+- `server/api/designers.ts` PUT (현재 69~115行 트랜잭션 내부):
+  - 디자이너 upsert 루프는 유지하되, 안에서 스케줄을 `scheduleRows`로 수집.
+  - 루프 종료 후, **스케줄 데이터가 온 디자이너(`scheduledDesignerIds`)만**
+    `deleteMany({where:{designerId:{in: scheduledDesignerIds}}})` → `createMany({data: scheduleRows})`.
+  - 스케줄이 payload에 없는 디자이너의 기존 스케줄은 건드리지 않음(원동작 보존).
+  - 스케줄 필드: designerId, dayIndex, enabled, startTime(=schedule.start), endTime(=schedule.end).
 
 ### 클라이언트
 
@@ -40,8 +39,8 @@
 
 ## 리스크 / 주의
 
-- `createMany`는 `@@unique([storeId, name])` 위반 시 한 번에 실패 → 기존 중복명 검증을
-  트랜잭션 진입 전에 유지(이미 있음).
-- Service의 `id`/`createdAt`가 매 저장마다 갱신되는 churn은 이번엔 그대로 둔다(참조 무결성
-  영향 없음 확인됨). 식별자 보존이 필요해지면 후속 작업에서 diff 방식으로 전환.
+- `designerSchedule`의 `@@unique([designerId, dayIndex])`: `entries()` 인덱스는 0~6 고유라
+  한 디자이너 안에서 dayIndex 중복 없음 → createMany 위반 없음.
+- 트랜잭션 원자성 유지(deleteMany schedules → createMany는 같은 tx 안).
 - 운영 DB 마이그레이션 불필요(스키마 변경 없음).
+- 디자이너 upsert는 값이 행마다 달라 배치 불가 → N 유지(보통 수 개라 비용 낮음).

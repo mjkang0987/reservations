@@ -73,6 +73,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 });
             }
 
+            // 디자이너 행은 예약 FK라 보존 필요 → upsert 유지(값이 행마다 달라 배치 불가).
+            // 스케줄은 디자이너별 요일 upsert(N×7) 대신, 모아서 일괄 교체(deleteMany+createMany).
+            const scheduleRows: Array<{
+                designerId: string;
+                dayIndex: number;
+                enabled: boolean;
+                startTime: string;
+                endTime: string;
+            }> = [];
+
             for (const designer of designers) {
                 const savedDesigner = await tx.designer.upsert({
                     where: {storeId_legacyId: {storeId: session.storeId, legacyId: designer.id}},
@@ -95,22 +105,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 });
 
                 for (const [dayIndex, schedule] of (designer.schedule ?? []).entries()) {
-                    await tx.designerSchedule.upsert({
-                        where: {designerId_dayIndex: {designerId: savedDesigner.id, dayIndex}},
-                        update: {
-                            enabled: schedule.enabled,
-                            startTime: schedule.start,
-                            endTime: schedule.end,
-                        },
-                        create: {
-                            designerId: savedDesigner.id,
-                            dayIndex,
-                            enabled: schedule.enabled,
-                            startTime: schedule.start,
-                            endTime: schedule.end,
-                        },
+                    scheduleRows.push({
+                        designerId: savedDesigner.id,
+                        dayIndex,
+                        enabled: schedule.enabled,
+                        startTime: schedule.start,
+                        endTime: schedule.end,
                     });
                 }
+            }
+
+            // 스케줄 데이터가 온 디자이너만 한 번에 교체(deleteMany+createMany).
+            // 스케줄이 payload에 없는 디자이너의 기존 스케줄은 건드리지 않는다(원동작 보존).
+            const scheduledDesignerIds = [...new Set(scheduleRows.map((r) => r.designerId))];
+            if (scheduledDesignerIds.length > 0) {
+                await tx.designerSchedule.deleteMany({where: {designerId: {in: scheduledDesignerIds}}});
+                await tx.designerSchedule.createMany({data: scheduleRows});
             }
         });
 
