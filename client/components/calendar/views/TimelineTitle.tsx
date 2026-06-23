@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 import {useCalendarStore} from '../../../store/calendarStore';
+import {TIMELINE_HALF_HOUR_HEIGHT} from '../../../utils/constants';
 
 export const TimelineTitle = () => {
     const time = useCalendarStore((s) => s.time);
@@ -82,7 +83,7 @@ const StyledNum = styled.span`
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 40px;
+    height: ${TIMELINE_HALF_HOUR_HEIGHT}px;
     padding: 0 10px;
     font-size: var(--tiny-font);
     color: var(--gray-color);
