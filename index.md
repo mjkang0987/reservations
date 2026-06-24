@@ -177,7 +177,7 @@ NextAuth 5.0 설정. Google·Kakao·Naver OAuth 지원.
 | `customers-merge.ts` | `/api/customers/merge` | POST | staff | 고객 병합 (예약·포인트·태그 이전) |
 | `customers-unmerge.ts` | `/api/customers/unmerge` | POST | staff | 병합 해제 (이력 기반 복원) |
 | `customers-merge-history.ts` | `/api/customers/merge-history` | GET | staff | 병합 이력 조회 |
-| `designers.ts` | `/api/designers` | GET(staff) / PUT(owner) | - | 디자이너 CRUD + 일정(DesignerSchedule) upsert |
+| `designers.ts` | `/api/designers` | GET(staff) / PUT(owner) / DELETE(owner) | - | 디자이너 CRUD + 일정(DesignerSchedule) upsert. DELETE는 영구 삭제(분리): 예약은 designerId=null로 보존, 스케줄은 cascade 삭제 |
 | `designers-merge.ts` | `/api/designers/merge` | POST | owner | 디자이너 병합 (source→target 예약 재배정 후 source 삭제) |
 | `services.ts` | `/api/services` | GET(staff) / PUT(owner) | - | 서비스 카탈로그 관리 |
 | `store.ts` | `/api/store` | GET(staff) / PUT(owner) | - | 매장 설정 (영업시간, 휴무일, 포인트 설정) |
