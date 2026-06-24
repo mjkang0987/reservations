@@ -54,6 +54,7 @@ interface DesignerCardProps {
     onStartEdit: (designerId: number) => void;
     onFinishEdit: () => void;
     onDeleteDesigner: (designer: Designer) => void;
+    onPermanentDelete?: (designer: Designer) => void;
 }
 
 const DesignerCard = ({
@@ -64,6 +65,7 @@ const DesignerCard = ({
     onStartEdit,
     onFinishEdit,
     onDeleteDesigner,
+    onPermanentDelete,
 }: DesignerCardProps) => {
     const did = designer.id;
     return (
@@ -119,6 +121,9 @@ const DesignerCard = ({
                     </>
                 ) : (
                     <StyledEditBtn type="button" onClick={() => onStartEdit(did)}>수정</StyledEditBtn>
+                )}
+                {onPermanentDelete && (
+                    <StyledDeleteBtn type="button" onClick={() => onPermanentDelete(designer)}>영구 삭제</StyledDeleteBtn>
                 )}
             </StyledDesignerHeaderActions>
         </StyledDesignerHeader>
@@ -217,6 +222,7 @@ interface DesignerSectionProps {
     onStartEdit: (designerId: number) => void;
     onFinishEdit: () => void;
     onDeleteDesigner: (designer: Designer) => void;
+    onPermanentDelete?: (designer: Designer) => void;
 }
 
 const DesignerSection = ({
@@ -228,6 +234,7 @@ const DesignerSection = ({
     onStartEdit,
     onFinishEdit,
     onDeleteDesigner,
+    onPermanentDelete,
 }: DesignerSectionProps) => (
     <StyledDesignerSection>
         <StyledDesignerSectionTitle>{title}</StyledDesignerSectionTitle>
@@ -243,6 +250,7 @@ const DesignerSection = ({
                         onStartEdit={onStartEdit}
                         onFinishEdit={onFinishEdit}
                         onDeleteDesigner={onDeleteDesigner}
+                        onPermanentDelete={onPermanentDelete}
                     />
                 ))}
             </StyledDesignerCardGrid>
@@ -254,9 +262,11 @@ const DesignerSection = ({
 
 export const DesignerManageSection = () => {
     const designers = useCalendarStore((s) => s.designers);
+    const reservationMap = useCalendarStore((s) => s.reservationMap);
     const addDesigner = useCalendarStore((s) => s.addDesigner);
     const updateDesigner = useCalendarStore((s) => s.updateDesigner);
     const updateDesignerDay = useCalendarStore((s) => s.updateDesignerDay);
+    const deleteDesigner = useCalendarStore((s) => s.deleteDesigner);
     const [newName, setNewName] = useState('');
     const [newStatus, setNewStatus] = useState<DesignerStatus>('재직');
     const [newPhone, setNewPhone] = useState('');
@@ -265,7 +275,15 @@ export const DesignerManageSection = () => {
     const [editingDesignerId, setEditingDesignerId] = useState<number | null>(null);
     const [isAddingDesigner, setIsAddingDesigner] = useState(false);
     const [confirmTarget, setConfirmTarget] = useState<Designer | null>(null);
+    const [permanentTarget, setPermanentTarget] = useState<Designer | null>(null);
     const {active: activeDesigners, onLeave: onLeaveDesigners, resigned: resignedDesigners} = splitDesignersByStatus(designers);
+
+    const permanentTargetReservationCount = permanentTarget
+        ? Object.values(reservationMap).reduce(
+            (sum, list) => sum + list.filter((r) => r.designerId === permanentTarget.id).length,
+            0
+        )
+        : 0;
 
     const handleAdd = () => {
         const name = newName.trim();
@@ -288,6 +306,17 @@ export const DesignerManageSection = () => {
         updateDesigner(confirmTarget.id, {status: '퇴직'});
         setEditingDesignerId(null);
         setConfirmTarget(null);
+    };
+
+    const handleRequestPermanentDelete = (designer: Designer) => {
+        setPermanentTarget(designer);
+    };
+
+    const handleConfirmPermanentDelete = () => {
+        if (!permanentTarget) return;
+        deleteDesigner(permanentTarget.id);
+        setEditingDesignerId(null);
+        setPermanentTarget(null);
     };
 
     return (
@@ -323,6 +352,7 @@ export const DesignerManageSection = () => {
                     onStartEdit={setEditingDesignerId}
                     onFinishEdit={() => setEditingDesignerId(null)}
                     onDeleteDesigner={handleRequestDelete}
+                    onPermanentDelete={handleRequestPermanentDelete}
                 />
             </StyledDesignerBody>
             <StyledServiceFooter>
@@ -409,6 +439,23 @@ export const DesignerManageSection = () => {
                     layerKey="designer-confirm"
                     onConfirm={handleConfirmDelete}
                     onClose={() => setConfirmTarget(null)}
+                />
+            )}
+            {permanentTarget && (
+                <ConfirmDialog
+                    title="영구 삭제"
+                    message={
+                        `"${permanentTarget.name}" 디자이너를 영구 삭제하시겠습니까?\n`
+                        + (permanentTargetReservationCount > 0
+                            ? `이 디자이너의 예약 ${permanentTargetReservationCount}건은 '미지정'으로 남고, `
+                            : '')
+                        + '디자이너 정보와 근무 일정은 완전히 삭제됩니다. 되돌릴 수 없습니다.'
+                    }
+                    confirmLabel="영구 삭제"
+                    confirmVariant="danger"
+                    layerKey="designer-permanent-confirm"
+                    onConfirm={handleConfirmPermanentDelete}
+                    onClose={() => setPermanentTarget(null)}
                 />
             )}
         </>
