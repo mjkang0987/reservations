@@ -89,6 +89,16 @@
 - **예상 결과**: ON → `/login`이 점검 페이지. OFF → `/login` 기존대로. 타입/빌드 무변.
 - **검증**: 타입체크/린트. 정상모드 `/login` 통과·점검모드 `/login` 차단 로직 추적.
 
+### 0-2. §0 main 배포 + 토글 드라이런 (rename 선행) — 진행 중
+
+> **목표**: 점검 페이지·게이트(현재 develop만)를 운영(main→Cloud Run)에 **`MAINTENANCE_MODE=false`로** 먼저 심고, 토글이 운영에서 실제 동작하는지 1회 리허설. 사용자 영향 0. rename 때 비로소 ON.
+
+- **버전**: `client/package.json` 0.8.0 → **0.9.0**(minor — develop에 `feat` 점검 페이지·게이트 포함, breaking 없음).
+- **머지**: develop→main **fast-forward 가능**(develop..main=0). main 푸시 자동배포 워크플로 없음(배포는 수동 gcloud) → main 푸시 자체는 사용자 영향 없음.
+- **배포(사용자 실행)**: `gcloud run deploy`로 새 코드 운영 반영. `MAINTENANCE_MODE` 미설정=OFF라 배포만으론 점검 안 켜짐.
+- **드라이런(사용자 실행)**: 운영에서 `MAINTENANCE_MODE` ON → `/maintenance` 확인 → OFF. Cloud Run env 변경은 새 리비전 롤아웃이므로 실제 1회 확인 필요.
+- **제약**: 샌드박스에 gcloud·GCP 인증 없음 → 배포·토글은 복붙 명령 제공, 실행은 사용자.
+
 ### 1. 카피·문서 — ✅ 완료 (커밋 `ff8f8a8`)
 - 브랜딩 카피: `about.tsx`(태그라인/meta "미용실·뷰티샵을 위한"→ 제거), `README.md`("Salon"→"Reservation & customer management"), `design-guide.html`(placeholder "헤어샵"→"매장")
 - 내부 문서: `prisma-seed-runbook.md`·`service-launch-plan.md` 영문 "salon"→"reservation"
