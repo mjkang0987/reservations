@@ -14,6 +14,30 @@
 
 ---
 
+## 완료 — 디자이너 영구 삭제 (분리 삭제 방식)
+
+> 구현·빌드 검증 완료. 상세는 git 히스토리.
+> 결정: **디자이너만 분리 삭제** — 디자이너+스케줄은 제거하되 과거 예약은 `designerId` 미지정으로 보존. 절대 차단되지 않음(예약 cascade 삭제 X).
+> UI: "퇴직자" 섹션 카드에만 "영구 삭제" 버튼 노출(2단계 안전장치). 확인 모달에 영향받는 예약 건수 표기.
+
+### 배경/현황 (조사 결과)
+- 서버 `designers.ts`는 PUT-by-omission으로 하드 삭제하되 **예약 연결 시 400 차단**. 영속화 `syncToServer`는 **에러를 삼키고 로컬 낙관적 제거** → 기존 `deleteDesigner`를 그대로 버튼에 붙이면 "화면선 사라지나 서버 거부 → 새로고침 시 부활" 버그. 그래서 전용 DELETE 엔드포인트로 간다.
+- DB: `DesignerSchedule`은 onDelete Cascade(자동), `Reservation.designerId`는 optional FK → 트랜잭션에서 명시적 `updateMany(null)` 후 designer.delete.
+- 프런트 `Reservation.designerId: number | null`, UI는 이미 `null`을 "미지정" 표시 → 분리 삭제와 정합.
+
+### 구현 항목
+1. **`server/api/designers.ts`** — `DELETE` 추가. `requireRole('owner')`, body `{ id }`(legacyId) → `storeId_legacyId`로 해석. 트랜잭션: `reservation.updateMany({designerId:해당 → null})` → `designer.delete()`(스케줄 Cascade). `Allow`에 DELETE 추가. 미존재 시 404.
+2. **`store/calendarStoreHelpers.ts`** — `deleteDesignerOnServer(id)` 추가(`deleteCustomerOnServer` 패턴). 원격 DELETE, 로컬 모드는 스냅샷에서 디자이너 제거 + 해당 예약 designerId=null.
+3. **`store/calendarStore.ts`** — `deleteDesigner` 액션 수정: PUT-by-omission 제거 → 디자이너 상태 제거 + `reservationMap` 내 해당 예약 designerId=null + `deleteDesignerOnServer(id)`.
+4. **`components/settings/DesignerManageSection.tsx`** — "영구 삭제" UI 추가. **퇴직자 섹션에만** 노출(2단계 안전장치: 재직→삭제(퇴직)→영구 삭제). 확인 모달에 "예약 N건은 '미지정'으로 남고 디자이너는 영구 삭제됩니다" 안내 후 `deleteDesigner(id)`.
+5. **문서**: 완료 후 `index.md`·`plan.md` 갱신.
+
+### 리스크
+- 분리 삭제라 예약 데이터 손실 없음. 단 매출/통계에서 해당 예약은 "미지정"으로 집계됨(의도된 동작).
+- 로컬 모드 스냅샷과 원격 동작 일치 확인 필요.
+
+---
+
 ## 다가오는 작업 — 읽기 과부하/페이징(③) + 매출 서버화(A)
 
 > 설계 상세: [docs/reading-overload-pagination.md](docs/reading-overload-pagination.md).
