@@ -135,6 +135,7 @@ export const StyledScrollArea = styled.div`
 export const StyledNav = styled.nav`
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
     gap: 2px;
     padding: 8px 10px 0 0;
     box-sizing: border-box;
@@ -150,7 +151,8 @@ export const StyledNavLink = styled(Link)<{ $active?: boolean }>`
     display: flex;
     align-items: center;
     width: 100%;
-    height: 36px;
+    min-height: 36px;
+    flex-shrink: 0;
     padding: 0 8px;
     box-sizing: border-box;
     background-color: ${(props) => props.$active ? 'var(--brand-color)' : 'transparent'};
@@ -183,7 +185,8 @@ export const StyledCreateButton = styled.button`
     align-items: center;
     gap: 8px;
     width: 100%;
-    height: 36px;
+    min-height: 36px;
+    flex-shrink: 0;
     padding: 0 8px;
     box-sizing: border-box;
     background-color: transparent;
@@ -212,7 +215,8 @@ export const StyledAccordionToggle = styled.button`
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    height: 36px;
+    min-height: 36px;
+    flex-shrink: 0;
     padding: 0 8px;
     box-sizing: border-box;
     background-color: transparent;
@@ -236,7 +240,7 @@ export const StyledAccordionContent = styled.div<{ $open: boolean }>`
     flex-direction: column;
     gap: 1px;
     overflow: hidden;
-    max-height: ${props => props.$open ? '320px' : '0'};
+    max-height: ${props => props.$open ? '640px' : '0'};
     transition: max-height 0.2s ease;
 `;
 
@@ -244,7 +248,8 @@ export const StyledSubNavLink = styled(Link)<{ $active?: boolean }>`
     display: flex;
     align-items: center;
     width: 100%;
-    height: 32px;
+    min-height: 32px;
+    flex-shrink: 0;
     padding: 0 8px 0 20px;
     box-sizing: border-box;
     background-color: transparent;
