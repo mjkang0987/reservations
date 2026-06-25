@@ -1,6 +1,7 @@
 import {useMemo, useState} from 'react';
 
 import {PageHero} from '../../ui/PageHero';
+import {useStoreLabels} from '../../../hooks/useStoreLabels';
 import {
     getDailyRevenue,
     getOperationInsights,
@@ -82,6 +83,7 @@ export const RevenueSection = ({
     quickRange,
     setQuickRange,
 }: RevenueSectionProps) => {
+    const labels = useStoreLabels();
     const [detailDateKey, setDetailDateKey] = useState<string | null>(null);
     const [metricLayerKey, setMetricLayerKey] = useState<RevenueMetricKey | null>(null);
     const [chartDetailKey, setChartDetailKey] = useState<ChartDetailKey | null>(null);
@@ -449,7 +451,7 @@ export const RevenueSection = ({
 
     return (
         <>
-            <PageHero eyebrow="REVENUE" title="매출" subtitle="기간별 매출 현황과 담당자별 실적을 확인합니다." />
+            <PageHero eyebrow="REVENUE" title="매출" subtitle={`기간별 매출 현황과 ${labels.assignee}별 실적을 확인합니다.`} />
             <RevenueFilters
                 startDateKey={startDateKey}
                 endDateKey={endDateKey}

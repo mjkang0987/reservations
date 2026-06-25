@@ -3,6 +3,8 @@ import {useCallback, useState} from 'react';
 import {useRouter} from 'next/router';
 
 import {useCalendarStore} from '../../store/calendarStore';
+import {useStoreLabels} from '../../hooks/useStoreLabels';
+import type {StoreLabels} from '../../features/store-settings/labels';
 import {useNaverBookingSync} from '../../hooks/useNaverBookingSync';
 import {useCustomerMergeSuggestion} from '../../hooks/useCustomerMergeSuggestion';
 import {splitAssigneesByStatus, getAssigneeColor} from '../../utils/assignees';
@@ -42,19 +44,22 @@ const PAGE_TITLES: Record<string, string> = {
     '/logout': '로그아웃',
 };
 
-const SETTINGS_TAB_TITLES: Record<string, string> = {
-    revenue: '매출',
-    point: '적립금 관리',
-    store: '매장 관리',
-    service: '서비스 관리',
-    assignee: '담당자 관리',
-    member: '멤버 관리',
-    sns: 'SNS 연동',
-};
+function getSettingsTabTitles(labels: StoreLabels): Record<string, string> {
+    return {
+        revenue: '매출',
+        point: '적립금 관리',
+        store: '매장 관리',
+        service: `${labels.service} 관리`,
+        assignee: `${labels.assignee} 관리`,
+        member: '멤버 관리',
+        sns: 'SNS 연동',
+    };
+}
 
 export const Header = () => {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const router = useRouter();
+    const labels = useStoreLabels();
     const aside = useCalendarStore((s) => s.aside);
     const setAside = useCalendarStore((s) => s.setAside);
     const currValue = useCalendarStore((s) => s.target);
@@ -66,8 +71,9 @@ export const Header = () => {
     const isCalendarPage = isRootPath || isCalendar(pathSegments);
     const settingsTab = typeof router.query.tab === 'string' ? router.query.tab : 'revenue';
     const isSettingsPage = router.pathname === '/settings' || router.pathname === '/settings/[tab]';
+    const settingsTabTitles = getSettingsTabTitles(labels);
     const pageTitle = isSettingsPage
-        ? `${SETTINGS_TAB_TITLES[settingsTab] ?? SETTINGS_TAB_TITLES.revenue}`
+        ? `${settingsTabTitles[settingsTab] ?? settingsTabTitles.revenue}`
         : PAGE_TITLES[router.pathname] ?? 'TAS';
     const {
         active: activeAssignees,
@@ -175,7 +181,7 @@ export const Header = () => {
                     <StyledAssigneeFilter value={calendarAssigneeId ?? ''}
                                           id="tour-assignee-filter"
                                           onChange={(e) => setCalendarAssigneeId(e.target.value ? Number(e.target.value) : null)}
-                                          aria-label="달력 담당자 필터">
+                                          aria-label={`달력 ${labels.assignee} 필터`}>
                         <option value="">전체보기</option>
                         <option value="0" data-bg-color="#8E8E93">미지정</option>
                         {activeAssignees.map((assignee) => (

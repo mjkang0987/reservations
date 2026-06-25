@@ -6,6 +6,7 @@ import {getAssigneeStatus, isAssigneeBookable, sortAssignees} from '../../../uti
 import type {ReservationChannel} from '../../../utils/reservations';
 import type {CustomerMemoTag} from '../../../utils/customers';
 import {ColorTag} from '../../ui/ColorTag';
+import {useStoreLabels} from '../../../hooks/useStoreLabels';
 
 import {
     StyledBody,
@@ -94,10 +95,12 @@ export const ReservationFormFields = ({
     dateErrorMessage,
     timeErrorMessage,
     children,
-}: ReservationFormFieldsProps) => (
+}: ReservationFormFieldsProps) => {
+    const labels = useStoreLabels();
+    return (
     <StyledForm>
         <StyledFieldRow role="group" aria-labelledby={`${idPrefix}-service-label`}>
-            <strong id={`${idPrefix}-service-label`}>서비스</strong>
+            <strong id={`${idPrefix}-service-label`}>{labels.service}</strong>
             <ServiceFields
                 idPrefix={idPrefix}
                 selectedServices={selectedServices}
@@ -122,7 +125,7 @@ export const ReservationFormFields = ({
         </label>
         {(activeAssignees.length > 0 || currentAssignee) && (
             <label htmlFor={`${idPrefix}-assignee`}>
-                <strong>담당자</strong>
+                <strong>{labels.assignee}</strong>
                 <select
                     id={`${idPrefix}-assignee`}
                     value={form.assigneeId}
@@ -204,7 +207,8 @@ export const ReservationFormFields = ({
         </label>
         {children}
     </StyledForm>
-);
+    );
+};
 
 interface ReservationEditSectionProps {
     form: ReservationDetailFormState;

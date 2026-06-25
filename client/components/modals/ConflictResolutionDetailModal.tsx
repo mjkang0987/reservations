@@ -1,6 +1,7 @@
 import type {SyncNotification} from '../../hooks/useNaverBookingSync';
 import {ConfirmDialog} from '../ui/ConfirmDialog';
 import {ReservationStaticDiffSection} from '../calendar/overlays/ReservationDetailSections';
+import {useStoreLabels} from '../../hooks/useStoreLabels';
 
 interface Props {
     notification: SyncNotification;
@@ -22,12 +23,13 @@ function formatResolvedAt(iso?: string): string {
 }
 
 export const ConflictResolutionDetailModal = ({notification, onClose}: Props) => {
+    const labels = useStoreLabels();
     const isAuto = notification.resolvedBy === 'auto';
 
     const items: Array<{label: string; value: string}> = [
         {label: '일시', value: `${formatDate(notification.appointmentDate)} ${notification.appointmentTime}`},
         {label: '고객', value: notification.customerName || '고객'},
-        {label: '담당자', value: notification.assigneeName || '미지정'},
+        {label: labels.assignee, value: notification.assigneeName || '미지정'},
         {label: '처리시각', value: formatResolvedAt(notification.resolvedAt)},
     ];
     if (!isAuto) {

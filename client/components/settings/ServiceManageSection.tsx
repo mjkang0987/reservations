@@ -70,6 +70,7 @@ interface ServiceEditModalProps {
 }
 
 const ServiceEditModal = ({item, serviceCatalog, onSave, onDelete, onClose}: ServiceEditModalProps) => {
+    const labels = useStoreLabels();
     const modalRoot = typeof document !== 'undefined' ? document.getElementById('modal-root') : null;
     const {layerId, layerDataId} = useLayerInstanceId('service-edit');
     const dialogRef = useDialogAccessibility<HTMLDivElement>(onClose);
@@ -83,11 +84,11 @@ const ServiceEditModal = ({item, serviceCatalog, onSave, onDelete, onClose}: Ser
     const handleSave = () => {
         const nextName = name.trim();
         if (!nextName) {
-            setError('서비스명을 입력해 주세요.');
+            setError(`${labels.service}명을 입력해 주세요.`);
             return;
         }
         if (serviceCatalog.some((s) => s.name === nextName && s.name !== item.name)) {
-            setError(`"${nextName}" 서비스는 이미 등록되어 있습니다.`);
+            setError(`"${nextName}" ${labels.service}는 이미 등록되어 있습니다.`);
             return;
         }
         onSave(item, {
@@ -108,25 +109,25 @@ const ServiceEditModal = ({item, serviceCatalog, onSave, onDelete, onClose}: Ser
             onClick={onClose}
             role="dialog"
             aria-modal="true"
-            aria-label="서비스 수정"
+            aria-label={`${labels.service} 수정`}
             id={layerId}
             data-layer-id={layerDataId}
         >
             <StyledServiceModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <StyledHeaderTitle>서비스 수정</StyledHeaderTitle>
+                    <StyledHeaderTitle>{labels.service} 수정</StyledHeaderTitle>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledModalBody>
                     <StyledForm>
                         <StyledFieldRow>
-                            <strong>서비스명</strong>
+                            <strong>{labels.service}명</strong>
                             <label htmlFor="service-edit-name">
                                 <input
                                     id="service-edit-name"
                                     value={name}
                                     onChange={(e) => { setName(e.target.value); setError(''); }}
-                                    placeholder="서비스명"
+                                    placeholder={`${labels.service}명`}
                                 />
                             </label>
                         </StyledFieldRow>
@@ -166,9 +167,9 @@ const ServiceEditModal = ({item, serviceCatalog, onSave, onDelete, onClose}: Ser
             {confirmDelete && (
                 <StyledConfirmOverlay onClick={() => setConfirmDelete(false)}>
                     <StyledConfirmModal onClick={(e) => e.stopPropagation()}>
-                        <StyledHeader><StyledHeaderTitle>서비스 삭제</StyledHeaderTitle></StyledHeader>
+                        <StyledHeader><StyledHeaderTitle>{labels.service} 삭제</StyledHeaderTitle></StyledHeader>
                         <StyledDeleteMsg>
-                            <StyledDeleteTarget>"{item.name}"</StyledDeleteTarget> 서비스를 삭제하시겠습니까?<br />
+                            <StyledDeleteTarget>"{item.name}"</StyledDeleteTarget> {labels.service}를 삭제하시겠습니까?<br />
                             이 작업은 되돌릴 수 없습니다.
                         </StyledDeleteMsg>
                         <StyledFooter>
@@ -197,6 +198,7 @@ interface ServiceAddModalProps {
 const EMPTY_ADD = {name: '', category: '', durationMinutes: '', price: ''};
 
 const ServiceAddModal = ({categories, serviceCatalog, onAdd, onClose}: ServiceAddModalProps) => {
+    const labels = useStoreLabels();
     const modalRoot = typeof document !== 'undefined' ? document.getElementById('modal-root') : null;
     const {layerId, layerDataId} = useLayerInstanceId('service-add');
     const dialogRef = useDialogAccessibility<HTMLDivElement>(onClose);
@@ -216,11 +218,11 @@ const ServiceAddModal = ({categories, serviceCatalog, onAdd, onClose}: ServiceAd
             return;
         }
         if (!itemName) {
-            setError('서비스명을 입력해 주세요.');
+            setError(`${labels.service}명을 입력해 주세요.`);
             return;
         }
         if (serviceCatalog.some((s) => s.name === itemName)) {
-            setError(`"${itemName}" 서비스는 이미 등록되어 있습니다.`);
+            setError(`"${itemName}" ${labels.service}는 이미 등록되어 있습니다.`);
             return;
         }
 
@@ -239,13 +241,13 @@ const ServiceAddModal = ({categories, serviceCatalog, onAdd, onClose}: ServiceAd
             onClick={onClose}
             role="dialog"
             aria-modal="true"
-            aria-label="서비스 추가"
+            aria-label={`${labels.service} 추가`}
             id={layerId}
             data-layer-id={layerDataId}
         >
             <StyledServiceModal ref={dialogRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <StyledHeader>
-                    <StyledHeaderTitle>서비스 추가</StyledHeaderTitle>
+                    <StyledHeaderTitle>{labels.service} 추가</StyledHeaderTitle>
                     <CloseIconButton onClick={onClose} />
                 </StyledHeader>
                 <StyledModalBody>
@@ -278,13 +280,13 @@ const ServiceAddModal = ({categories, serviceCatalog, onAdd, onClose}: ServiceAd
                             )}
                         </StyledFieldRow>
                         <StyledFieldRow>
-                            <strong>서비스명</strong>
+                            <strong>{labels.service}명</strong>
                             <label htmlFor="service-add-name">
                                 <input
                                     id="service-add-name"
                                     value={form.name}
                                     onChange={(e) => { setForm({...form, name: e.target.value}); setError(''); }}
-                                    placeholder="서비스명"
+                                    placeholder={`${labels.service}명`}
                                 />
                             </label>
                         </StyledFieldRow>
@@ -363,20 +365,20 @@ export const ServiceManageSection = () => {
         const appliedCount = updateService(original.name, updated);
         setEditingItem(null);
         toast(appliedCount > 0
-            ? `서비스가 저장되었습니다. 예정된 예약 ${appliedCount}건에 반영했습니다.`
-            : '서비스가 저장되었습니다.');
+            ? `${labels.service}가 저장되었습니다. 예정된 예약 ${appliedCount}건에 반영했습니다.`
+            : `${labels.service}가 저장되었습니다.`);
     };
 
     const handleDelete = (name: string) => {
         deleteService(name);
         setEditingItem(null);
-        toast(`"${name}" 서비스가 삭제되었습니다.`, 'info');
+        toast(`"${name}" ${labels.service}가 삭제되었습니다.`, 'info');
     };
 
     const handleAdd = (item: ServiceItem) => {
         addService(item);
         setShowAddModal(false);
-        toast('서비스가 추가되었습니다.');
+        toast(`${labels.service}가 추가되었습니다.`);
     };
 
     const handleDragStart = (e: DragEvent<HTMLDivElement>, name: string) => {

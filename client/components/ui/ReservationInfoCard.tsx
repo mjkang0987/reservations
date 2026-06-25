@@ -8,6 +8,7 @@ import {AssigneeLabel} from './AssigneeLabel';
 import {ReservationStatusBadge} from './ReservationStatusBadge';
 import {NewCustomerBadge} from './NewCustomerBadge';
 import {ServiceChipList} from './ServiceChip';
+import {useStoreLabels} from '../../hooks/useStoreLabels';
 
 type ReservationInfoCardProps = {
     reservation: Reservation;
@@ -61,6 +62,7 @@ export function ReservationInfoCard({
     accentBar = true,
     className,
 }: ReservationInfoCardProps) {
+    const labels = useStoreLabels();
     const clickable = !!onClick;
     const isInactive = reservation.status === 'cancelled' || reservation.status === 'noshow';
     const state = getReservationState(reservation, today);
@@ -137,7 +139,7 @@ export function ReservationInfoCard({
                 />
                 <StyledMetaLine>
                     <StyledAssigneeMeta>
-                        <span>담당자</span>
+                        <span>{labels.assignee}</span>
                         <AssigneeLabel color={assigneeColor} name={assigneeName} />
                     </StyledAssigneeMeta>
                 </StyledMetaLine>

@@ -10,6 +10,8 @@ import type {Assignee} from './assignees';
 import type {RevenueFilterMode} from './revenue';
 import {isRevenueReservationTarget} from './revenue';
 import {parseServiceString, sumPrice} from './services';
+import {getStoreLabels} from '../features/store-settings/labels';
+import {useCalendarStore} from '../store/calendarStore';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -57,6 +59,7 @@ export function exportRevenueToExcel({
     filterMode,
 }: ExportParams): void {
     const assigneeMap = new Map(assignees.map((d) => [d.id, d.name]));
+    const labels = getStoreLabels(useCalendarStore.getState().shopType);
 
     const rows: Record<string, string | number>[] = [];
 
@@ -79,8 +82,8 @@ export function exportRevenueToExcel({
                 '요일': weekday,
                 '시간': `${r.startTime}~${r.endTime}`,
                 '고객명': customer?.name ?? '',
-                '서비스': r.service,
-                '담당자': r.assigneeId != null ? (assigneeMap.get(r.assigneeId) ?? '') : '',
+                [labels.service]: r.service,
+                [labels.assignee]: r.assigneeId != null ? (assigneeMap.get(r.assigneeId) ?? '') : '',
                 '금액': resolvePrice(r.service, r.price),
                 '결제수단': formatPayment(r),
                 '상태': STATUS_LABELS[r.status ?? 'active'] ?? r.status ?? '',

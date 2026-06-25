@@ -12,6 +12,7 @@ import {formatTel} from '../../../utils/customers';
 import type {Reservation} from '../../../utils/reservations';
 import {formatPrice} from '../../../utils/services';
 import {ReservationStatusBadge} from '../../ui/ReservationStatusBadge';
+import {useStoreLabels} from '../../../hooks/useStoreLabels';
 import {StyledBody, StyledBodyInner} from './ModalStyles';
 
 interface ReservationViewSectionProps {
@@ -43,6 +44,7 @@ export function ReservationViewSection({
     onCustomerClick,
     onOpenHistory,
 }: ReservationViewSectionProps) {
+    const labels = useStoreLabels();
     const customer = customerMap[reservation.customerId];
     const isCancelled = reservation.status === 'cancelled';
     const isCompleted = reservation.status === 'completed';
@@ -75,7 +77,7 @@ export function ReservationViewSection({
                     <StyledDesc>{reservation.date}</StyledDesc>
                     <StyledTerm>시간</StyledTerm>
                     <StyledDesc>{reservation.startTime} ~ {reservation.endTime}</StyledDesc>
-                    <StyledTerm>서비스</StyledTerm>
+                    <StyledTerm>{labels.service}</StyledTerm>
                     <StyledDesc>
                         <StyledServiceChipList service={reservation.service}
                                               serviceColorMap={serviceColorMap}
@@ -135,7 +137,7 @@ export function ReservationViewSection({
                     )}
                     <StyledTerm>적립금</StyledTerm>
                     <StyledDesc>{formatPrice(customer?.points ?? 0)}</StyledDesc>
-                    <StyledTerm>담당자</StyledTerm>
+                    <StyledTerm>{labels.assignee}</StyledTerm>
                     <StyledDesc>
                         <AssigneeLabel color={displayAssigneeColor} name={displayAssigneeName} />
                     </StyledDesc>

@@ -8,6 +8,7 @@ import type {Customer, CustomerMap} from '../../../utils/customers';
 import type {Assignee} from '../../../utils/assignees';
 import {getAssigneeAvailabilityState, splitAssigneesByStatus} from '../../../utils/assignees';
 import {buildCatalogMap, calcEndTime, joinServiceNames, sumDurationMinutes, sumPrice} from '../../../utils/services';
+import {useStoreLabels} from '../../../hooks/useStoreLabels';
 import type {ReservationDetailFormState, ReservationFieldError} from './ReservationDetailSections';
 type CustomerMode = 'existing' | 'new';
 
@@ -38,6 +39,7 @@ export function useReservationCreateForm({
     onSave,
 }: UseReservationCreateFormParams) {
     const serviceCatalog = useCalendarStore((s) => s.serviceCatalog);
+    const labels = useStoreLabels();
     const catalogMap = useMemo(() => buildCatalogMap(serviceCatalog), [serviceCatalog]);
 
     const {active: activeAssignees, onLeave: onLeaveAssignees, resigned: resignedAssignees} = splitAssigneesByStatus(assignees);
@@ -155,14 +157,14 @@ export function useReservationCreateForm({
     const validate = (): ReservationFieldError | null => {
         const normalizedNewCustomerTel = newCustomerTel.replace(/\D/g, '');
 
-        if (activeAssignees.length > 0 && !form.assigneeId) return {field: 'assignee', message: '담당자를 선택해주세요.'};
+        if (activeAssignees.length > 0 && !form.assigneeId) return {field: 'assignee', message: `${labels.assignee}를 선택해주세요.`};
         if (customerMode === 'existing' && !customerId) return {field: 'customer', message: '고객을 선택해주세요.'};
         if (customerMode === 'new' && !newCustomerName.trim()) return {field: 'customer', message: '신규 고객명을 입력해주세요.'};
         if (customerMode === 'new' && !newCustomerTel.trim()) return {field: 'customer', message: '신규 고객 연락처를 입력해주세요.'};
         if (customerMode === 'new' && !KOREAN_MOBILE_PHONE_PATTERN.test(normalizedNewCustomerTel)) {
             return {field: 'customer', message: '신규 고객 연락처 형식을 확인해주세요.'};
         }
-        if (selectedServices.length === 0) return {field: 'service', message: '서비스를 선택해주세요.'};
+        if (selectedServices.length === 0) return {field: 'service', message: `${labels.service}를 선택해주세요.`};
         if (!form.date) return {field: 'date', message: '날짜를 선택해주세요.'};
         if (!form.startTime) return {field: 'time', message: '시작 시간을 입력해주세요.'};
         if (!form.endTime) return {field: 'time', message: '종료 시간을 입력해주세요.'};

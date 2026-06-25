@@ -3,6 +3,7 @@ import React, {useCallback, useState} from 'react';
 import styled from 'styled-components';
 
 import {Spinner} from '../ui/Spinner';
+import {useStoreLabels} from '../../hooks/useStoreLabels';
 import type {LocalDbSnapshot} from '../../lib/local-db';
 import {createDefaultLocalDbSnapshot, saveLocalDbSnapshot} from '../../lib/local-db';
 import type {Assignee} from '../../features/assignees/model';
@@ -42,6 +43,7 @@ function clearLocalAndReload(snapshot: LocalDbSnapshot): void {
 }
 
 export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
+    const labels = useStoreLabels();
     const [phase, setPhase] = useState<Phase>('confirm');
     const [errorMsg, setErrorMsg] = useState('');
     const [mergePairs, setMergePairs] = useState<MergePair[]>([]);
@@ -124,7 +126,7 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
             onFinish();
         } catch {
             setProcessing(false);
-            setErrorMsg('담당자 병합에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+            setErrorMsg(`${labels.assignee} 병합에 실패했습니다. 잠시 후 다시 시도해 주세요.`);
             setPhase('error');
         }
     }, [mergePairs, decisions, snapshot, onFinish]);
@@ -180,12 +182,12 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
             <StyledConfirmOverlay>
                 <StyledWiderModal>
                     <StyledHeader>
-                        <StyledHeaderTitle>담당자 병합</StyledHeaderTitle>
+                        <StyledHeaderTitle>{labels.assignee} 병합</StyledHeaderTitle>
                     </StyledHeader>
                     <StyledBody>
                         <StyledDesc>
-                            게스트 데이터에 기존 담당자와 이름이 같은 담당자가 있습니다.
-                            같은 담당자라면 <strong>병합</strong>을 선택해 예약을 합쳐주세요.
+                            게스트 데이터에 기존 {labels.assignee}와 이름이 같은 {labels.assignee}가 있습니다.
+                            같은 {labels.assignee}라면 <strong>병합</strong>을 선택해 예약을 합쳐주세요.
                         </StyledDesc>
                         <StyledPairList>
                             {mergePairs.map((pair) => {
@@ -247,7 +249,7 @@ export function GuestMigrationLayer({snapshot, storeName, onFinish}: Props) {
                         게스트 모드에서 만든 데이터를 어떻게 하시겠습니까?
                     </StyledDesc>
                     <StyledStats>
-                        {assignees.length > 0 && <StyledStatItem>담당자 {assignees.length}명</StyledStatItem>}
+                        {assignees.length > 0 && <StyledStatItem>{labels.assignee} {assignees.length}명</StyledStatItem>}
                         {customers.length > 0 && <StyledStatItem>고객 {customers.length}명</StyledStatItem>}
                         {reservations.length > 0 && <StyledStatItem>예약 {reservations.length}건</StyledStatItem>}
                     </StyledStats>

@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 import {useCalendarStore} from '../../store/calendarStore';
+import {useStoreLabels} from '../../hooks/useStoreLabels';
 import type {SyncNotification} from '../../hooks/useNaverBookingSync';
 import type {Reservation} from '../../utils/reservations';
 import type {ReservationMap} from '../../features/reservations/model';
@@ -47,6 +48,7 @@ export const NaverSyncNotification = ({
     onSelectReservation,
     onSelectConflict,
 }: Props) => {
+    const labels = useStoreLabels();
     const [open, setOpen] = useState(false);
     const [showAllModal, setShowAllModal] = useState(false);
     const [hasMounted, setHasMounted] = useState(false);
@@ -146,7 +148,7 @@ export const NaverSyncNotification = ({
                                                 <span className="name">{n.customerName || '고객'}</span>{' '}
                                                 <span className="suffix">고객님</span>{' '}
                                                 <span className="name">{n.assigneeName || '미지정'}</span>{' '}
-                                                <span className="suffix">담당자로 중복 예약 발생했습니다.</span>{' '}
+                                                <span className="suffix">{labels.assignee}로 중복 예약 발생했습니다.</span>{' '}
                                                 <StyledConflictTag>중복예약</StyledConflictTag>{' '}
                                                 <StyledStatusTag $status={n.conflictStatus}>{getConflictStatusLabel(n)}</StyledStatusTag>
                                             </span>
@@ -165,7 +167,7 @@ export const NaverSyncNotification = ({
                                         </StyledItemText>
                                     )}
                                     <StyledAssigneeMeta>
-                                        <span>담당자</span>
+                                        <span>{labels.assignee}</span>
                                         <AssigneeLabel color={getAssigneeColor(n.assigneeName, assignees)}
                                                        name={n.assigneeName} />
                                     </StyledAssigneeMeta>
@@ -258,6 +260,7 @@ interface ModalProps {
 }
 
 const NotificationModal = ({notifications, assignees, reservationMap, markRead, markAllRead, onSelectReservation, onSelectConflict, onClose}: ModalProps) => {
+    const labels = useStoreLabels();
     const dialogRef = useDialogAccessibility<HTMLDivElement>(onClose);
     const [resolvedDetail, setResolvedDetail] = useState<SyncNotification | null>(null);
 
@@ -310,13 +313,13 @@ const NotificationModal = ({notifications, assignees, reservationMap, markRead, 
                     <span className="name">{n.customerName || '고객'}</span>{' '}
                     <span className="suffix">고객님</span>{' '}
                     <span className="name">{n.assigneeName || '미지정'}</span>{' '}
-                    <span className="suffix">담당자로 중복 예약 발생했습니다.</span>{' '}
+                    <span className="suffix">{labels.assignee}로 중복 예약 발생했습니다.</span>{' '}
                     <StyledConflictTag>중복예약</StyledConflictTag>{' '}
                     <StyledStatusTag $status={n.conflictStatus}>{getConflictStatusLabel(n)}</StyledStatusTag>
                 </span>
             </StyledConflictItemText>
             <StyledAssigneeMeta>
-                <span>담당자</span>
+                <span>{labels.assignee}</span>
                 <AssigneeLabel color={getAssigneeColor(n.assigneeName, assignees)} name={n.assigneeName} />
             </StyledAssigneeMeta>
         </StyledModalItem>
@@ -337,7 +340,7 @@ const NotificationModal = ({notifications, assignees, reservationMap, markRead, 
                 }
             </StyledItemText>
             <StyledAssigneeMeta>
-                <span>담당자</span>
+                <span>{labels.assignee}</span>
                 <AssigneeLabel color={getAssigneeColor(n.assigneeName, assignees)} name={n.assigneeName} />
             </StyledAssigneeMeta>
             <StyledFlag>{flag}</StyledFlag>

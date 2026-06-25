@@ -3,17 +3,23 @@ import {formatPrice, parseServiceString, sumPrice} from '../../../utils/services
 import type {ReservationDetailFormState} from './ReservationDetailSections';
 import type {ReservationDetailMode} from './reservationDetailTypes';
 import type {PaymentEntryDraft, ReservationDiffItem} from './reservationDetailTypes';
+import {getStoreLabels} from '../../../features/store-settings/labels';
+import {useCalendarStore} from '../../../store/calendarStore';
 
-const FIELD_LABELS: Record<keyof ReservationDetailFormState, string> = {
-    service: '서비스',
-    assigneeId: '담당자',
-    date: '날짜',
-    startTime: '시작시간',
-    endTime: '종료시간',
-    price: '가격',
-    memo: '요청사항',
-    channel: '예약경로'
-};
+// 업종 라벨을 호출 시점(lazy)에 계산해 필드 라벨 맵을 만든다. (모듈 최상위에서 계산 금지)
+function getFieldLabels(): Record<keyof ReservationDetailFormState, string> {
+    const labels = getStoreLabels(useCalendarStore.getState().shopType);
+    return {
+        service: labels.service,
+        assigneeId: labels.assignee,
+        date: '날짜',
+        startTime: '시작시간',
+        endTime: '종료시간',
+        price: '가격',
+        memo: '요청사항',
+        channel: '예약경로'
+    };
+}
 
 export function getPaymentEntries(reservation: Reservation): PaymentEntry[] {
     if (Array.isArray(reservation.paymentEntries) && reservation.paymentEntries.length > 0) {
@@ -70,6 +76,7 @@ export function getChangedFields(
 ) {
     const fields: ReservationDiffItem[] = [];
     const beforePrice = before.price ?? sumPrice(parseServiceString(before.service));
+    const FIELD_LABELS = getFieldLabels();
 
     (Object.keys(FIELD_LABELS) as (keyof ReservationDetailFormState)[]).forEach((key) => {
         if (key === 'assigneeId') {
@@ -103,6 +110,7 @@ export function getChangedFields(
 
 export function getHistoryDiffs(entry: ReservationHistoryEntry, assigneeNameMap: Record<number, string>) {
     const diffs: ReservationDiffItem[] = [];
+    const FIELD_LABELS = getFieldLabels();
 
     if (entry.after.status === 'cancelled' && entry.before.status !== 'cancelled') {
         diffs.push({label: '상태', before: '예약', after: '취소'});

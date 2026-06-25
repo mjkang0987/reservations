@@ -3,6 +3,7 @@ import {Fragment, useState} from 'react';
 import {formatPrice} from '../../../utils/services';
 import type {CustomerMap} from '../../../utils/customers';
 import {compareAssigneeName} from '../../../utils/assignees';
+import {useStoreLabels} from '../../../hooks/useStoreLabels';
 import {EMPTY_TEXT} from '../settings-styles';
 import {StyledColorSwatch} from './revenue-styles';
 import {
@@ -129,6 +130,7 @@ export const RevenueChartGrid = ({
     onChartDetailClick,
     seriesLength,
 }: RevenueChartGridProps) => {
+    const labels = useStoreLabels();
     const [hoveredDateKey, setHoveredDateKey] = useState<string | null>(null);
     const hoveredPoint = chartPoints.find((item) => item.dateKey === hoveredDateKey) ?? null;
 
@@ -278,7 +280,7 @@ export const RevenueChartGrid = ({
             {/* Assignee bar */}
             <StyledChartCard>
                 <StyledChartHeader>
-                    <StyledChartHeaderTitle>담당자별 매출</StyledChartHeaderTitle>
+                    <StyledChartHeaderTitle>{labels.assignee}별 매출</StyledChartHeaderTitle>
                     <StyledChartHeaderMeta>{assigneeKey === 'all' ? '전체 기준' : '선택 담당자 기준'}</StyledChartHeaderMeta>
                 </StyledChartHeader>
                 {assigneeChartItems.length === 0 ? (
@@ -341,7 +343,7 @@ export const RevenueChartGrid = ({
             {/* Cancellation rate */}
             <StyledChartCard>
                 <StyledChartHeader>
-                    <StyledChartHeaderTitle>담당자별 취소율</StyledChartHeaderTitle>
+                    <StyledChartHeaderTitle>{labels.assignee}별 취소율</StyledChartHeaderTitle>
                     <StyledChartHeaderMeta>기간 내 전체 예약 기준</StyledChartHeaderMeta>
                 </StyledChartHeader>
                 <StyledOperationSummary>

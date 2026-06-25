@@ -4,6 +4,7 @@ import type {Reservation} from '../../../utils/reservations';
 
 import {StyledArrow, StyledChangeRow, StyledNewTime} from './ModalStyles';
 import {ConfirmDialog} from '../../ui/ConfirmDialog';
+import {useStoreLabels} from '../../../hooks/useStoreLabels';
 
 interface ReservationMoveConfirmModalProps {
     reservation: Reservation;
@@ -20,6 +21,7 @@ export const ReservationMoveConfirmModal = ({
     onClose,
     onConfirm,
 }: ReservationMoveConfirmModalProps) => {
+    const labels = useStoreLabels();
     const dateChanged = reservation.date !== nextReservation.date;
 
     return (
@@ -34,7 +36,7 @@ export const ReservationMoveConfirmModal = ({
         >
             <StyledConfirmContent>
                 <StyledConfirmList>
-                    <StyledTerm>서비스</StyledTerm>
+                    <StyledTerm>{labels.service}</StyledTerm>
                     <StyledDesc>{reservation.service}</StyledDesc>
                     {customerName && (
                         <>

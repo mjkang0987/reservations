@@ -5,8 +5,10 @@ import styled from 'styled-components';
 import {useCalendarStore} from '../../../store/calendarStore';
 import {buildServiceColorMap, getGroupedCatalog, getServiceColor} from '../../../utils/services';
 import {StyledServiceText} from '../../ui/ServiceChip';
+import {useStoreLabels} from '../../../hooks/useStoreLabels';
 
 export const ServiceLegend = () => {
+    const labels = useStoreLabels();
     const [open, setOpen] = useState(false);
     const serviceCatalog = useCalendarStore((s) => s.serviceCatalog);
     const categoryBaseColorMap = useCalendarStore((s) => s.categoryBaseColorMap);
@@ -39,7 +41,7 @@ export const ServiceLegend = () => {
             </StyledPanel>}
             <StyledToggle type="button"
                           onClick={() => setOpen((prev) => !prev)}
-                          aria-label="서비스 범례 토글"
+                          aria-label={`${labels.service} 범례 토글`}
                           $open={open}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
                      strokeLinecap="round" strokeLinejoin="round">

@@ -6,6 +6,7 @@ import type {ConflictInfo} from '../../hooks/useNaverBookingSync';
 import {useCalendarStore} from '../../store/calendarStore';
 import {buildServiceColorMap} from '../../utils/services';
 import {getAssigneeColor} from '../../utils/assignees';
+import {useStoreLabels} from '../../hooks/useStoreLabels';
 
 import {
     OVERLAY_Z_INDEX,
@@ -114,6 +115,7 @@ export const NaverSyncConflictModal = ({
                                            onDismiss,
                                            onSelectReservation,
                                        }: NaverSyncConflictModalProps) => {
+    const labels = useStoreLabels();
     const {layerId, layerDataId} = useLayerInstanceId('naver-sync-conflict');
     const noop = useCallback(() => {
     }, []);
@@ -148,7 +150,7 @@ export const NaverSyncConflictModal = ({
                         )}
                         {isDangerAssignee && (
                             <StyledStatusBadge $variant="danger">
-                                담당자 중복 {getAssigneeName(reservation)}
+                                {labels.assignee} 중복 {getAssigneeName(reservation)}
                             </StyledStatusBadge>
                         )}
                     </StyledConflictBadges>
@@ -209,7 +211,7 @@ export const NaverSyncConflictModal = ({
             if (original.assigneeId !== current.assigneeId) {
                 const oldName = assignees.find((d) => d.id === original.assigneeId)?.name ?? '미지정';
                 const newName = assignees.find((d) => d.id === current.assigneeId)?.name ?? '미지정';
-                lines.push(`${oldName} → ${newName} 담당자가 변경되었습니다.`);
+                lines.push(`${oldName} → ${newName} ${labels.assignee}가 변경되었습니다.`);
             }
             if (original.date !== current.date) {
                 lines.push(`${original.date} → ${current.date} 예약날짜가 변경되었습니다.`);
@@ -232,7 +234,7 @@ export const NaverSyncConflictModal = ({
     const overlapEnd = conflict.newReservation.endTime < conflict.existingReservation.endTime
         ? conflict.newReservation.endTime
         : conflict.existingReservation.endTime;
-    const conflictSummary = `${getAssigneeName(conflict.newReservation)} 담당자, ${conflict.newReservation.date} ${overlapStart}~${overlapEnd}에 ${getCustomerName(conflict.newReservation)}·${getCustomerName(conflict.existingReservation)}님 예약이 겹쳤습니다`;
+    const conflictSummary = `${getAssigneeName(conflict.newReservation)} ${labels.assignee}, ${conflict.newReservation.date} ${overlapStart}~${overlapEnd}에 ${getCustomerName(conflict.newReservation)}·${getCustomerName(conflict.existingReservation)}님 예약이 겹쳤습니다`;
 
     const handleAdvanceClick = () => {
         setReasonOpen(true);

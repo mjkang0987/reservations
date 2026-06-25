@@ -4,6 +4,7 @@ import {createPortal} from 'react-dom';
 import {useRouter} from 'next/router';
 import {useSession} from 'next-auth/react';
 import {useCalendarStore} from '../../../store/calendarStore';
+import {useStoreLabels} from '../../../hooks/useStoreLabels';
 
 import type {PaymentEntry, PaymentMethod, Reservation, ReservationHistoryEntry, ReservationMap, ReservationStatus} from '../../../utils/reservations';
 import {findOverlap, hasCompletedPayment} from '../../../utils/reservations';
@@ -99,6 +100,7 @@ export const ReservationDetail = ({
                                       onDelete
                                   }: ReservationDetailProps) => {
     const router = useRouter();
+    const labels = useStoreLabels();
     const {data: session} = useSession();
     const canDelete = !!onDelete && (session?.user?.role === 'owner' || session?.user?.role === 'manager');
     const storeReservationMap = useCalendarStore((s) => s.reservationMap);
@@ -268,8 +270,8 @@ export const ReservationDetail = ({
     };
 
     const validateForm = (): ReservationFieldError | null => {
-        if (activeAssignees.length > 0 && !form.assigneeId) return {field: 'assignee', message: '담당자를 선택해주세요.'};
-        if (!form.service.trim()) return {field: 'service', message: '서비스를 선택해주세요.'};
+        if (activeAssignees.length > 0 && !form.assigneeId) return {field: 'assignee', message: `${labels.assignee}를 선택해주세요.`};
+        if (!form.service.trim()) return {field: 'service', message: `${labels.service}를 선택해주세요.`};
         if (!form.date) return {field: 'date', message: '날짜를 선택해주세요.'};
         if (!form.startTime) return {field: 'time', message: '시작 시간을 입력해주세요.'};
         if (!form.endTime) return {field: 'time', message: '종료 시간을 입력해주세요.'};
@@ -376,7 +378,7 @@ export const ReservationDetail = ({
         const expectedAmount = displayPrice - (sourceReservation.naverDeposit ?? 0);
 
         if (paymentTotal !== expectedAmount) {
-            setError({field: 'general', message: `결제 금액 합계(${formatPrice(paymentTotal)})가 서비스 금액(${formatPrice(expectedAmount)})과 일치하지 않습니다.`});
+            setError({field: 'general', message: `결제 금액 합계(${formatPrice(paymentTotal)})가 ${labels.service} 금액(${formatPrice(expectedAmount)})과 일치하지 않습니다.`});
             return;
         }
 
@@ -566,7 +568,7 @@ export const ReservationDetail = ({
                     message="이 예약을 취소하시겠습니까?"
                     color="var(--danger-color)"
                     items={[
-                        {label: '서비스', value: reservation.service},
+                        {label: labels.service, value: reservation.service},
                         {label: '날짜', value: reservation.date},
                         {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
                         {label: '고객명', value: customer?.name ?? '-'},
@@ -579,7 +581,7 @@ export const ReservationDetail = ({
                     message="이 예약을 영구 삭제하시겠습니까? (되돌릴 수 없습니다)"
                     color="var(--danger-color)"
                     items={[
-                        {label: '서비스', value: reservation.service},
+                        {label: labels.service, value: reservation.service},
                         {label: '날짜', value: reservation.date},
                         {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
                         {label: '고객명', value: customer?.name ?? '-'},
@@ -592,7 +594,7 @@ export const ReservationDetail = ({
                     message="이 예약을 완료 처리하시겠습니까?"
                     color="var(--blue-color)"
                     items={[
-                        {label: '서비스', value: reservation.service},
+                        {label: labels.service, value: reservation.service},
                         {label: '날짜', value: reservation.date},
                         {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
                         {label: '고객명', value: customer?.name ?? '-'},
@@ -653,7 +655,7 @@ export const ReservationDetail = ({
                     message="이 예약을 노쇼 처리하시겠습니까?"
                     color="var(--warning-color)"
                     items={[
-                        {label: '서비스', value: reservation.service},
+                        {label: labels.service, value: reservation.service},
                         {label: '날짜', value: reservation.date},
                         {label: '시간', value: `${reservation.startTime} ~ ${reservation.endTime}`},
                         {label: '고객명', value: customer?.name ?? '-'},
@@ -729,7 +731,7 @@ export const ReservationDetail = ({
                 <StyledRestoreBody>
                     <StyledRestoreMessage>취소된 예약을 되돌리시겠습니까?</StyledRestoreMessage>
                     <StyledRestoreList>
-                        <StyledRestoreTerm>서비스</StyledRestoreTerm>
+                        <StyledRestoreTerm>{labels.service}</StyledRestoreTerm>
                         <StyledRestoreDesc>{reservation.service}</StyledRestoreDesc>
                         <StyledRestoreTerm>날짜</StyledRestoreTerm>
                         <StyledRestoreDesc>{reservation.date}</StyledRestoreDesc>
