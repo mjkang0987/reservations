@@ -89,8 +89,9 @@ hair_reservations/
 | `customers/model.ts` | `Customer` | id, name, tel, points, memoTags, pointHistories, allergyNote, claimNote, preferenceNote |
 | `assignees/model.ts` | `Assignee` | id, name, schedule(7일), status[^6], color, phone |
 | `services/model.ts` | `ServiceItem` | name, durationMinutes, category, price |
-| `services/default-services.ts` | - | 업종(ShopType)별 기본 서비스·카테고리 색상 (온보딩용) |
+| `services/default-services.ts` | - | 업종(ShopType) union + 업종별 기본 서비스·카테고리 색상(Partial, 온보딩용) |
 | `store-settings/model.ts` | `StoreSettings` | businessHours, closedDates, pointSettings(적립률, 충전규칙) |
+| `store-settings/labels.ts` | - | 업종 마스터 목록·category별 표시어(담당자/서비스)·`getStoreLabels`/`sanitizeShopType` ([업종별 라벨](#업종별-라벨-담당자서비스-표시어)) |
 | `local-db/storage.ts` | - | 게스트 모드 로컬 스냅샷 (`takeaseat.local-db.v1`). `shouldUseLocalDb()`로 모드 판정, 게스트 약관 동의 버전 헬퍼(`getGuestTermsVersion`/`setGuestTermsAgreed`) — `lib/local-db`로 re-export |
 
 [^4]: status: `active` · `completed` · `cancelled` · `noshow`
@@ -116,6 +117,7 @@ hair_reservations/
 
 | 파일 | 역할 |
 |------|------|
+| `useStoreLabels.ts` | 매장 업종(shopType)에 맞는 `{assignee, service}` 표시어 반환 (업종별 라벨) |
 | `useNaverBookingSync.ts` | 네이버 예약 동기화[^8]. 자동 폴링, 중복 감지, 알림 생성, conflict 큐 관리 |
 | `naverSyncConflictStorage.ts` | conflict 상태 localStorage 영속화 |
 | `useCustomerMergeSuggestion.ts` | 동명이인·유사 고객 병합 제안 감지 (게스트 모드 제외) |
@@ -366,6 +368,30 @@ StorePointSettings (적립률, 충전규칙)
   → CustomerPointHistory로 이력 기록
   → points로 결제 가능 (PaymentMethod.points)
 ```
+
+### 업종별 라벨 (담당자/서비스 표시어)
+
+매장의 업종(`Store.shopType`)에 따라 "담당자"·"서비스" 표시어가 화면에서 자동으로 바뀐다.
+
+- **출처**: `client/features/store-settings/labels.ts` — 업종 마스터 목록(`SHOP_INDUSTRIES`), category별 표시어(`CATEGORY_LABELS`), `getStoreLabels(shopType)`, 저장 정규화 `sanitizeShopType()`(콤마조인·유효값 필터, 서버 onboarding·migrate-local·store PATCH 공용).
+- **소비**: `client/hooks/useStoreLabels.ts` 의 `useStoreLabels()` → `{assignee, service}`. 컴포넌트는 하드코딩 "담당자/서비스" 대신 이 값을 쓴다.
+- **변경 위치**: 설정 → 매장 관리 → "매장 정보" 수정 → **업종** 셀렉트(category별 optgroup). 다중 업종(콤마)인 경우 첫 업종의 category로 라벨 결정.
+- **참고**: 약관·개인정보·소개 등의 "서비스"는 *앱 자체* 를 뜻하므로 라벨 치환 대상이 아니다.
+
+| category | 업종(예) | 담당자 라벨 | 서비스 라벨 |
+|----------|---------|------------|------------|
+| beauty | 헤어/네일/왁싱/속눈썹/피부/메이크업/반영구 | 담당자 | 서비스 |
+| food | 음식점/카페/주점·바 | 테이블 | 메뉴 |
+| medical | 병원·의원/치과/한의원/동물병원 | 담당의 | 진료 |
+| fitness | 헬스·PT/요가·필라테스/골프/댄스 | 강사 | 수업 |
+| class | 학원/공방·클래스/과외 | 선생님 | 수업 |
+| pet | 애견미용 | 담당자 | 서비스 |
+| repair | 세차/정비·수리 | 기사 | 작업 |
+| space | 공간대여/연습실 | 룸 | 이용 |
+| counsel | 상담 | 상담사 | 상담 |
+| etc | 기타 | 담당자 | 서비스 |
+
+> 적용 범위: aside 메뉴·담당자 관리·서비스 관리 등 운영 화면(예약 폼·캘린더·매출 포함, 단계적 확대). 기존 뷰티 매장은 표시어 변화 없음(담당자/서비스 유지).
 
 ---
 
