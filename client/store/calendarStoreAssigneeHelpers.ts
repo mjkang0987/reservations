@@ -14,7 +14,9 @@ export function buildAddedAssigneeState(
         return null;
     }
 
-    const assigneeId = Date.now();
+    // legacyId는 Int(32비트) 컬럼이라 Date.now()(13자리)를 쓰면 서버 저장 시 범위 초과(P2020).
+    // 기존 id 최대값 + 1로 작은 정수를 부여한다(없으면 1부터).
+    const assigneeId = assignees.reduce((max, a) => Math.max(max, a.id), 0) + 1;
     const nextAssignee: Assignee = {
         id: assigneeId,
         name: cleanName,
