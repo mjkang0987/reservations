@@ -142,6 +142,13 @@ ALTER TABLE "Reservation" RENAME CONSTRAINT "Reservation_designerId_fkey" TO "Re
 **위 이름은 운영 DB 실측 결과(`pg_constraint`·`pg_indexes`)와 대조해 확정됨.** 단, 마이그레이션 시점에 스키마가 또 바뀌었을 수 있으니 실행 직전 재확인 권장.
 **검증**: 마이그레이션 후 `prisma migrate diff`(또는 `migrate dev`)가 **빈 diff**여야 함(drift 0). diff가 남으면 빠진 제약/인덱스 이름이 있다는 신호.
 
+**진행 상태(2026-06-25)** — 브랜치 `refactor/designer-to-assignee`(커밋 `fdbee67`):
+- ✅ `schema.prisma` rename 완료(model/enum/필드/관계, 잔여 Designer 0).
+- ✅ 마이그레이션 `0004_rename_designer_to_assignee/migration.sql` 작성(ALTER RENAME, 데이터 보존). enum 값 불변.
+- ✅ **정적 검증**: 0001~0003의 Designer DDL 12객체(테이블2·enum1·컬럼2·PK2·unique2·FK3) 전부 0004 RENAME으로 커버. Reservation designerId 단독 인덱스 없음 확인.
+- ⏳ **라이브 검증 대기**: 샌드박스에 Postgres 설치 불가(no sudo) → 사용자 로컬에서 `cd client && pnpm prisma:migrate:local` 후 `pnpm prisma:validate` + migrate status로 빈 diff 확인 필요.
+- ⏳ **코드 rename 미착수**: client 71 + server 11 파일, 1311줄 + 한글 '디자이너' 73곳. 식별자 매핑(Designer→Assignee, designerId→assigneeId, DesignerSchedule→AssigneeSchedule, DesignerStatus→AssigneeStatus, designers→assignees) + 파일/배럴/URL(`/settings/designer`→`/settings/assignee`)/표시문구. 빌드(tsc) 통과까지 영역별 진행 예정.
+
 **작업 범위 (영향 파일):**
 - `server/prisma/schema.prisma` — `model Designer`·`model DesignerSchedule`·`enum DesignerStatus`·`designerId` FK(Reservation/DesignerSchedule)·`Store.designers` 관계. ⚠️ **enum 값은 영문**(`active`/`on_leave`/`resigned`) — 타입 이름만 rename(`AssigneeStatus`), **값은 건드리지 말 것**(한글 아님). 한글 `재직/휴직/퇴직`은 프런트 표시값.
 - 서버: `/api/designers`→`/api/assignees`(라우트 파일·핸들러), `designers-merge`·`naver-booking-fix-designer`, `server/db/mappers.ts`(`dbReservationToFrontend`의 `designerId` 분기 + **영문↔한글 상태 매퍼 `active:'재직'` 양방향 맵의 `DesignerStatus` 타입 참조**), `resolveDesignerCuid`.
