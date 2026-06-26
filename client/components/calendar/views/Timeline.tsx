@@ -59,8 +59,11 @@ export const Timeline = ({
     const calendarAssigneeId = useCalendarStore((s) => s.calendarAssigneeId);
 
     const dateKey = toDateKey(fullYear, month, date);
+    // 주별/3일 뷰에서는 취소된 예약을 숨긴다(블록·건수 부풀림 방지). 일별 뷰에서는 그대로 노출.
+    const hideCancelled = type === ViewType.Week || type === ViewType.Three;
     const reservations = (reservationMap[dateKey] || []).filter((reservation) => (
-        calendarAssigneeId == null || (calendarAssigneeId === 0 ? !reservation.assigneeId : reservation.assigneeId === calendarAssigneeId)
+        (calendarAssigneeId == null || (calendarAssigneeId === 0 ? !reservation.assigneeId : reservation.assigneeId === calendarAssigneeId))
+        && !(hideCancelled && reservation.status === 'cancelled')
     ));
     const serviceColorMap = useMemo(
         () => buildServiceColorMap(serviceCatalog, categoryBaseColorMap),
