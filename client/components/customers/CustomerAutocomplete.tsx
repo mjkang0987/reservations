@@ -79,6 +79,7 @@ export function CustomerAutocomplete({
 
 const StyledAutocomplete = styled.div`
   position: relative;
+  min-width: 0;
 
   > label {
     display: flex;
@@ -100,6 +101,7 @@ const StyledInput = styled.input`
   font-size: 13px;
   color: var(--black-color);
   width: 100%;
+  min-width: 0;
 `;
 
 const StyledSuggestionWrap = styled.div`

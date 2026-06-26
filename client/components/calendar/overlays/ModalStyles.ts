@@ -249,6 +249,7 @@ export const StyledBody = styled.div`
 
 export const StyledBodyInner = styled.div`
     ${scrollContentStyle};
+    overflow-x: hidden; /* 세로 스크롤(overflow-y:auto)이 가로축까지 auto로 만들어 라벨이 잘리는 현상 방지 */
     padding: var(--modal-body-padding);
 `;
 
@@ -261,6 +262,7 @@ export const StyledForm = styled.div`
         display: flex;
         flex-direction: column;
         gap: 4px;
+        min-width: 0; /* 그리드/플렉스 컬럼 안에서 줄어들 수 있게(라벨 기본 min-width:auto 방지) */
 
         > strong {
             font-size: 12px;
@@ -275,6 +277,7 @@ export const StyledForm = styled.div`
             font-size: 13px;
             color: var(--black-color);
             width: 100%;
+            min-width: 0; /* iOS date/time 등 네이티브 컨트롤이 컨테이너를 밀어내지 않도록 */
         }
     }
 `;
