@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import styled from 'styled-components';
 
@@ -10,6 +10,7 @@ import {useToastStore} from '../../store/toastStore';
 import {useCalendarStore} from '../../store/calendarStore';
 import {shouldUseLocalDb} from '../../lib/local-db';
 import {formatPrice} from '../../utils/services';
+import {CustomerAutocomplete} from '../customers/CustomerAutocomplete';
 import type {MembershipProduct, CustomerMembership} from '../../features/memberships/model';
 
 type Tab = 'products' | 'issue';
@@ -61,8 +62,11 @@ export const MembershipManageSection = () => {
 
     // 발급 폼
     const [issueCustomerId, setIssueCustomerId] = useState('');
+    const [issueCustomerQuery, setIssueCustomerQuery] = useState('');
+    const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
     const [issueProductId, setIssueProductId] = useState('');
     const [issueError, setIssueError] = useState('');
+    const customerBlurTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     const fetchData = useCallback(async () => {
         if (isLocal) return;
@@ -93,6 +97,32 @@ export const MembershipManageSection = () => {
         (legacyId: number) => customerMap[legacyId]?.name ?? `#${legacyId}`,
         [customerMap]
     );
+    const filteredIssueCustomers = useMemo(() => (
+        issueCustomerQuery.trim()
+            ? customers.filter((c) => c.name.includes(issueCustomerQuery) || c.tel.includes(issueCustomerQuery))
+            : customers
+    ), [customers, issueCustomerQuery]);
+
+    const handleCustomerSelect = (id: number) => {
+        const c = customerMap[id];
+        setIssueCustomerId(String(id));
+        if (c) setIssueCustomerQuery(c.name);
+        setShowCustomerSuggestions(false);
+        setIssueError('');
+    };
+    const handleCustomerQueryChange = (value: string) => {
+        setIssueCustomerQuery(value);
+        setIssueCustomerId('');
+        setShowCustomerSuggestions(true);
+        setIssueError('');
+    };
+    const handleCustomerFocus = () => {
+        clearTimeout(customerBlurTimer.current);
+        setShowCustomerSuggestions(true);
+    };
+    const handleCustomerBlur = () => {
+        customerBlurTimer.current = setTimeout(() => setShowCustomerSuggestions(false), 150);
+    };
 
     // ── 상품 CRUD ──
     const resetForm = () => {
@@ -176,6 +206,7 @@ export const MembershipManageSection = () => {
             if (!res.ok) throw new Error();
             toast('회원권을 발급했습니다.');
             setIssueCustomerId('');
+            setIssueCustomerQuery('');
             setIssueProductId('');
             setIssueError('');
             await fetchData();
@@ -303,16 +334,17 @@ export const MembershipManageSection = () => {
                         <>
                             <StyledFormCard>
                                 <StyledFieldGrid>
-                                    <StyledField htmlFor="mi-customer">
-                                        <span>고객</span>
-                                        <StyledSelect id="mi-customer" value={issueCustomerId}
-                                                      onChange={(e) => {setIssueCustomerId(e.target.value); setIssueError('');}}>
-                                            <option value="">고객 선택</option>
-                                            {customers.map((c) => (
-                                                <option key={c.id} value={c.id}>{c.name} ({c.tel})</option>
-                                            ))}
-                                        </StyledSelect>
-                                    </StyledField>
+                                    <CustomerAutocomplete
+                                        id="mi-customer"
+                                        query={issueCustomerQuery}
+                                        showSuggestions={showCustomerSuggestions}
+                                        filteredCustomers={filteredIssueCustomers}
+                                        selectedId={issueCustomerId ? Number(issueCustomerId) : 0}
+                                        onChangeQuery={handleCustomerQueryChange}
+                                        onFocus={handleCustomerFocus}
+                                        onBlur={handleCustomerBlur}
+                                        onSelect={handleCustomerSelect}
+                                    />
                                     <StyledField htmlFor="mi-product">
                                         <span>회원권</span>
                                         <StyledSelect id="mi-product" value={issueProductId}

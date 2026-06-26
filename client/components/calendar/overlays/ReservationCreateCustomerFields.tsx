@@ -3,8 +3,8 @@ import React from 'react';
 import styled from 'styled-components';
 
 import type {Customer} from '../../../utils/customers';
-import {formatTel} from '../../../utils/customers';
-import {scrollContentStyle, scrollHintStyle, StyledInlineError} from './ModalStyles';
+import {StyledInlineError} from './ModalStyles';
+import {CustomerAutocomplete} from '../../customers/CustomerAutocomplete';
 
 type CustomerMode = 'existing' | 'new';
 
@@ -62,46 +62,20 @@ export function ReservationCreateCustomerFields({
                 </StyledCustomerModeButton>
             </StyledCustomerModeTabs>
             {customerMode === 'existing' ? (
-                <StyledAutocomplete>
-                    <label htmlFor="create-customer">
-                        <strong>고객</strong>
-                        <input
-                            id="create-customer"
-                            type="text"
-                            autoComplete="off"
-                            placeholder="고객명 또는 연락처 검색"
-                            value={customerQuery}
-                            onChange={(e) => onChangeCustomerQuery(e.target.value)}
-                            onFocus={onFocusCustomerQuery}
-                            onBlur={onBlurCustomerQuery}
-                        />
-                    </label>
-                    {showSuggestions && filteredCustomers.length > 0 && (
-                        <StyledSuggestionWrap>
-                            <StyledSuggestionList role="listbox" id="create-customer-listbox">
-                                {filteredCustomers.map((customer) => (
-                                    <StyledSuggestionItem
-                                        key={customer.id}
-                                        role="option"
-                                        aria-selected={customer.id === customerId}
-                                        onMouseDown={() => onSelectCustomer(customer.id)}
-                                    >
-                                        <StyledSuggestionName>{customer.name}</StyledSuggestionName>
-                                        <StyledSuggestionTel>{formatTel(customer.tel)}</StyledSuggestionTel>
-                                    </StyledSuggestionItem>
-                                ))}
-                            </StyledSuggestionList>
-                        </StyledSuggestionWrap>
-                    )}
-                    {showSuggestions && customerQuery.trim() && filteredCustomers.length === 0 && (
-                        <StyledSuggestionWrap>
-                            <StyledSuggestionList>
-                                <StyledNoResult>검색 결과 없음</StyledNoResult>
-                            </StyledSuggestionList>
-                        </StyledSuggestionWrap>
-                    )}
+                <div>
+                    <CustomerAutocomplete
+                        id="create-customer"
+                        query={customerQuery}
+                        showSuggestions={showSuggestions}
+                        filteredCustomers={filteredCustomers}
+                        selectedId={customerId}
+                        onChangeQuery={onChangeCustomerQuery}
+                        onFocus={onFocusCustomerQuery}
+                        onBlur={onBlurCustomerQuery}
+                        onSelect={onSelectCustomer}
+                    />
                     {customerErrorMessage && <StyledInlineError>{customerErrorMessage}</StyledInlineError>}
-                </StyledAutocomplete>
+                </div>
             ) : (
                 <StyledNewCustomerFields>
                     <label htmlFor="create-new-customer-name">
@@ -156,60 +130,3 @@ const StyledNewCustomerFields = styled.div`
   }
 `;
 
-const StyledAutocomplete = styled.div`
-  position: relative;
-`;
-
-const StyledSuggestionWrap = styled.div`
-  ${scrollHintStyle};
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  z-index: 10;
-  margin: 4px 0 0;
-  max-height: 160px;
-  background-color: var(--white-color);
-  border: 1px solid var(--light-gray-color);
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-`;
-
-const StyledSuggestionList = styled.ul`
-  ${scrollContentStyle};
-  padding: 4px 0;
-  list-style: none;
-`;
-
-const StyledSuggestionItem = styled.li`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
-  font-size: 13px;
-  cursor: pointer;
-
-  &[aria-selected="true"] {
-    background-color: var(--black-color-10);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background-color: var(--black-color-10);
-    }
-  }
-`;
-
-const StyledSuggestionName = styled.span``;
-
-const StyledSuggestionTel = styled.span`
-  font-size: 11px;
-  color: var(--gray-color);
-`;
-
-const StyledNoResult = styled.li`
-  padding: 8px 10px;
-  font-size: 12px;
-  color: var(--gray-color);
-  text-align: center;
-`;
