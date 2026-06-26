@@ -4,6 +4,35 @@
 
 ---
 
+## 진행 예정 — 쿠폰(할인) 시스템
+
+> 결정(사용자): 할인 방식 **정액+정률 둘 다**, 발급 **직접발급+코드형 둘 다**, 결제는 **결제수단에 `coupon` 추가해 차감**.
+> 위치: 적립금(금액)·회원권(횟수/기간)에 이어 **할인**을 담당. 회원권 시스템 패턴을 그대로 따른다.
+
+### 현황 조사 결과
+- 결제 = `ReservationPaymentEntry`(method `PaymentMethod` + amount Int, 예약당 다건=분할결제). 결제 UI는 `ReservationDetailPaymentLayer`(method 셀렉트 + 금액 + 추가/삭제).
+- `PaymentMethod` enum에 이미 `discount`(할인·수동), `points`(적립금) 존재. 프런트 union(`reservations/model.ts`)엔 '할인'·'적립금' 라벨.
+- 토글 패턴(`usePointSystem`/`useMembershipSystem`) + aside 게이팅 + `/settings/[tab]` 디스패치 + `CustomerAutocomplete`(발급 고객검색) 재사용 가능.
+
+### 설계 (회원권 미러링)
+- **Store.useCouponSystem Boolean @default(false)** — 매장관리 토글.
+- **CouponProduct**(쿠폰 정의): id, legacyId, storeId, name, `discountType`(amount|rate), `discountValue Int`(원 또는 %), `maxDiscount Int?`(정률 상한), `minOrderAmount Int?`(최소 결제금액), `validDays Int?`(만료), `code String?`(있으면 코드형 — @@unique[storeId,code]), status(active|archived). @@unique[storeId,legacyId].
+- **CustomerCoupon**(고객 보유): id, legacyId, storeId, customerId, productId?, name 스냅샷, discountType/discountValue/maxDiscount/minOrderAmount 스냅샷, issuedAt, expiresAt?, usedAt?, reservationId?(사용처), status(active|used|expired|cancelled).
+- **PaymentMethod**에 `coupon` 추가(할인과 구분 — 추적되는 쿠폰 차감).
+
+### 구현 단계
+1. **Phase 1 — 토글 + 모델 + 상품 관리**: Store 토글 + CouponProduct/CustomerCoupon 마이그레이션, CRUD API, 매장관리 체크박스, aside '쿠폰 관리' 메뉴/아이콘, `/settings/coupon` 상품 탭(정액/정률·코드·만료·최소금액).
+2. **Phase 2 — 발급**: 직접 발급(`CustomerAutocomplete`로 고객 검색) + 코드형 클레임(코드 입력→해당 고객에 CustomerCoupon 발급), 보유 목록, 고객 상세에 보유 쿠폰 표시.
+3. **Phase 3 — 결제 연동(머니플로우, 신중)**: 결제 레이어 method에 '쿠폰' 추가 → 보유 쿠폰 선택 → 할인액 자동계산(정액=value, 정률=round(total×%) capped maxDiscount, minOrderAmount 검증) → `ReservationPaymentEntry(coupon)` 기록 + CustomerCoupon used 처리(트랜잭션). 매출 집계(RevenueFilters/charts)에 쿠폰 할인 반영.
+   - ⚠️ 회원권 Phase 3b(결제 자동차감)와 같은 핵심 머니플로우 영역 → 함께/테스트 동반 권장.
+
+### 리스크/주의
+- 정률 반올림·상한·최소금액 경계, 분할결제와의 합계 정합성.
+- 결제 차감은 트랜잭션(예약 결제 ↔ 쿠폰 used). 만료/중복사용/타고객 쿠폰 방어.
+- 새 테이블 마이그레이션 → 운영 반영은 0006(회원권)처럼 `migrate deploy` 필요.
+
+---
+
 ## 진행 중 — 고객 연락처 저장 포맷 통일 (DB=숫자만, 표시=000-0000-0000)
 
 > 결정(사용자): **연락처는 DB에 숫자만 저장, 화면엔 패턴(000-0000-0000)으로 노출.**
