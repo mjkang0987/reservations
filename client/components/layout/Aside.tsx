@@ -51,6 +51,7 @@ const SETTINGS_SUBMENU = [
     {tab: 'revenue', href: '/settings/revenue', label: '매출', icon: 'revenue'},
     {tab: 'point', href: '/settings/point', label: '적립금 관리', icon: 'point'},
     {tab: 'membership', href: '/settings/membership', label: '회원권 관리', icon: 'membership'},
+    {tab: 'coupon', href: '/settings/coupon', label: '쿠폰 관리', icon: 'coupon'},
     {tab: 'store', href: '/settings/store', label: '매장 관리', icon: 'store'},
     {tab: 'service', href: '/settings/service', label: '서비스 관리', icon: 'service'},
     {tab: 'assignee', href: '/settings/assignee', label: '담당자 관리', icon: 'assignee'},
@@ -136,6 +137,7 @@ export const Aside = () => {
     const isLoggedInStaff = !!session?.user && !isOwner;
     const usePointSystem = useCalendarStore((s) => s.usePointSystem);
     const useMembershipSystem = useCalendarStore((s) => s.useMembershipSystem);
+    const useCouponSystem = useCalendarStore((s) => s.useCouponSystem);
     const labels = useStoreLabels();
     const submenuLabel = (item: typeof SETTINGS_SUBMENU[number]) =>
         item.tab === 'assignee' ? `${labels.assignee} 관리`
@@ -246,6 +248,7 @@ export const Aside = () => {
                                 // 매장 기능 토글로 켠 경우에만 노출
                                 if (item.tab === 'point') return usePointSystem;
                                 if (item.tab === 'membership') return useMembershipSystem;
+                                if (item.tab === 'coupon') return useCouponSystem;
                                 return true;
                             }).map((item) =>
                                 <StyledSubNavLink href={item.href}

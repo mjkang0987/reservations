@@ -154,6 +154,13 @@ export const AsideMenuIcon = ({icon}: {icon: string}) => {
                     <path d="M13.5 6.5V17.5" strokeDasharray="2 2" />
                 </StyledMenuIcon>
             );
+        case 'coupon':
+            return (
+                <StyledMenuIcon viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7.5C4 6.7 4.7 6 5.5 6H18.5C19.3 6 20 6.7 20 7.5V10C18.9 10 18 10.9 18 12C18 13.1 18.9 14 20 14V16.5C20 17.3 19.3 18 18.5 18H5.5C4.7 18 4 17.3 4 16.5V14C5.1 14 6 13.1 6 12C6 10.9 5.1 10 4 10Z" />
+                    <path d="M14 9L10 15" strokeDasharray="0.1 3" />
+                </StyledMenuIcon>
+            );
         case 'guide':
             return (
                 <StyledMenuIcon viewBox="0 0 24 24" aria-hidden="true">
