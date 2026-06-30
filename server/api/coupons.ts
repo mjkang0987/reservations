@@ -17,8 +17,9 @@ function parseCode(value: unknown): string | null {
     return trimmed === '' ? null : trimmed;
 }
 
-// 할인값 검증: 정액=0 이상 정수, 정률=0~100 정수
+// 할인값 검증: 정액=0 이상 정수, 정률=0~100 정수. 빈값/누락은 무효(Number('')=0 통과 방지).
 function parseDiscountValue(value: unknown, discountType: string): number | null {
+    if (value === null || value === undefined || value === '') return null;
     const n = Number(value);
     if (!Number.isFinite(n) || n < 0) return null;
     if (discountType === 'rate' && n > 100) return null;
