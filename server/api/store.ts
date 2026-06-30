@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!requireRole(session, 'staff', res)) return;
 
         const [store, businessHours, closedDates, pointSettings] = await Promise.all([
-            prisma.store.findUnique({where: {id: session.storeId}, select: {name: true, shopType: true, usePointSystem: true, useMembershipSystem: true}}),
+            prisma.store.findUnique({where: {id: session.storeId}, select: {name: true, shopType: true, usePointSystem: true, useMembershipSystem: true, useCouponSystem: true}}),
             prisma.storeBusinessHour.findMany({where: {storeId: session.storeId}, orderBy: {dayIndex: 'asc'}}),
             prisma.storeClosedDate.findMany({where: {storeId: session.storeId}}),
             prisma.storePointSettings.findUnique({where: {storeId: session.storeId}}),
@@ -31,6 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             shopType: store?.shopType ?? null,
             usePointSystem: store?.usePointSystem ?? false,
             useMembershipSystem: store?.useMembershipSystem ?? false,
+            useCouponSystem: store?.useCouponSystem ?? false,
         });
     }
 
@@ -112,8 +113,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'PATCH') {
         if (!requireRole(session, 'owner', res)) return;
 
-        const {storeName, shopType, usePointSystem, useMembershipSystem} = req.body as {
-            storeName?: unknown; shopType?: unknown; usePointSystem?: unknown; useMembershipSystem?: unknown;
+        const {storeName, shopType, usePointSystem, useMembershipSystem, useCouponSystem} = req.body as {
+            storeName?: unknown; shopType?: unknown; usePointSystem?: unknown; useMembershipSystem?: unknown; useCouponSystem?: unknown;
         };
 
         if (storeName !== undefined && (typeof storeName !== 'string' || !storeName.trim())) {
@@ -128,6 +129,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (useMembershipSystem !== undefined && typeof useMembershipSystem !== 'boolean') {
             return res.status(400).json({error: 'Invalid useMembershipSystem'});
         }
+        if (useCouponSystem !== undefined && typeof useCouponSystem !== 'boolean') {
+            return res.status(400).json({error: 'Invalid useCouponSystem'});
+        }
 
         await prisma.store.update({
             where: {id: session.storeId},
@@ -136,6 +140,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 ...(shopType !== undefined && {shopType: sanitizeShopType(shopType)}),
                 ...(usePointSystem !== undefined && {usePointSystem: usePointSystem as boolean}),
                 ...(useMembershipSystem !== undefined && {useMembershipSystem: useMembershipSystem as boolean}),
+                ...(useCouponSystem !== undefined && {useCouponSystem: useCouponSystem as boolean}),
             },
         });
 
@@ -144,6 +149,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             shopType: shopType ?? undefined,
             usePointSystem: usePointSystem ?? undefined,
             useMembershipSystem: useMembershipSystem ?? undefined,
+            useCouponSystem: useCouponSystem ?? undefined,
         });
     }
 

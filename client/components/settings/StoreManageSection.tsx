@@ -26,6 +26,7 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
     const updateStoreClosedDates = useCalendarStore((s) => s.updateStoreClosedDates);
     const usePointSystem = useCalendarStore((s) => s.usePointSystem);
     const useMembershipSystem = useCalendarStore((s) => s.useMembershipSystem);
+    const useCouponSystem = useCalendarStore((s) => s.useCouponSystem);
     const updateStoreFeatures = useCalendarStore((s) => s.updateStoreFeatures);
     const [businessHours, setBusinessHours] = useState(storeSettings.businessHours);
     const [closedDates, setClosedDates] = useState(storeSettings.closedDates);
@@ -310,6 +311,21 @@ export const StoreManageSection = ({formatDateLabel}: StoreManageSectionProps) =
                         <StyledFeatureText>
                             <StyledFeatureName>회원권 시스템 사용</StyledFeatureName>
                             <StyledFeatureDesc>횟수·기간 회원권 발급·차감 기능. 켜면 설정 메뉴에 ‘회원권 관리’가 나타납니다.</StyledFeatureDesc>
+                        </StyledFeatureText>
+                    </StyledFeatureItem>
+                    <StyledFeatureItem htmlFor="feature-coupon">
+                        <StyledFeatureCheckbox
+                            id="feature-coupon"
+                            type="checkbox"
+                            checked={useCouponSystem}
+                            onChange={(e) => {
+                                updateStoreFeatures({useCouponSystem: e.target.checked});
+                                toast(e.target.checked ? '쿠폰 시스템을 켰습니다.' : '쿠폰 시스템을 껐습니다.');
+                            }}
+                        />
+                        <StyledFeatureText>
+                            <StyledFeatureName>쿠폰 시스템 사용</StyledFeatureName>
+                            <StyledFeatureDesc>정액·정률 할인 쿠폰 발급 기능. 켜면 설정 메뉴에 ‘쿠폰 관리’가 나타납니다.</StyledFeatureDesc>
                         </StyledFeatureText>
                     </StyledFeatureItem>
                 </StyledFeatureList>

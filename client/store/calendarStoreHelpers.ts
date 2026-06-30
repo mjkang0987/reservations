@@ -185,7 +185,7 @@ export function syncStoreInfo(storeName: string, shopType: string | null): void 
     }).catch(() => {});
 }
 
-export function syncStoreFeatures(patch: {usePointSystem?: boolean; useMembershipSystem?: boolean}): void {
+export function syncStoreFeatures(patch: {usePointSystem?: boolean; useMembershipSystem?: boolean; useCouponSystem?: boolean}): void {
     if (shouldUseLocalDb()) {
         updateLocalDbSnapshot((c) => ({...c, ...patch}));
         return;

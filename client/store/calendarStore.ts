@@ -139,6 +139,7 @@ export interface CalendarState {
     shopType: string | null;
     usePointSystem: boolean;
     useMembershipSystem: boolean;
+    useCouponSystem: boolean;
     storeSettings: StoreSettings;
     syncNotifications: SyncNotification[];
 
@@ -173,8 +174,8 @@ export interface CalendarState {
     setAssignees: (assignees: Assignee[]) => void;
     setStoreInfo: (name: string, type: string | null) => void;
     updateStoreInfo: (name: string, type: string | null) => void;
-    setStoreFeatures: (usePointSystem: boolean, useMembershipSystem: boolean) => void;
-    updateStoreFeatures: (patch: {usePointSystem?: boolean; useMembershipSystem?: boolean}) => void;
+    setStoreFeatures: (usePointSystem: boolean, useMembershipSystem: boolean, useCouponSystem: boolean) => void;
+    updateStoreFeatures: (patch: {usePointSystem?: boolean; useMembershipSystem?: boolean; useCouponSystem?: boolean}) => void;
     setStoreSettings: (storeSettings: StoreSettings) => void;
     updateStoreBusinessHours: (hours: Partial<StoreSettings['businessHours']>) => void;
     updateStorePointSettings: (pointSettings: Partial<StoreSettings['pointSettings']>) => void;
@@ -271,6 +272,7 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     shopType: null,
     usePointSystem: false,
     useMembershipSystem: false,
+    useCouponSystem: false,
     storeSettings: DEFAULT_STORE_SETTINGS,
     syncNotifications: [],
 
@@ -438,7 +440,7 @@ export const useCalendarStore = create<CalendarState>((set) => ({
         set({storeName, shopType});
         syncStoreInfo(storeName, shopType);
     },
-    setStoreFeatures: (usePointSystem, useMembershipSystem) => set({usePointSystem, useMembershipSystem}),
+    setStoreFeatures: (usePointSystem, useMembershipSystem, useCouponSystem) => set({usePointSystem, useMembershipSystem, useCouponSystem}),
     updateStoreFeatures: (patch) => {
         set(patch);
         syncStoreFeatures(patch);
